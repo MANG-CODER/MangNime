@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
@@ -14,6 +14,8 @@ export default function LoginPage() {
   const [message, setMessage] = useState(null);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "/"; // ✅ ambil halaman asal
   const supabase = createClient();
 
   // FUNGSI LOGIN GOOGLE
@@ -22,7 +24,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`, // ✅ ke callback dulu
+        redirectTo: `${window.location.origin}/auth/callback?next=${next}`, // ✅
       },
     });
     if (error) {
@@ -35,7 +37,6 @@ export default function LoginPage() {
   const handleSignUp = async (e) => {
     e.preventDefault();
     if (!email || !password) return setError("Email dan password wajib diisi!");
-
     setLoading(true);
     setError(null);
     setMessage(null);
@@ -44,7 +45,7 @@ export default function LoginPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${next}`, // ✅
       },
     });
 
@@ -52,16 +53,16 @@ export default function LoginPage() {
       setError(error.message);
     } else {
       setMessage(
-        "Berhasil mendaftar! Silakan cek kotak masuk email Anda untuk verifikasi sebelum masuk.",
+        "Berhasil mendaftar! Silakan cek email Anda untuk verifikasi sebelum masuk.",
       );
     }
     setLoading(false);
   };
+
   // FUNGSI MASUK EMAIL
   const handleSignIn = async (e) => {
     e.preventDefault();
     if (!email || !password) return setError("Email dan password wajib diisi!");
-
     setLoading(true);
     setError(null);
     setMessage(null);
@@ -78,7 +79,7 @@ export default function LoginPage() {
         setError("Email atau password salah.");
       }
     } else {
-      router.push("/");
+      router.push(next); // ✅ balik ke halaman asal
       router.refresh();
     }
     setLoading(false);
@@ -86,12 +87,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#0D0B1A] flex items-center justify-center relative px-4 overflow-hidden py-12">
-      {/* Efek Cahaya Latar */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-celestia-pink/10 blur-[150px] rounded-full pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-celestia-sky/10 blur-[150px] rounded-full pointer-events-none"></div>
 
       <div className="w-full max-w-md bg-[#151226]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10 animate-fade-in">
-        {/* Logo */}
         <div className="flex justify-center mb-8">
           <Link href="/">
             <Image
@@ -108,7 +107,6 @@ export default function LoginPage() {
           Masuk ke <span className="text-celestia-pink">Akun</span>
         </h2>
 
-        {/* Notifikasi Error/Sukses */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm px-4 py-3 rounded-xl mb-4 text-center">
             {error}
@@ -120,7 +118,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* TOMBOL GOOGLE */}
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
@@ -147,7 +144,6 @@ export default function LoginPage() {
           Lanjutkan dengan Google
         </button>
 
-        {/* GARIS PEMISAH */}
         <div className="flex items-center gap-4 mb-6">
           <div className="flex-1 h-px bg-white/10"></div>
           <span className="text-gray-500 text-xs font-bold tracking-widest">
@@ -156,7 +152,6 @@ export default function LoginPage() {
           <div className="flex-1 h-px bg-white/10"></div>
         </div>
 
-        {/* FORM EMAIL & PASSWORD */}
         <form className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1.5">
@@ -170,7 +165,6 @@ export default function LoginPage() {
               className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-celestia-lavender focus:bg-white/5 transition-all"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1.5">
               Password
@@ -183,7 +177,6 @@ export default function LoginPage() {
               className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-celestia-lavender focus:bg-white/5 transition-all"
             />
           </div>
-
           <div className="pt-2 flex flex-col gap-3">
             <button
               onClick={handleSignIn}
