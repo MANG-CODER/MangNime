@@ -27,7 +27,7 @@ export default function AboutPage() {
         {/* Ganti URL 'src' di bawah ini dengan path gambar GFX Anda (misal: '/images/about-gfx.jpg') */}
         <div className="relative w-full aspect-[21/9] rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(76,201,255,0.15)] border border-white/10 mb-12 group">
           <Image
-            src="/img/GFx.png"
+            src="/img/GFX.png"
             alt="MangNime GFX Showcase"
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-700"
