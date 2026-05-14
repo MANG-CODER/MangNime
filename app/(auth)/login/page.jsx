@@ -15,13 +15,19 @@ export default function LoginPage() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  // Jika parameter next kosong atau '/' (dari home), kita set kosong
-  const rawNext = searchParams.get("next");
-  const nextTarget = !rawNext || rawNext === "/" ? "" : `?next=${rawNext}`;
-  const redirectUrl = `${window.location.origin}/auth/callback${nextTarget}`;
-
   const supabase = createClient();
+
+  // ==========================================
+  // ✅ FUNGSI PEMBUAT URL (Aman dari Error Window)
+  // ==========================================
+  const getRedirectUrl = () => {
+    const rawNext = searchParams.get("next");
+    // Jika ada 'next' dan bukan "/", rakit dengan parameter URL yang valid
+    const nextParam =
+      rawNext && rawNext !== "/" ? `?next=${encodeURIComponent(rawNext)}` : "";
+    // Gabungkan origin dengan /callback dan parameter next
+    return `${window.location.origin}/callback${nextParam}`;
+  };
 
   // FUNGSI LOGIN GOOGLE
   const handleGoogleLogin = async () => {
@@ -29,7 +35,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: redirectUrl, // Menggunakan URL yang sudah difilter
+        redirectTo: getRedirectUrl(), // Panggil fungsinya di sini
       },
     });
     if (error) {
@@ -50,7 +56,7 @@ export default function LoginPage() {
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
+        emailRedirectTo: getRedirectUrl(), // Panggil fungsinya di sini
       },
     });
 
@@ -85,7 +91,8 @@ export default function LoginPage() {
       }
     } else {
       // Kembali ke halaman asal, jika rawNext kosong maka ke '/'
-      router.push(rawNext || "/");
+      const rawNext = searchParams.get("next");
+      router.push(rawNext && rawNext !== "/" ? rawNext : "/");
       router.refresh();
     }
     setLoading(false);

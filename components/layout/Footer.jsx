@@ -83,7 +83,7 @@ export default function Footer() {
                   href="/komik/latest"
                   className="hover:text-celestia-lavender hover:translate-x-1 transition-all inline-block"
                 >
-                  Komik Terbaru
+                  Update Terbaru
                 </Link>
               </li>
               <li>

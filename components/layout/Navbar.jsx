@@ -480,13 +480,12 @@ export default function Navbar() {
               </Link>
             ) : (
               // ✅ Logic Login Baru
-              <Button
-                href={`/login?next=${pathname}`}
-                variant="primary"
-                size="md"
+              <Link
+                href={`/login?next=${encodeURIComponent(pathname)}`}
+                className="px-6 py-2.5 bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white font-bold text-sm rounded-xl hover:scale-105 hover:shadow-glow-purple transition-all text-center flex justify-center"
               >
                 LOGIN
-              </Button>
+              </Link>
             )}
           </div>
 
@@ -635,14 +634,12 @@ export default function Navbar() {
               </Link>
             ) : (
               // ✅ Logic Login Baru (Mobile)
-              <Button
-                href={`/login?next=${pathname}`}
-                variant="primary"
-                size="md"
-                className="w-full text-center flex justify-center"
+              <Link
+                href={`/login?next=${encodeURIComponent(pathname)}`}
+                className="px-6 py-2.5 bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white font-bold text-sm rounded-xl hover:scale-105 hover:shadow-glow-purple transition-all text-center flex justify-center"
               >
                 LOGIN
-              </Button>
+              </Link>
             )}
           </div>
         </div>

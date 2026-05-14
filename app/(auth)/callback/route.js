@@ -3,25 +3,26 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
+  const requestUrl = new URL(request.url);
+  const code = requestUrl.searchParams.get("code");
 
-  // Jika next kosong, atau "/", maka arahkan ke origin (beranda)
-  const nextRaw = searchParams.get("next");
-  const nextTarget = !nextRaw || nextRaw === "/" ? "" : nextRaw;
+  // 1. Ambil parameter 'next' dan terjemahkan (Decode) %2F menjadi /
+  let nextRaw = requestUrl.searchParams.get("next");
+  let next = nextRaw ? decodeURIComponent(nextRaw) : "/";
 
-  // Membaca domain asli dari Load Balancer Vercel (Sangat Penting)
+  // Pastikan selalu diawali dengan slash (/) agar Next.js tidak bingung
+  if (!next.startsWith("/")) next = `/${next}`;
+
+  // 2. Proteksi Load Balancer (Vercel vs Localhost)
   const forwardedHost = request.headers.get("x-forwarded-host");
   const isLocalEnv = process.env.NODE_ENV === "development";
-
-  // Menentukan Base URL yang benar (Localhost vs Vercel)
   const baseUrl = isLocalEnv
-    ? origin
+    ? requestUrl.origin
     : forwardedHost
       ? `https://${forwardedHost}`
-      : origin;
+      : requestUrl.origin;
 
-  // 1. Jika ada 'code', lakukan autentikasi session
+  // 3. Proses Tukar Code dengan Sesi Login
   if (code) {
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -33,9 +34,13 @@ export async function GET(request) {
             return cookieStore.getAll();
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            );
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options),
+              );
+            } catch (error) {
+              // Abaikan error di server component
+            }
           },
         },
       },
@@ -44,11 +49,11 @@ export async function GET(request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Redirect ke target! Jika nextTarget kosong, dia akan redirect ke baseUrl (Home)
-      return NextResponse.redirect(`${baseUrl}${nextTarget}`);
+      // ✅ SUCCESS: Redirect tepat ke halaman sebelumnya
+      return NextResponse.redirect(`${baseUrl}${next}`);
     }
   }
 
-  // 2. Jika kode tidak ada atau error saat menukar token, balik ke Login
+  // Jika gagal, kembalikan ke halaman login
   return NextResponse.redirect(`${baseUrl}/login?error=auth_failed`);
 }
