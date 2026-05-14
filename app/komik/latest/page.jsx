@@ -2,6 +2,7 @@ import { fetchKomikAPI } from "@/services/komikApi";
 import KomikCard from "@/components/komik/KomikCard";
 import Pagination from "@/components/ui/Pagination";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import { getLatestKomik } from "@/services/komikApi";
 
 export const metadata = { title: "Komik Update Terbaru - MangNime" };
 
