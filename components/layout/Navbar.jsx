@@ -159,7 +159,7 @@ export default function Navbar() {
                     href="/ongoing"
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
-                    <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-sky text-gray-400 transition-colors">
+                    <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-gold text-gray-400 transition-colors">
                       <svg
                         className="w-5 h-5"
                         viewBox="0 0 24 24"
@@ -184,7 +184,7 @@ export default function Navbar() {
                     href="/completed"
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
-                    <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-sky text-gray-400 transition-colors">
+                    <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
                       <svg
                         className="w-5 h-5"
                         viewBox="0 0 24 24"
@@ -210,7 +210,7 @@ export default function Navbar() {
                     href="/genre"
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
-                    <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-sky text-gray-400 transition-colors">
+                    <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-lavender text-gray-400 transition-colors">
                       <svg
                         className="w-5 h-5"
                         viewBox="0 0 24 24"
@@ -479,7 +479,6 @@ export default function Navbar() {
                 </span>
               </Link>
             ) : (
-              // ✅ Logic Login Baru
               <Link
                 href={`/login?next=${encodeURIComponent(pathname)}`}
                 className="px-6 py-2.5 bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white font-bold text-sm rounded-xl hover:scale-105 hover:shadow-glow-purple transition-all text-center flex justify-center"
@@ -633,9 +632,10 @@ export default function Navbar() {
                 </div>
               </Link>
             ) : (
-              // ✅ Logic Login Baru (Mobile)
+              // ✅ Logic Auto-Close ditambahkan pada tombol LOGIN di mobile
               <Link
                 href={`/login?next=${encodeURIComponent(pathname)}`}
+                onClick={() => setIsOpen(false)}
                 className="px-6 py-2.5 bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white font-bold text-sm rounded-xl hover:scale-105 hover:shadow-glow-purple transition-all text-center flex justify-center"
               >
                 LOGIN

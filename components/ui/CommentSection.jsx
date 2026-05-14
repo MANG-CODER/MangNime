@@ -200,12 +200,20 @@ export default function CommentSection({ topicId, title = "Comments" }) {
 
     return (
       <div
-        className={`flex gap-3 md:gap-4 group ${isReply ? "mt-4 ml-6 md:ml-12 border-l-2 border-white/5 pl-4" : "mt-8"}`}
+        // ✅ FIX NESTED REPLY MOBILE: Pakai margin kiri yang kecil di sm/md, baru besar di lg/desktop
+        className={`flex gap-3 md:gap-4 group overflow-hidden ${
+          isReply
+            ? "mt-4 ml-2 sm:ml-4 md:ml-12 border-l border-white/10 pl-2 sm:pl-3 md:pl-4"
+            : "mt-8"
+        }`}
       >
         <img
           src={comment.user_avatar}
           alt="Avatar"
-          className="w-10 h-10 rounded-full object-cover shrink-0 border border-white/10 bg-[#151226]"
+          // ✅ FIX AVATAR MOBILE: Ukuran avatar lebih kecil kalau dia merupakan balasan
+          className={`rounded-full object-cover shrink-0 border border-white/10 bg-[#151226] ${
+            isReply ? "w-8 h-8 md:w-10 md:h-10" : "w-10 h-10"
+          }`}
         />
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -308,7 +316,6 @@ export default function CommentSection({ topicId, title = "Comments" }) {
   const parentComments = comments.filter((c) => !c.parent_id);
 
   return (
-    // DI SINI KUNCINYA: w-full max-w-[1200px] (Sangat lebar namun tetap proporsional & Rata Tengah)
     <div className="mt-16 w-full max-w-[1200px] mx-auto bg-[#0D0B1A] rounded-2xl border border-white/5 p-6 md:p-10 shadow-xl animate-fade-in">
       <div className="bg-[#151226]/80 rounded-2xl border border-white/10 p-1 mb-10 shadow-inner">
         {user ? (

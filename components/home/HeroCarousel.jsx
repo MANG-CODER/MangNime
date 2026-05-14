@@ -117,7 +117,8 @@ export default function HeroCarousel({ items }) {
               Sedang Populer
             </div>
 
-            <h2 className="font-heading text-4xl md:text-5xl lg:text-7xl font-black text-white leading-[1.1] drop-shadow-2xl">
+            {/* ✅ PERBAIKAN: Menambahkan line-clamp-2 md:line-clamp-3 pada judul */}
+            <h2 className="font-heading text-4xl md:text-5xl lg:text-7xl font-black text-white leading-[1.1] drop-shadow-2xl line-clamp-2 md:line-clamp-3">
               {currentAnime.title}
             </h2>
 

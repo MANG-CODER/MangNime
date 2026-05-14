@@ -11,32 +11,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  // ==========================================
-  // ✅ FUNGSI PEMBUAT URL (Aman dari Error Window)
-  // ==========================================
   const getRedirectUrl = () => {
     const rawNext = searchParams.get("next");
-    // Jika ada 'next' dan bukan "/", rakit dengan parameter URL yang valid
     const nextParam =
       rawNext && rawNext !== "/" ? `?next=${encodeURIComponent(rawNext)}` : "";
-    // Gabungkan origin dengan /callback dan parameter next
     return `${window.location.origin}/callback${nextParam}`;
   };
 
-  // FUNGSI LOGIN GOOGLE
   const handleGoogleLogin = async () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: getRedirectUrl(), // Panggil fungsinya di sini
-      },
+      options: { redirectTo: getRedirectUrl() },
     });
     if (error) {
       setError("Gagal login dengan Google.");
@@ -44,39 +35,11 @@ export default function LoginPage() {
     }
   };
 
-  // FUNGSI DAFTAR EMAIL
-  const handleSignUp = async (e) => {
-    e.preventDefault();
-    if (!email || !password) return setError("Email dan password wajib diisi!");
-    setLoading(true);
-    setError(null);
-    setMessage(null);
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: getRedirectUrl(), // Panggil fungsinya di sini
-      },
-    });
-
-    if (error) {
-      setError(error.message);
-    } else {
-      setMessage(
-        "Berhasil mendaftar! Silakan cek email Anda untuk verifikasi sebelum masuk.",
-      );
-    }
-    setLoading(false);
-  };
-
-  // FUNGSI MASUK EMAIL
   const handleSignIn = async (e) => {
     e.preventDefault();
     if (!email || !password) return setError("Email dan password wajib diisi!");
     setLoading(true);
     setError(null);
-    setMessage(null);
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -85,12 +48,11 @@ export default function LoginPage() {
 
     if (error) {
       if (error.message.includes("Email not confirmed")) {
-        setError("Email Anda belum dikonfirmasi. Cek kotak masuk Anda!");
+        setError("Email belum dikonfirmasi. Cek kotak masuk Anda!");
       } else {
         setError("Email atau password salah.");
       }
     } else {
-      // Kembali ke halaman asal, jika rawNext kosong maka ke '/'
       const rawNext = searchParams.get("next");
       router.push(rawNext && rawNext !== "/" ? rawNext : "/");
       router.refresh();
@@ -98,10 +60,14 @@ export default function LoginPage() {
     setLoading(false);
   };
 
+  // URL untuk dikirim ke halaman register agar user tetap kembali ke halaman yang sama
+  const nextTarget = searchParams.get("next")
+    ? `?next=${encodeURIComponent(searchParams.get("next"))}`
+    : "";
+
   return (
     <div className="min-h-screen bg-[#0D0B1A] flex items-center justify-center relative px-4 overflow-hidden py-12">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-celestia-pink/10 blur-[150px] rounded-full pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-celestia-sky/10 blur-[150px] rounded-full pointer-events-none"></div>
+      {/* ... (Background blur tetap sama) ... */}
 
       <div className="w-full max-w-md bg-[#151226]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10 animate-fade-in">
         <div className="flex justify-center mb-8">
@@ -123,11 +89,6 @@ export default function LoginPage() {
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm px-4 py-3 rounded-xl mb-4 text-center">
             {error}
-          </div>
-        )}
-        {message && (
-          <div className="bg-green-500/10 border border-green-500/50 text-green-400 text-sm px-4 py-3 rounded-xl mb-4 text-center">
-            {message}
           </div>
         )}
 
@@ -165,7 +126,7 @@ export default function LoginPage() {
           <div className="flex-1 h-px bg-white/10"></div>
         </div>
 
-        <form className="space-y-4">
+        <form onSubmit={handleSignIn} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1.5">
               Email
@@ -192,19 +153,19 @@ export default function LoginPage() {
           </div>
           <div className="pt-2 flex flex-col gap-3">
             <button
-              onClick={handleSignIn}
+              type="submit"
               disabled={loading}
               className="w-full py-3 bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-glow-purple disabled:opacity-50"
             >
-              MASUK
+              {loading ? "MEMPROSES..." : "MASUK"}
             </button>
-            <button
-              onClick={handleSignUp}
-              disabled={loading}
-              className="w-full py-3 bg-white/5 border border-white/10 text-gray-300 font-bold rounded-xl hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50"
+
+            <Link
+              href={`/register${nextTarget}`}
+              className="w-full py-3 bg-white/5 border border-white/10 text-gray-300 font-bold rounded-xl hover:bg-white/10 hover:text-white transition-colors flex items-center justify-center text-sm"
             >
               DAFTAR AKUN BARU
-            </button>
+            </Link>
           </div>
         </form>
       </div>

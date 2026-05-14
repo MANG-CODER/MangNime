@@ -99,7 +99,7 @@ export default function Footer() {
                   href="/komik/genres"
                   className="hover:text-celestia-lavender hover:translate-x-1 transition-all inline-block"
                 >
-                  Genre Komik
+                  Daftar Genre
                 </Link>
               </li>
             </ul>
