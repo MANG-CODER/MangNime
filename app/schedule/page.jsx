@@ -5,7 +5,7 @@ export const metadata = { title: "Jadwal Rilis Anime - MangNime" };
 
 export default async function SchedulePage() {
   const res = await fetchWithDelay(API_ENDPOINTS.SCHEDULE, 500, {
-    next: { revalidate: 3600 },
+    next: { revalidate: 86400 },
   });
 
   // Ambil langsung array datanya berdasarkan JSON

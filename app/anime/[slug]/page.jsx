@@ -6,6 +6,8 @@ import BackButton from "@/components/ui/BackButton";
 import CommentSection from "@/components/ui/CommentSection";
 import AnimeActionButtons from "@/components/anime/AnimeActionButtons";
 
+export const revalidate = 3600;
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
 

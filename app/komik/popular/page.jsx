@@ -18,9 +18,11 @@ export default async function PopularKomikPage({ searchParams }) {
   const page = parseInt(resolvedParams?.page || 1);
   const category = resolvedParams?.category || "all";
 
-  // 1. FETCH API UTAMA (Pakai Parameter Category)
+  // 1. FETCH API UTAMA (Masukkan delay 1000ms dan opsi revalidate)
   let res = await fetchKomikAPI(
     `/popular?category=${category}&page=${page}&take=20`,
+    1000,
+    { next: { revalidate: 3600 } }, // ✅ FETCH-LEVEL CACHING
   );
 
   // 2. FALLBACK JIKA API POPULAR NGAMBEK (Status 400/500)
@@ -29,11 +31,14 @@ export default async function PopularKomikPage({ searchParams }) {
       `Fallback Advance Search untuk populer (Kategori: ${category})...`,
     );
     const formatFilter = category !== "all" ? `&format=${category}` : "";
+
+    // ✅ Terapkan juga revalidate di fallback-nya
     res = await fetchKomikAPI(
       `/advanceSearch?sort=popular&sortOrder=desc&page=${page}${formatFilter}`,
+      1000,
+      { next: { revalidate: 3600 } },
     );
   }
-
   const rawData = res?.data?.data || res?.data || [];
   const meta = res?.data?.meta || res?.meta || null;
 

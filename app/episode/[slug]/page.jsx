@@ -16,6 +16,8 @@ async function getEpisodeData(slug) {
   return res?.data || res || null;
 }
 
+export const revalidate = 86400;
+
 export default async function EpisodePage({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams.slug;

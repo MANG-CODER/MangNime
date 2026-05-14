@@ -20,6 +20,8 @@ export async function generateMetadata({ params }) {
   };
 }
 
+export const revalidate = 3600;
+
 export default async function DetailKomikPage({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams.slug;

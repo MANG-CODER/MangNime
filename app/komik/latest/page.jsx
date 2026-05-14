@@ -5,11 +5,14 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export const metadata = { title: "Komik Update Terbaru - MangNime" };
 
+
 export default async function LatestKomikPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams?.page || 1);
 
-  const res = await fetchKomikAPI(`/latest?page=${page}`);
+  const res = await getLatestKomik(page, {
+    next: { revalidate: 3600 },
+  });
   const komikList = res?.data?.data || res?.data || [];
   const meta = res?.data?.meta || res?.meta || null;
 

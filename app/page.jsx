@@ -11,6 +11,8 @@ export const metadata = {
   title: "MangNime - Streaming Anime & Baca Komik Gratis",
 };
 
+export const revalidate = 3600;
+
 export default async function Home() {
   let ongoingList = [];
   let completedList = [];
