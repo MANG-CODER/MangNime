@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import EmojiPicker from "emoji-picker-react";
 import { usePathname } from "next/navigation";
-import Link from "next/link"; // Pastikan import Link
+import Link from "next/link";
 
 export default function CommentSection({ topicId, title = "Comments" }) {
   const pathname = usePathname();
@@ -308,8 +308,8 @@ export default function CommentSection({ topicId, title = "Comments" }) {
   const parentComments = comments.filter((c) => !c.parent_id);
 
   return (
-    // Mengubah Container agar independent lebar (Rata Tengah & max-w-[1000px])
-    <div className="mt-16 max-w-[1000px] mx-auto bg-[#0D0B1A] rounded-2xl border border-white/5 p-6 md:p-8 shadow-xl animate-fade-in">
+    // DI SINI KUNCINYA: w-full max-w-[1200px] (Sangat lebar namun tetap proporsional & Rata Tengah)
+    <div className="mt-16 w-full max-w-[1200px] mx-auto bg-[#0D0B1A] rounded-2xl border border-white/5 p-6 md:p-10 shadow-xl animate-fade-in">
       <div className="bg-[#151226]/80 rounded-2xl border border-white/10 p-1 mb-10 shadow-inner">
         {user ? (
           <form onSubmit={handleSubmit} className="relative p-4 md:p-5">

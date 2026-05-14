@@ -15,7 +15,12 @@ export default function LoginPage() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/"; // ✅ ambil halaman asal
+
+  // Jika parameter next kosong atau '/' (dari home), kita set kosong
+  const rawNext = searchParams.get("next");
+  const nextTarget = !rawNext || rawNext === "/" ? "" : `?next=${rawNext}`;
+  const redirectUrl = `${window.location.origin}/auth/callback${nextTarget}`;
+
   const supabase = createClient();
 
   // FUNGSI LOGIN GOOGLE
@@ -24,7 +29,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${next}`, // ✅
+        redirectTo: redirectUrl, // Menggunakan URL yang sudah difilter
       },
     });
     if (error) {
@@ -45,7 +50,7 @@ export default function LoginPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${next}`, // ✅
+        emailRedirectTo: redirectUrl,
       },
     });
 
@@ -79,7 +84,8 @@ export default function LoginPage() {
         setError("Email atau password salah.");
       }
     } else {
-      router.push(next); // ✅ balik ke halaman asal
+      // Kembali ke halaman asal, jika rawNext kosong maka ke '/'
+      router.push(rawNext || "/");
       router.refresh();
     }
     setLoading(false);

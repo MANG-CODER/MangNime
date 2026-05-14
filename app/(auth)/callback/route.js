@@ -5,8 +5,23 @@ import { NextResponse } from "next/server";
 export async function GET(request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/"; // Default ke beranda
 
+  // Jika next kosong, atau "/", maka arahkan ke origin (beranda)
+  const nextRaw = searchParams.get("next");
+  const nextTarget = !nextRaw || nextRaw === "/" ? "" : nextRaw;
+
+  // Membaca domain asli dari Load Balancer Vercel (Sangat Penting)
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const isLocalEnv = process.env.NODE_ENV === "development";
+
+  // Menentukan Base URL yang benar (Localhost vs Vercel)
+  const baseUrl = isLocalEnv
+    ? origin
+    : forwardedHost
+      ? `https://${forwardedHost}`
+      : origin;
+
+  // 1. Jika ada 'code', lakukan autentikasi session
   if (code) {
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -29,35 +44,11 @@ export async function GET(request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // =================================================================
-      // KUNCI PERBAIKAN VERCEL: Gunakan X-Forwarded-Host
-      // Memastikan domain dan HTTPS tetap aman saat melewati Load Balancer
-      // =================================================================
-      const forwardedHost = request.headers.get("x-forwarded-host");
-      const isLocalEnv = process.env.NODE_ENV === "development";
-
-      if (isLocalEnv) {
-        // Jika jalan di localhost PC Anda
-        return NextResponse.redirect(`${origin}${next}`);
-      } else if (forwardedHost) {
-        // Jika jalan di Vercel (Produksi)
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
-      } else {
-        // Fallback terakhir
-        return NextResponse.redirect(`${origin}${next}`);
-      }
+      // Redirect ke target! Jika nextTarget kosong, dia akan redirect ke baseUrl (Home)
+      return NextResponse.redirect(`${baseUrl}${nextTarget}`);
     }
   }
 
-  // JIKA ERROR ATAU TIDAK ADA CODE (Misal: User batal login)
-  // Terapkan keamanan Vercel di sini juga
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const isLocalEnv = process.env.NODE_ENV === "development";
-  const baseUrl = isLocalEnv
-    ? origin
-    : forwardedHost
-      ? `https://${forwardedHost}`
-      : origin;
-
+  // 2. Jika kode tidak ada atau error saat menukar token, balik ke Login
   return NextResponse.redirect(`${baseUrl}/login?error=auth_failed`);
 }
