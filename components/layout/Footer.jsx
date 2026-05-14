@@ -33,7 +33,7 @@ export default function Footer() {
           <div className="space-y-6">
             <h4 className="text-white font-black text-lg flex items-center gap-2">
               <span className="w-1.5 h-5 bg-celestia-lavender rounded-full shadow-glow-lavender"></span>
-              Navigasi
+              Navigasi Anime
             </h4>
             <ul className="space-y-3 text-sm font-medium text-gray-400">
               <li>
@@ -66,6 +66,40 @@ export default function Footer() {
                   className="hover:text-celestia-lavender hover:translate-x-1 transition-all inline-block"
                 >
                   Daftar Genre
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Navigation Komik */}
+          <div className="space-y-6">
+            <h4 className="text-white font-black text-lg flex items-center gap-2">
+              <span className="w-1.5 h-5 bg-celestia-lavender rounded-full shadow-glow-lavender"></span>
+              Navigasi Komik
+            </h4>
+            <ul className="space-y-3 text-sm font-medium text-gray-400">
+              <li>
+                <Link
+                  href="/komik/latest"
+                  className="hover:text-celestia-lavender hover:translate-x-1 transition-all inline-block"
+                >
+                  Komik Terbaru
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/komik/popular"
+                  className="hover:text-celestia-lavender hover:translate-x-1 transition-all inline-block"
+                >
+                  Komik Populer
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/komik/genres"
+                  className="hover:text-celestia-lavender hover:translate-x-1 transition-all inline-block"
+                >
+                  Genre Komik
                 </Link>
               </li>
             </ul>
