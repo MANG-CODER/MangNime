@@ -43,6 +43,9 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
 
     if (error) {
@@ -54,7 +57,6 @@ export default function LoginPage() {
     }
     setLoading(false);
   };
-
   // FUNGSI MASUK EMAIL
   const handleSignIn = async (e) => {
     e.preventDefault();
