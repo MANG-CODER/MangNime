@@ -45,7 +45,7 @@ export default function Loading() {
           {/* Icon diam di tengah */}
           <div className="relative w-12 h-12">
             <Image
-              src="/img/icon.png"
+              src="/img/Icon.png"
               alt="Loading Icon"
               fill
               className="object-contain"
