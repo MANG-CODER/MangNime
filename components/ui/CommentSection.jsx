@@ -195,22 +195,49 @@ export default function CommentSection({ topicId, title = "Comments" }) {
     }
   };
 
-  const CommentItem = ({ comment, isReply = false }) => {
-    const childComments = comments.filter((c) => c.parent_id === comment.id);
+  // =========================================================================
+  // ✅ LOGIKA BARU: DROPDOWN FLAT UNTUK BALASAN (TIDAK NESTED)
+  // =========================================================================
+  const CommentItem = ({ comment, isReply = false, topLevelId = null }) => {
+    const [showReplies, setShowReplies] = useState(false);
+
+    // Kumpulkan SEMUA turunan (balasan dari balasan) jika ini adalah komentar utama
+    let descendants = [];
+    if (!isReply) {
+      const getDescendants = (parentId) => {
+        let result = [];
+        const children = comments.filter((c) => c.parent_id === parentId);
+        children.forEach((child) => {
+          result.push(child);
+          result = result.concat(getDescendants(child.id));
+        });
+        return result;
+      };
+
+      // Mengurutkan balasan dari yang terlama ke terbaru agar bacanya nyambung
+      descendants = getDescendants(comment.id).sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at),
+      );
+    }
+
+    // Deteksi jika komentar ini membalas komentar anak lain, tambahkan @username
+    let replyToUsername = null;
+    if (isReply && comment.parent_id !== topLevelId) {
+      const repliedComment = comments.find((c) => c.id === comment.parent_id);
+      if (repliedComment) replyToUsername = repliedComment.user_name;
+    }
 
     return (
       <div
-        // ✅ FIX NESTED REPLY MOBILE: Pakai margin kiri yang kecil di sm/md, baru besar di lg/desktop
         className={`flex gap-3 md:gap-4 group overflow-hidden ${
           isReply
-            ? "mt-4 ml-2 sm:ml-4 md:ml-12 border-l border-white/10 pl-2 sm:pl-3 md:pl-4"
+            ? "mt-4 ml-4 md:ml-12 border-l border-white/10 pl-3 md:pl-4"
             : "mt-8"
         }`}
       >
         <img
           src={comment.user_avatar}
           alt="Avatar"
-          // ✅ FIX AVATAR MOBILE: Ukuran avatar lebih kecil kalau dia merupakan balasan
           className={`rounded-full object-cover shrink-0 border border-white/10 bg-[#151226] ${
             isReply ? "w-8 h-8 md:w-10 md:h-10" : "w-10 h-10"
           }`}
@@ -235,8 +262,15 @@ export default function CommentSection({ topicId, title = "Comments" }) {
           </div>
 
           <p className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed mb-2">
+            {/* Tampilkan @username penanda reply di sini */}
+            {replyToUsername && (
+              <span className="text-celestia-pink font-bold mr-1.5">
+                @{replyToUsername}
+              </span>
+            )}
             {comment.content}
           </p>
+
           {comment.image_url && (
             <img
               src={comment.image_url}
@@ -305,9 +339,31 @@ export default function CommentSection({ topicId, title = "Comments" }) {
               ))}
           </div>
 
-          {childComments.map((child) => (
-            <CommentItem key={child.id} comment={child} isReply={true} />
-          ))}
+          {/* TOMBOL DROPDOWN LIHAT BALASAN (Hanya untuk Komentar Induk) */}
+          {!isReply && descendants.length > 0 && (
+            <button
+              onClick={() => setShowReplies(!showReplies)}
+              className="mt-3 flex items-center gap-2 text-xs font-bold text-celestia-pink hover:text-white transition-colors bg-celestia-pink/10 hover:bg-celestia-pink/20 px-4 py-1.5 rounded-full w-max"
+            >
+              {showReplies
+                ? "Sembunyikan Balasan ▲"
+                : `Lihat ${descendants.length} Balasan ▼`}
+            </button>
+          )}
+
+          {/* DAFTAR BALASAN FLAT SATU JALUR */}
+          {!isReply && showReplies && (
+            <div className="mt-2 flex flex-col">
+              {descendants.map((child) => (
+                <CommentItem
+                  key={child.id}
+                  comment={child}
+                  isReply={true}
+                  topLevelId={comment.id}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
