@@ -5,7 +5,6 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export const metadata = { title: "Komik Populer - MangNime" };
 
-// DAFTAR FILTER KATEGORI (Mirip Mugenime)
 const POPULAR_FILTERS = [
   { id: "all", label: "🔥 Trending" },
   { id: "manga", label: "Best Manga" },
@@ -18,45 +17,21 @@ export default async function PopularKomikPage({ searchParams }) {
   const page = parseInt(resolvedParams?.page || 1);
   const category = resolvedParams?.category || "all";
 
-  // 1. FETCH API UTAMA (Masukkan delay 1000ms dan opsi revalidate)
-  let res = await fetchKomikAPI(
+  const res = await fetchKomikAPI(
     `/popular?category=${category}&page=${page}&take=20`,
-    1000,
-    { next: { revalidate: 3600 } }, // ✅ FETCH-LEVEL CACHING
+    0,
+    { next: { revalidate: 3600 } },
   );
 
-  // 2. FALLBACK JIKA API POPULAR NGAMBEK (Status 400/500)
-  if (!res || !res.data) {
-    console.log(
-      `Fallback Advance Search untuk populer (Kategori: ${category})...`,
-    );
-    const formatFilter = category !== "all" ? `&format=${category}` : "";
-
-    // ✅ Terapkan juga revalidate di fallback-nya
-    res = await fetchKomikAPI(
-      `/advanceSearch?sort=popular&sortOrder=desc&page=${page}${formatFilter}`,
-      1000,
-      { next: { revalidate: 3600 } },
-    );
-  }
-  const rawData = res?.data?.data || res?.data || [];
+  // ✅ Data dari Deno sudah dinormalisasi — langsung pakai, tidak perlu unwrap lagi
+  const komikList = res?.data?.data || res?.data || [];
   const meta = res?.data?.meta || res?.meta || null;
 
-  // 3. NORMALISASI STRUKTUR DATA
-  const komikList = rawData.map((item) => {
-    const komikData = item.data ? item.data : item;
-    return {
-      ...komikData,
-      cover: komikData.cover || komikData.coverImage || komikData.image,
-    };
-  });
-
-  // 4. MAPPING PAGINATION
+  // Pagination
   let paginationData = null;
-  if (meta && meta.lastPage) {
+  if (meta?.lastPage) {
     const currentPageNum = Number(meta.page || page || 1);
     const totalPagesNum = Number(meta.lastPage || 1);
-
     paginationData = {
       currentPage: currentPageNum,
       totalPages: totalPagesNum,
@@ -70,7 +45,7 @@ export default async function PopularKomikPage({ searchParams }) {
   return (
     <div className="min-h-screen bg-[#0D0B1A] pt-32 pb-20 px-4">
       <div className="container mx-auto max-w-[1400px] animate-fade-in">
-        {/* HEADER SECTION MIRIP MUGENIME */}
+        {/* HEADER */}
         <div className="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-12 mb-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-celestia-lavender/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3"></div>
           <div className="relative z-10">
@@ -122,26 +97,23 @@ export default async function PopularKomikPage({ searchParams }) {
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {POPULAR_FILTERS.map((filter) => {
-              const isActive = category === filter.id;
-              return (
-                <Link
-                  key={filter.id}
-                  href={`/komik/popular?category=${filter.id}`}
-                  className={`px-5 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
-                    isActive
-                      ? "bg-celestia-lavender text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
-                      : "bg-transparent text-gray-400 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  {filter.label}
-                </Link>
-              );
-            })}
+            {POPULAR_FILTERS.map((filter) => (
+              <Link
+                key={filter.id}
+                href={`/komik/popular?category=${filter.id}`}
+                className={`px-5 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  category === filter.id
+                    ? "bg-celestia-lavender text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                    : "bg-transparent text-gray-400 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {filter.label}
+              </Link>
+            ))}
           </div>
         </div>
 
-        {/* KONTEN KARTU KOMIK */}
+        {/* KONTEN */}
         {komikList.length > 0 ? (
           <>
             <div
@@ -155,9 +127,6 @@ export default async function PopularKomikPage({ searchParams }) {
               ))}
             </div>
 
-            {/* PAGINASI */}
-
-            {/* PAGINASI KUSTOM UNTUK MEMPERTAHANKAN FILTER */}
             {paginationData && (
               <div className="mt-12 flex justify-center">
                 <PopularPagination
@@ -177,9 +146,6 @@ export default async function PopularKomikPage({ searchParams }) {
   );
 }
 
-// ==========================================
-// KOMPONEN PAGINATION KHUSUS POPULER
-// ==========================================
 function PopularPagination({ pagination, category }) {
   if (!pagination || pagination.totalPages <= 1) return null;
 
@@ -191,11 +157,8 @@ function PopularPagination({ pagination, category }) {
     nextPage,
     totalPages,
   } = pagination;
-
-  // Fungsi merakit URL yang aman dari dobel tanda tanya
-  const createUrl = (targetPage) => {
-    return `/komik/popular?category=${category}&page=${targetPage}`;
-  };
+  const createUrl = (targetPage) =>
+    `/komik/popular?category=${category}&page=${targetPage}`;
 
   return (
     <div className="flex items-center justify-center gap-2 w-full">

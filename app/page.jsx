@@ -95,6 +95,42 @@ export default async function Home() {
             </div>
           )}
         </section>
+        
+        {/* Completed Anime */}
+        <section>
+          <div className="flex justify-between items-center mb-8 border-t border-white/5 pt-10">
+            <h2 className="font-heading text-2xl md:text-4xl font-black flex items-center gap-4 text-white drop-shadow-lg">
+              <span className="w-2 h-10 bg-celestia-gold rounded-full shadow-[0_0_15px_rgba(255,108,155,0.8)]"></span>
+              Anime{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-celestia-gold to-celestia-pink">
+                Completed
+              </span>
+            </h2>
+            <Link
+              href="/completed"
+              className="group flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-gray-300 transition-all"
+            >
+              Lihat Semua
+              <span className="bg-white/5 group-hover:bg-gray-500 group-hover:text-white px-2.5 py-1 rounded-lg transition-all">
+                &rarr;
+              </span>
+            </Link>
+          </div>
+
+          {completedList.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8">
+              {completedList.slice(0, 10).map((anime, idx) => (
+                <ScrollReveal key={idx}>
+                  <AnimeCard anime={anime} index={idx} />
+                </ScrollReveal>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-500 font-light border border-white/5 rounded-2xl bg-white/[0.02]">
+              Sedang memuat tayangan...
+            </div>
+          )}
+        </section>
 
         {/* =========================================
             SEGMEN KOMIK
@@ -171,41 +207,7 @@ export default async function Home() {
           )}
         </section>
 
-        {/* Completed Anime */}
-        <section>
-          <div className="flex justify-between items-center mb-8 border-t border-white/5 pt-10">
-            <h2 className="font-heading text-2xl md:text-4xl font-black flex items-center gap-4 text-white drop-shadow-lg">
-              <span className="w-2 h-10 bg-celestia-gold rounded-full shadow-[0_0_15px_rgba(255,108,155,0.8)]"></span>
-              Anime{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-celestia-gold to-celestia-pink">
-                Completed
-              </span>
-            </h2>
-            <Link
-              href="/completed"
-              className="group flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-gray-300 transition-all"
-            >
-              Lihat Semua
-              <span className="bg-white/5 group-hover:bg-gray-500 group-hover:text-white px-2.5 py-1 rounded-lg transition-all">
-                &rarr;
-              </span>
-            </Link>
-          </div>
-
-          {completedList.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8">
-              {completedList.slice(0, 10).map((anime, idx) => (
-                <ScrollReveal key={idx}>
-                  <AnimeCard anime={anime} index={idx} />
-                </ScrollReveal>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-10 text-gray-500 font-light border border-white/5 rounded-2xl bg-white/[0.02]">
-              Sedang memuat tayangan...
-            </div>
-          )}
-        </section>
+        
       </div>
 
       <CommentSection

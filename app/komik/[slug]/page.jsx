@@ -6,13 +6,12 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 import Button from "@/components/ui/Button";
 import KomikActionButtons from "@/components/komik/KomikActionButtons";
 import CommentSection from "@/components/ui/CommentSection";
+import BackButton from "@/components/ui/BackButton";
 
-// Konfigurasi Metadata SEO Otomatis
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
   const res = await fetchKomikAPI(`/komik/${resolvedParams.slug}`);
   const komik = res?.data || null;
-
   if (!komik) return { title: "Komik Tidak Ditemukan - MangNime" };
   return {
     title: `${komik.title} - MangNime`,
@@ -26,14 +25,21 @@ export default async function DetailKomikPage({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams.slug;
 
-  // FETCH DATA DETAIL KOMIK
-  const res = await fetchKomikAPI(`/komik/${slug}`);
-  const komik = res?.data || null;
+  // ✅ Fetch detail + latest sekaligus untuk rekomendasi
+  const [komikRes, latestRes] = await Promise.all([
+    fetchKomikAPI(`/komik/${slug}`),
+    fetchKomikAPI(`/latest?page=1`, 0, { next: { revalidate: 1800 } }),
+  ]);
+
+  const komik = komikRes?.data || null;
+  // ✅ Pakai latest sebagai rekomendasi, filter komik yang sedang dibaca
+  const recommendations = (latestRes?.data?.data || latestRes?.data || [])
+    .filter((item) => item.slug !== slug)
+    .slice(0, 6);
 
   if (!komik) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-6 px-4 animate-fade-in">
-        {/* Gambar Maskot / Icon 404 */}
         <div className="relative w-64 h-64 md:w-80 md:h-80 hover:scale-105 transition-transform duration-500">
           <Image
             src="/img/404icon.png"
@@ -43,8 +49,6 @@ export default async function DetailKomikPage({ params }) {
             priority
           />
         </div>
-
-        {/* Bagian Teks */}
         <div className="space-y-2">
           <h1 className="text-7xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-celestia-pink to-celestia-lavender drop-shadow-lg">
             404
@@ -53,12 +57,9 @@ export default async function DetailKomikPage({ params }) {
             Halaman Tidak Ditemukan
           </h2>
         </div>
-
         <p className="text-gray-400 max-w-md leading-relaxed text-sm md:text-base">
           Gulungan sihir komik ini tidak ditemukan.
         </p>
-
-        {/* Tombol Aksi */}
         <div className="pt-4 relative z-10">
           <Button href="/" variant="primary" size="md">
             Kembali ke beranda
@@ -68,19 +69,14 @@ export default async function DetailKomikPage({ params }) {
     );
   }
 
-  // Persiapan Variabel Data
   const bgImage = komik.backgroundImage || komik.cover;
   const chapters = komik.readChapter || [];
-  const recommendations = komik.recommended || [];
-
-  // Mencari chapter pertama (untuk tombol Mulai Membaca)
   const firstChapter =
     chapters.length > 0 ? chapters[chapters.length - 1] : null;
 
   return (
-    // Container utama ditambahkan 'relative'
     <div className="min-h-screen bg-[#0D0B1A] pb-20 relative animate-fade-in">
-      {/* 1. HERO & BACKGROUND BANNER (FORMULA ANTI-GAP) */}
+      {/* HERO BACKGROUND */}
       <div className="absolute top-0 left-0 w-full h-[450px] md:h-[550px] lg:h-[700px] z-0 overflow-hidden">
         <Image
           src={bgImage}
@@ -93,10 +89,13 @@ export default async function DetailKomikPage({ params }) {
         <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#0D0B1A] via-[#0D0B1A] to-transparent translate-y-[1px]"></div>
       </div>
 
-      {/* 2. KONTEN DETAIL UTAMA */}
+      {/* KONTEN DETAIL UTAMA */}
       <div className="container mx-auto px-4 md:px-6 max-w-[1200px] pt-28 md:pt-36 relative z-10">
+        <div className="mb-6">
+          <BackButton />
+        </div>
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12 md:items-start mt-6 md:mt-8">
-          {/* KIRI: Cover Komik */}
+          {/* Cover */}
           <div className="w-56 sm:w-64 md:w-72 lg:w-80 flex-shrink-0 mx-auto md:mx-0 group">
             <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] border border-white/10">
               <Image
@@ -107,7 +106,6 @@ export default async function DetailKomikPage({ params }) {
                 sizes="(max-width: 768px) 100vw, 300px"
                 priority
               />
-              {/* Badge Tipe di Sudut Kiri Atas Cover */}
               {komik.format && (
                 <div className="absolute top-3 left-3 bg-celestia-royal/90 backdrop-blur-md text-white text-xs font-black tracking-widest px-3 py-1.5 rounded-lg uppercase shadow-lg">
                   {komik.format}
@@ -116,28 +114,24 @@ export default async function DetailKomikPage({ params }) {
             </div>
           </div>
 
-          {/* KANAN: Informasi Komik */}
+          {/* Info */}
           <div className="flex-1 w-full text-center md:text-left flex flex-col items-center md:items-start">
-            {/* Native Title */}
             {komik.nativeTitle && (
               <h3 className="text-celestia-gold/80 font-medium text-sm md:text-base mb-2 mt-4 md:mt-0">
                 {komik.nativeTitle}
               </h3>
             )}
-
-            {/* Title */}
             <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-black text-white leading-tight drop-shadow-2xl mb-4">
               {komik.title}
             </h1>
 
-            {/* Badges Info Cepat */}
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2">
               <span className="flex items-center gap-1.5 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-3 py-1.5 rounded-full text-sm font-bold shadow-[0_0_10px_rgba(234,179,8,0.2)]">
                 ★ {komik.rating} / 10
               </span>
               <span
                 className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
-                  komik.status.toLowerCase() === "ongoing"
+                  komik.status?.toLowerCase() === "ongoing"
                     ? "bg-green-500/10 text-green-400 border-green-500/20"
                     : "bg-blue-500/10 text-blue-400 border-blue-500/20"
                 }`}
@@ -154,7 +148,7 @@ export default async function DetailKomikPage({ params }) {
               )}
             </div>
 
-            {/* List Genre */}
+            {/* ✅ Genre fix: pakai genre.name langsung, bukan genre.data?.name */}
             <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-6">
               {komik.genres?.map((genre, idx) => (
                 <Link
@@ -162,12 +156,11 @@ export default async function DetailKomikPage({ params }) {
                   href={`/search?type=komik&genreIds=${genre.id}`}
                   className="text-[11px] font-black uppercase tracking-widest px-4 py-1.5 bg-white/5 text-gray-300 hover:text-white border border-white/10 hover:border-celestia-pink rounded-full transition-all"
                 >
-                  {genre.data?.name}
+                  {genre.name}
                 </Link>
               ))}
             </div>
 
-            {/* ACTION BUTTONS (CLIENT) */}
             <KomikActionButtons
               komik={komik}
               slug={slug}
@@ -177,10 +170,9 @@ export default async function DetailKomikPage({ params }) {
         </div>
       </div>
 
-      {/* 3. KONTEN BAWAH: SINOPSIS & DAFTAR CHAPTER */}
+      {/* SINOPSIS & CHAPTER & REKOMENDASI */}
       <div className="container mx-auto max-w-[1200px] px-4 pt-16 md:pt-24 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-          {/* KOLOM KIRI (70%): SINOPSIS & CHAPTER */}
           <div className="lg:col-span-2 space-y-12">
             {/* Sinopsis */}
             <ScrollReveal>
@@ -215,8 +207,6 @@ export default async function DetailKomikPage({ params }) {
                     {chapters.length} Chapter
                   </span>
                 </div>
-
-                {/* Scrollable Chapter Box */}
                 <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-5 md:p-8 max-h-[550px] overflow-y-auto custom-scrollbar backdrop-blur-xl shadow-lg">
                   {chapters.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 pr-2">
@@ -245,17 +235,16 @@ export default async function DetailKomikPage({ params }) {
             </ScrollReveal>
           </div>
 
-          {/* KOLOM KANAN (30%): REKOMENDASI */}
+          {/* ✅ Rekomendasi dari latest, pakai field normalizeCard (image, type, score) */}
           <div className="lg:col-span-1">
             <ScrollReveal>
               <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
                 <span className="w-2 h-8 bg-celestia-gold rounded-full shadow-glow-gold"></span>
-                Rekomendasi
+                Terbaru
               </h2>
-
               {recommendations.length > 0 ? (
                 <div className="flex flex-col gap-4">
-                  {recommendations.slice(0, 6).map((rec, idx) => (
+                  {recommendations.map((rec, idx) => (
                     <Link
                       key={idx}
                       href={`/komik/${rec.slug}`}
@@ -263,7 +252,10 @@ export default async function DetailKomikPage({ params }) {
                     >
                       <div className="w-16 md:w-20 aspect-[3/4] shrink-0 relative rounded-xl overflow-hidden bg-black/50 border border-white/5 group-hover:border-celestia-gold/30 transition-colors">
                         <Image
-                          src={rec.cover}
+                          src={
+                            rec.image ||
+                            "https://placehold.co/200x300/151226/8b6cff?text=No+Image"
+                          }
                           alt={rec.title}
                           fill
                           className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -274,9 +266,9 @@ export default async function DetailKomikPage({ params }) {
                           {rec.title}
                         </h4>
                         <span className="text-xs text-gray-400 capitalize flex items-center gap-1.5 bg-black/30 w-max px-2 py-1 rounded-md border border-white/5">
-                          {rec.format} •{" "}
+                          {rec.type} •{" "}
                           <span className="text-celestia-gold font-bold">
-                            ★ {rec.rating}
+                            ★ {rec.score}
                           </span>
                         </span>
                       </div>
@@ -293,7 +285,7 @@ export default async function DetailKomikPage({ params }) {
         </div>
       </div>
 
-      {/* 4. DISKUSI KOMIK (DI LUAR GRID, FULL WIDTH) */}
+      {/* DISKUSI */}
       <div className="container mx-auto max-w-[1200px] px-4 mt-16 relative z-10">
         <ScrollReveal>
           <CommentSection topicId={`komik-${slug}`} title="Diskusi Komik" />
