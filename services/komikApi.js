@@ -15,10 +15,13 @@ export const fetchKomikAPI = async (endpoint, delayMs = 0, options = {}) => {
       headersList.get("x-real-ip") ||
       "Unknown IP";
 
+      const clientUserAgent = headersList.get("user-agent") || "node";
+
     const res = await fetch(`${KOMIK_API_URL}${endpoint}`, {
       headers: {
         Accept: "application/json",
         "x-forwarded-for": clientIp,
+        "User-Agent": clientUserAgent,
         Authorization: `Bearer ${process.env.KOMIK_API_SECRET}`,
       },
       ...options,
