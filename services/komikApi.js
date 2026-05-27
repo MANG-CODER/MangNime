@@ -19,6 +19,7 @@ export const fetchKomikAPI = async (endpoint, delayMs = 0, options = {}) => {
       headers: {
         Accept: "application/json",
         "x-forwarded-for": clientIp,
+        Authorization: `Bearer ${process.env.KOMIK_API_SECRET}`,
       },
       ...options,
     });
