@@ -1,3 +1,5 @@
+import { headers } from "next/headers";
+
 const KOMIK_API_URL = "https://komikcastapi.vestiapani.deno.net/api";
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -6,9 +8,17 @@ export const fetchKomikAPI = async (endpoint, delayMs = 0, options = {}) => {
   try {
     if (delayMs > 0) await delay(delayMs);
 
+    const headersList = await headers();
+
+    const clientIp =
+      headersList.get("x-forwarded-for") ||
+      headersList.get("x-real-ip") ||
+      "Unknown IP";
+
     const res = await fetch(`${KOMIK_API_URL}${endpoint}`, {
       headers: {
         Accept: "application/json",
+        "x-forwarded-for": clientIp,
       },
       ...options,
     });

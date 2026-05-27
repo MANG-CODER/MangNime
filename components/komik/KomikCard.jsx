@@ -7,7 +7,6 @@ export default function KomikCard({ komik }) {
   const slug = itemData.slug || itemData.endpoint || "";
   const title = itemData.title || "Judul Tidak Diketahui";
 
-  // ✅ Tambah itemData.image (field dari normalizeCard scraper.ts)
   const image =
     itemData.image ||
     itemData.coverImage ||
@@ -15,18 +14,15 @@ export default function KomikCard({ komik }) {
     itemData.thumbnail ||
     "https://placehold.co/200x300/151226/8b6cff?text=No+Image";
 
-  // ✅ Cek itemData.chapter (dari normalizeCard) ATAU chapters array
   const latestChapter =
     itemData.chapter ||
     (itemData.chapters?.length > 0 ? itemData.chapters[0].chapterIndex : "");
 
   const score = itemData.score || itemData.rating || "";
-
-  // ✅ Cek itemData.type (dari normalizeCard) ATAU itemData.format
   const type = itemData.type || itemData.format || "";
 
   return (
-    <Link href={`/komik/${slug}`} className="group flex flex-col gap-2">
+    <Link href={`/komik/${slug}`} prefetch={false} className="group flex flex-col gap-2">
       <div className="aspect-[3/4] rounded-xl overflow-hidden relative border border-white/10 bg-[#151226]">
         <Image
           src={image}
@@ -38,7 +34,6 @@ export default function KomikCard({ komik }) {
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
 
-        {/* Badge Tipe (Manga/Manhwa/Manhua) */}
         {type && (
           <span className="absolute top-2 right-2 bg-celestia-pink text-white text-[9px] font-black tracking-widest px-2 py-1 rounded uppercase shadow-lg z-10">
             {type}
