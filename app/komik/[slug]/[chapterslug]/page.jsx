@@ -13,7 +13,7 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export const revalidate = 86400;
+export const revalidate = 604800;
 
 export default async function ReadChapterPage({ params }) {
   const resolvedParams = await params;
