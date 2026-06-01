@@ -4,6 +4,15 @@ import CommentSection from "@/components/ui/CommentSection";
 import BookmarkButton from "@/components/ui/BookmarkButton";
 import ChapterHistoryTracker from "@/components/komik/ChapterHistoryTracker";
 
+function formatDate(dateStr) {
+  if (!dateStr) return null;
+  return new Date(dateStr).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams?.slug || "";
@@ -49,7 +58,6 @@ export default async function ReadChapterPage({ params }) {
     );
   }
 
-  // DIUBAH: fallback ke data.images karena struktur API
   const images = chapterData.data?.images ?? chapterData.images ?? [];
   const komikTitle = chapterData.komikTitle ?? slug.replace(/-/g, " ");
   const chapterIndex = chapterData.chapterIndex;
@@ -96,9 +104,16 @@ export default async function ReadChapterPage({ params }) {
             </svg>
           </Link>
 
-          <h1 className="text-sm md:text-lg font-black text-white truncate text-center flex-1 drop-shadow-md">
-            {pageTitle}
-          </h1>
+          <div className="flex flex-col items-center flex-1 min-w-0">
+            <h1 className="text-sm md:text-lg font-black text-white truncate text-center w-full drop-shadow-md">
+              {pageTitle}
+            </h1>
+            {chapterData.createdAt && (
+              <span className="text-[11px] text-gray-500 mt-0.5">
+                {formatDate(chapterData.createdAt)}
+              </span>
+            )}
+          </div>
 
           <div className="shrink-0 scale-75 origin-right md:scale-90">
             <BookmarkButton
@@ -134,8 +149,6 @@ export default async function ReadChapterPage({ params }) {
           </div>
         )}
       </div>
-
-      {/* DIUBAH: hapus <pre> debug */}
 
       <div className="container mx-auto max-w-3xl px-4 py-10 mt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
         {prevChapterUrl ? (

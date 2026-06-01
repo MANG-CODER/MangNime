@@ -8,6 +8,15 @@ import KomikActionButtons from "@/components/komik/KomikActionButtons";
 import CommentSection from "@/components/ui/CommentSection";
 import BackButton from "@/components/ui/BackButton";
 
+function formatDate(dateStr) {
+  if (!dateStr) return null;
+  return new Date(dateStr).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
   const res = await fetchKomikAPI(`/komik/${resolvedParams.slug}`);
@@ -208,10 +217,17 @@ export default async function DetailKomikPage({ params }) {
                           prefetch={false}
                           className="bg-black/20 border border-white/5 hover:border-celestia-sky/50 hover:bg-celestia-sky/5 hover:shadow-glow-blue px-5 py-4 rounded-2xl flex items-center justify-between group transition-all"
                         >
-                          <span className="font-bold text-sm text-gray-300 group-hover:text-white transition-colors">
-                            Chapter {ch.chapterIndex}
-                          </span>
-                          <span className="text-gray-600 group-hover:text-celestia-sky transform group-hover:translate-x-1 transition-all">
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <span className="font-bold text-sm text-gray-300 group-hover:text-white transition-colors">
+                              Chapter {ch.chapterIndex}
+                            </span>
+                            {ch.createdAt && (
+                              <span className="text-[11px] text-gray-600 group-hover:text-gray-400 transition-colors">
+                                {formatDate(ch.createdAt)}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-gray-600 group-hover:text-celestia-sky transform group-hover:translate-x-1 transition-all shrink-0">
                             &rarr;
                           </span>
                         </Link>
