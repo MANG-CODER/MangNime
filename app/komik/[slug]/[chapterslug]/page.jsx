@@ -49,7 +49,8 @@ export default async function ReadChapterPage({ params }) {
     );
   }
 
-  const images = chapterData.images ?? [];
+  // DIUBAH: fallback ke data.images karena struktur API
+  const images = chapterData.data?.images ?? chapterData.images ?? [];
   const komikTitle = chapterData.komikTitle ?? slug.replace(/-/g, " ");
   const chapterIndex = chapterData.chapterIndex;
   const pageTitle = `${komikTitle} - Chapter ${chapterIndex}`;
@@ -133,6 +134,8 @@ export default async function ReadChapterPage({ params }) {
           </div>
         )}
       </div>
+
+      {/* DIUBAH: hapus <pre> debug */}
 
       <div className="container mx-auto max-w-3xl px-4 py-10 mt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
         {prevChapterUrl ? (
