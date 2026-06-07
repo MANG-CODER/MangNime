@@ -31,7 +31,7 @@ export const metadata = {
     siteName: "MangNime",
     images: [
       {
-        url: "/img/logo.png",
+        url: "/img/Icon.png",
         width: 1200,
         height: 630,
       },
