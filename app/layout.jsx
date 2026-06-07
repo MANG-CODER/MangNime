@@ -17,7 +17,7 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "MangNime - Streaming Anime Gratis",
+  title: "MangNime",
   description:
     "Tempat nonton anime subtitle Indonesia gratis dengan kualitas HD dan tanpa iklan yang menggangu.",
     icons: {
