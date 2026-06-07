@@ -21,8 +21,8 @@ export const metadata = {
   description:
     "Tempat nonton anime subtitle Indonesia gratis dengan kualitas HD dan tanpa iklan yang menggangu.",
     icons: {
-    icon: "/img/Icon.png",
-    apple: "/img/Icon.png",
+    icon: "/img/Icon2.png",
+    apple: "/img/Icon2.png",
   },
   openGraph: {
     title: "MangNime - Streaming Anime Sub Indo Gratis",
