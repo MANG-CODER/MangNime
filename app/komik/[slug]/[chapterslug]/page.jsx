@@ -17,9 +17,82 @@ export async function generateMetadata({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams?.slug || "";
   const currentChapter = resolvedParams?.chapterslug || "";
-  return {
-    title: `Membaca ${slug.replace(/-/g, " ")} - ${currentChapter.replace(/-/g, " ")} | MangNime`,
-  };
+
+  try {
+    const chapterIndexStr = currentChapter
+      .toLowerCase()
+      .replace("chapter-", "");
+    const res = await fetchKomikAPI(`/komik/${slug}/${chapterIndexStr}`);
+    const chapterData = res?.data ?? null;
+
+    if (!chapterData) throw new Error("Data tidak ada");
+
+    const komikTitle =
+      chapterData.komikTitle ||
+      slug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    const chapterIndex = chapterData.chapterIndex;
+
+    const ogTitle = `${komikTitle} Chapter ${chapterIndex} Bahasa Indonesia | MangNime`;
+    const ogDescription = `Baca ${komikTitle} Chapter ${chapterIndex} bahasa Indonesia gratis di MangNime. Update chapter terbaru setiap hari.`;
+
+    // Gunakan halaman pertama chapter sebagai gambar OG
+    const images = chapterData.data?.images ?? chapterData.images ?? [];
+    const coverImage = images[0] || null;
+
+    // Fallback: ambil cover komik dari detail page
+    let komikCover = coverImage;
+    if (!komikCover) {
+      try {
+        const komikRes = await fetchKomikAPI(`/komik/${slug}`);
+        komikCover = komikRes?.data?.cover || null;
+      } catch {
+        // biarkan null
+      }
+    }
+
+    const canonicalUrl = `https://mangnime.vercel.app/komik/${slug}/${currentChapter}`;
+
+    return {
+      title: ogTitle,
+      description: ogDescription,
+      openGraph: {
+        title: ogTitle,
+        description: ogDescription,
+        url: canonicalUrl,
+        siteName: "MangNime",
+        images: komikCover
+          ? [
+              {
+                url: komikCover,
+                width: 800,
+                height: 1200,
+                alt: `${komikTitle} Chapter ${chapterIndex}`,
+              },
+            ]
+          : [],
+        locale: "id_ID",
+        type: "book",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: ogTitle,
+        description: ogDescription,
+        images: komikCover ? [komikCover] : [],
+      },
+      alternates: {
+        canonical: canonicalUrl,
+      },
+    };
+  } catch (error) {
+    const komikTitle = slug
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+    const chapterLabel = currentChapter.replace(/-/g, " ");
+    return {
+      title: `${komikTitle} - ${chapterLabel} | MangNime`,
+      description: "Baca komik bahasa Indonesia gratis di MangNime.",
+    };
+  }
 }
 
 export const revalidate = 604800;

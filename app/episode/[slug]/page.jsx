@@ -16,7 +16,91 @@ async function getEpisodeData(slug) {
   return res?.data || res || null;
 }
 
+// Fungsi helper: ambil poster anime berdasarkan animeId
+async function getAnimePoster(animeId) {
+  if (!animeId) return null;
+  try {
+    const res = await fetchWithDelay(`${API_ENDPOINTS.ANIME}${animeId}`, 0, {
+      cache: "force-cache",
+    });
+    const animeData = res?.data || res || null;
+    return animeData?.poster || animeData?.image || null;
+  } catch {
+    return null;
+  }
+}
+
 export const revalidate = 86400;
+
+export async function generateMetadata({ params }) {
+  const resolvedParams = await params;
+  const slug = resolvedParams.slug;
+
+  try {
+    const epData = await getEpisodeData(slug);
+    if (!epData || !epData.title) throw new Error("Data tidak ada");
+
+    // Ambil poster anime — dipakai sebagai gambar OG
+    const poster = await getAnimePoster(epData.animeId);
+
+    const episodeMatch = epData.title.match(/Episode\s+(\d+(\.\d+)?)/i);
+    const episodeNumber = episodeMatch ? episodeMatch[1] : null;
+
+    // Coba bentuk judul anime bersih (hapus "Episode X - " dari title)
+    const animeTitle = epData.title
+      .replace(/[-–]\s*Episode\s+[\d.]+.*/i, "")
+      .replace(/Episode\s+[\d.]+.*/i, "")
+      .trim();
+
+    const ogTitle = episodeNumber
+      ? `${animeTitle} - Episode ${episodeNumber} Sub Indo | MangNime`
+      : `${epData.title} | MangNime`;
+
+    const ogDescription = `Nonton ${epData.title} subtitle Indonesia gratis di MangNime. Streaming anime berkualitas HD tanpa iklan.`;
+
+    const canonicalUrl = `https://mangnime.vercel.app/episode/${slug}`;
+
+    return {
+      title: ogTitle,
+      description: ogDescription,
+      openGraph: {
+        title: ogTitle,
+        description: ogDescription,
+        url: canonicalUrl,
+        siteName: "MangNime",
+        images: poster
+          ? [
+              {
+                url: poster,
+                width: 800,
+                height: 1200,
+                alt: epData.title,
+              },
+            ]
+          : [],
+        locale: "id_ID",
+        type: "video.episode",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: ogTitle,
+        description: ogDescription,
+        images: poster ? [poster] : [],
+      },
+      alternates: {
+        canonical: canonicalUrl,
+      },
+    };
+  } catch (error) {
+    const fallbackTitle = slug
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+    return {
+      title: `${fallbackTitle} | MangNime`,
+      description: "Nonton anime subtitle Indonesia gratis di MangNime.",
+    };
+  }
+}
 
 export default async function EpisodePage({ params }) {
   const resolvedParams = await params;
@@ -32,27 +116,12 @@ export default async function EpisodePage({ params }) {
     );
   }
 
-  let animePoster = "https://placehold.co/300x400"; // Gambar default jika gagal
+  let animePoster = "https://placehold.co/300x400";
 
   if (epData.animeId) {
-    try {
-      const resAnime = await fetchWithDelay(
-        `${API_ENDPOINTS.ANIME}${epData.animeId}`,
-        0,
-        {
-          cache: "force-cache",
-        },
-      );
-      const animeData = resAnime?.data || resAnime || null;
-
-      if (animeData?.poster || animeData?.image) {
-        animePoster = animeData.poster || animeData.image;
-      }
-    } catch (error) {
-      console.error("Gagal mengambil poster anime:", error);
-    }
+    const fetchedPoster = await getAnimePoster(epData.animeId);
+    if (fetchedPoster) animePoster = fetchedPoster;
   }
-  // ----------------------------------------------------
 
   // Server Action
   async function fetchServerUrl(serverId) {
@@ -63,21 +132,18 @@ export default async function EpisodePage({ params }) {
     return res?.data?.url || res?.url || res;
   }
 
-  // Ekstrak angka episode dari judul (misal "Episode 12" -> "12") untuk History
   const episodeMatch = epData.title.match(/Episode\s+(\d+(\.\d+)?)/i);
   const episodeNumber = episodeMatch ? episodeMatch[1] : "Terbaru";
 
   return (
     <div className="max-w-[1400px] mx-auto space-y-6 animate-fade-in pb-16 relative">
-      {/* 1. TRACKER HISTORY (Data Asli Disuntikkan Di Sini) */}
       <EpisodeHistoryTracker
-        slug={epData.animeId || slug} // Pakai ID anime agar history menumpuk di judul animenya
+        slug={epData.animeId || slug}
         title={epData.title}
         image={animePoster}
         episodeNumber={episodeNumber}
       />
 
-      {/* Background Ornamen Kosmik Ringan */}
       <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-celestia-royal/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
 
       {/* 2. HEADER PLAYER */}
@@ -108,15 +174,14 @@ export default async function EpisodePage({ params }) {
 
           {/* Bagian Kanan: Tombol Bookmark & Semua Episode */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* PERBAIKAN BOOKMARK: Gunakan prop 'item' dan tambahkan 'url' */}
             <BookmarkButton
               item={{
-                slug: slug, // Slug spesifik episode ini
+                slug: slug,
                 title: epData.title,
                 image: animePoster,
                 status: "Tersimpan",
                 type: "episode",
-                url: `/episode/${slug}`, // Penting agar link di halaman bookmark bekerja!
+                url: `/episode/${slug}`,
               }}
             />
             <Button
@@ -227,7 +292,6 @@ export default async function EpisodePage({ params }) {
                   }`}
                 >
                   <span>{ep.title.split("Subtitle")[0]}</span>
-                  {/* Indikator Titik Bersinar untuk Episode Saat Ini */}
                   {isCurrent && (
                     <span className="w-2 h-2 rounded-full bg-celestia-gold shadow-glow-gold animate-pulse"></span>
                   )}

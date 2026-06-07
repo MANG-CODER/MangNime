@@ -34,14 +34,12 @@ export default async function GenreDetailPage({ params, searchParams }) {
     console.error(`Gagal memuat genre ${slug}:`, error);
   }
 
-  // Mengubah "action-magic" menjadi "Action Magic" untuk judul
   const displayTitle = slug
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
 
   return (
     <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-0 mt-6">
-      {/* Header Celestia dengan Tombol Kembali */}
       <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-2xl backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-celestia-pink/15 blur-[120px] rounded-full pointer-events-none"></div>
 

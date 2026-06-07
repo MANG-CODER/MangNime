@@ -27,7 +27,6 @@ export default function ScheduleTabs({ scheduleData }) {
 
   return (
     <div className="space-y-10">
-      {/* Scrollable Tabs - Celestia Style */}
       <div className="flex overflow-x-auto custom-scrollbar pb-4 gap-4 snap-x px-2">
         {daysOrder.map((day) => {
           const isActive = activeTab === day;
@@ -63,7 +62,6 @@ export default function ScheduleTabs({ scheduleData }) {
             {activeTab}
           </h2>
 
-          {/* Badge "Hari Ini" dengan Aksen Pink Celestia */}
           {activeTab === today && (
             <span className="bg-celestia-pink/10 border border-celestia-pink/30 text-celestia-pink text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-[0_0_15px_rgba(255,120,198,0.4)] ml-2">
               Hari Ini

@@ -27,8 +27,6 @@ export default async function SearchPage({ searchParams }) {
   let animeList = [];
   let komikList = [];
   let komikPagination = null;
-  // Catatan: animePagination dihapus karena API Sanka Vollerei mengembalikan seluruh hasil di page 1 (pagination: null)
-
   // ==========================================
   // 1. FETCH KOMIK (Mendukung Paginasi)
   // ==========================================
@@ -67,9 +65,6 @@ export default async function SearchPage({ searchParams }) {
   // ==========================================
   // 2. FETCH ANIME (TIDAK mendukung paginasi pencarian)
   // ==========================================
-  // Kita HANYA fetch anime jika berada di Halaman 1.
-  // Jika user pindah ke halaman 2 (untuk melihat komik selanjutnya),
-  // bagian Anime tidak perlu di-fetch ulang (biarkan kosong atau hilang).
   if (
     (type === "all" || type === "anime") &&
     !genreIds &&
@@ -77,7 +72,6 @@ export default async function SearchPage({ searchParams }) {
     page === 1
   ) {
     try {
-      // Menggunakan endpoint /search/keyword karena tidak ada rute paginasi
       const animeEndpoint = `${API_ENDPOINTS.SEARCH}${encodeURIComponent(keyword)}`;
       const animeRes = await fetchWithDelay(animeEndpoint, 500, {
         next: { revalidate: 3600 },

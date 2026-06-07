@@ -20,7 +20,6 @@ export default async function Home() {
   let newestKomik = [];
 
   try {
-    // Jalankan kedua API secara bersamaan
     const [animeRes, komikRes] = await Promise.all([
       fetchWithDelay(API_ENDPOINTS.HOME, 500, { next: { revalidate: 3600 } }),
       fetchKomikAPI("/home"),

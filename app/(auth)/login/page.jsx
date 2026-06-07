@@ -60,15 +60,12 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  // URL untuk dikirim ke halaman register agar user tetap kembali ke halaman yang sama
   const nextTarget = searchParams.get("next")
     ? `?next=${encodeURIComponent(searchParams.get("next"))}`
     : "";
 
   return (
     <div className="min-h-screen bg-[#0D0B1A] flex items-center justify-center relative px-4 overflow-hidden py-12">
-      {/* ... (Background blur tetap sama) ... */}
-
       <div className="w-full max-w-md bg-[#151226]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10 animate-fade-in">
         <div className="flex justify-center mb-8">
           <Link href="/">

@@ -1,7 +1,7 @@
 import { Outfit, Poppins } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar"; // Pastikan path ini benar
-import Footer from "@/components/layout/Footer"; // Pastikan path ini benar
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 
 const outfit = Outfit({
   weight: ['400', '700', '900'],
@@ -27,7 +27,7 @@ export const metadata = {
   openGraph: {
     title: "MangNime - Streaming Anime Sub Indo Gratis",
     description: "Nonton anime subtitle Indonesia terbaik dengan kualitas HD.",
-    url: "https://mangnime.com", // Ganti dengan domain Anda nanti
+    url: "https://mangnime.vercel.app",
     siteName: "MangNime",
     images: [
       {

@@ -8,7 +8,6 @@ export default function Button({
   className = "",
   ...props
 }) {
-  // Definisi gaya dasar
   const baseStyles =
     "inline-flex items-center justify-center font-bold transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none";
 

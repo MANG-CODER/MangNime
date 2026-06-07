@@ -1,15 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import Button from "@/components/ui/Button";
 import SearchBar from "./SearchBar";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
+
+  const [pillStyle, setPillStyle] = useState({ left: 0, width: 0, opacity: 0 });
+
+  const menuContainerRef = useRef(null);
+  const homeRef = useRef(null);
+  const animeRef = useRef(null);
+  const komikRef = useRef(null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -41,13 +47,72 @@ export default function Navbar() {
     return "User";
   };
 
-  const isHome = pathname === "/";
+  const isHomeSection = pathname === "/";
+  const isAnimeSection = [
+    "/schedule",
+    "/ongoing",
+    "/completed",
+    "/genre",
+    "/anime",
+    "/episode",
+    "/batch",
+  ].some((p) => pathname.startsWith(p));
+  const isKomikSection = ["/komik", "/search"].some((p) =>
+    pathname.startsWith(p),
+  );
+
+  const movePillToActive = useCallback(() => {
+    let activeRef = null;
+    if (isHomeSection) activeRef = homeRef.current;
+    else if (isAnimeSection) activeRef = animeRef.current;
+    else if (isKomikSection) activeRef = komikRef.current;
+
+    if (activeRef) {
+      setPillStyle({
+        left: activeRef.offsetLeft,
+        width: activeRef.offsetWidth,
+        opacity: 1,
+      });
+    } else {
+      setPillStyle((prev) => ({ ...prev, opacity: 0 }));
+    }
+  }, [isHomeSection, isAnimeSection, isKomikSection]);
+
+  useEffect(() => {
+    const timer = setTimeout(movePillToActive, 100);
+    window.addEventListener("resize", movePillToActive);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", movePillToActive);
+    };
+  }, [movePillToActive]);
+
+  const handleMouseEnter = (e) => {
+    setPillStyle({
+      left: e.currentTarget.offsetLeft,
+      width: e.currentTarget.offsetWidth,
+      opacity: 1,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    movePillToActive();
+  };
+
+  const ActiveIndicator = () => (
+    <div className="absolute -bottom-2 flex justify-center w-full left-0">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-celestia-pink opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-celestia-pink"></span>
+      </span>
+    </div>
+  );
 
   return (
     <nav className="w-full bg-[#0D0B1A]/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
       <div className="container mx-auto px-4 lg:px-8 py-4">
         <div className="flex items-center justify-between gap-4">
-          {/* LOGO SVG */}
+          {/* LOGO */}
           <Link
             href="/"
             className="flex-shrink-0 ml-8 md:ml-12 lg:ml-16 transition-transform hover:scale-105"
@@ -59,15 +124,31 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* DESKTOP MENU */}
-          <div className="hidden lg:flex items-center gap-2 text-sm font-heading font-bold">
+          {/* DESKTOP MENU DENGAN MAGNETIC SLIDING */}
+          <div
+            ref={menuContainerRef}
+            className="hidden lg:flex items-center gap-2 text-sm font-heading font-bold relative"
+            onMouseLeave={handleMouseLeave}
+          >
+            {/* ✨ FLOATING PILL BACKGROUND ✨ */}
+            <div
+              className="absolute top-1 bottom-1 bg-white/10 rounded-xl transition-all duration-300 ease-out z-0 pointer-events-none"
+              style={{
+                left: pillStyle.left,
+                width: pillStyle.width,
+                opacity: pillStyle.opacity,
+                transform: "scale(1.05)",
+                transitionProperty: "left, width, opacity, transform",
+              }}
+            />
+
             {/* BERANDA */}
             <Link
               href="/"
-              className={`relative flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all ${
-                isHome
-                  ? "bg-white/10 text-white"
-                  : "text-gray-400 hover:text-white hover:bg-white/5"
+              ref={homeRef}
+              onMouseEnter={handleMouseEnter}
+              className={`relative z-10 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-colors duration-300 ${
+                isHomeSection ? "text-white" : "text-gray-400 hover:text-white"
               }`}
             >
               <svg
@@ -83,19 +164,20 @@ export default function Navbar() {
                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
               </svg>
               Beranda
-              {isHome && (
-                <div className="absolute -bottom-2.5 flex justify-center w-full">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-celestia-pink opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-celestia-pink"></span>
-                  </span>
-                </div>
-              )}
+              {isHomeSection && <ActiveIndicator />}
             </Link>
 
             {/* MEGA MENU ANIME */}
-            <div className="relative group">
-              <button className="flex items-center gap-2 px-5 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group-hover:bg-white/5 group-hover:text-white">
+            <div
+              ref={animeRef}
+              onMouseEnter={handleMouseEnter}
+              className="relative group flex items-stretch"
+            >
+              <button
+                className={`relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-xl transition-colors duration-300 group-hover:text-white ${
+                  isAnimeSection ? "text-white" : "text-gray-400"
+                }`}
+              >
                 <svg
                   className="w-4 h-4"
                   viewBox="0 0 24 24"
@@ -112,6 +194,7 @@ export default function Navbar() {
                 <span className="text-[10px] opacity-50 transition-transform group-hover:rotate-180">
                   ▼
                 </span>
+                {isAnimeSection && <ActiveIndicator />}
               </button>
 
               <div className="absolute top-full left-0 pt-6 w-[700px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
@@ -236,8 +319,16 @@ export default function Navbar() {
             </div>
 
             {/* MEGA MENU KOMIK */}
-            <div className="relative group">
-              <button className="flex items-center gap-2 px-5 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all group-hover:bg-white/5 group-hover:text-white">
+            <div
+              ref={komikRef}
+              onMouseEnter={handleMouseEnter}
+              className="relative group flex items-stretch"
+            >
+              <button
+                className={`relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-xl transition-colors duration-300 group-hover:text-white ${
+                  isKomikSection ? "text-white" : "text-gray-400"
+                }`}
+              >
                 <svg
                   className="w-4 h-4"
                   viewBox="0 0 24 24"
@@ -254,6 +345,7 @@ export default function Navbar() {
                 <span className="text-[10px] opacity-50 transition-transform group-hover:rotate-180">
                   ▼
                 </span>
+                {isKomikSection && <ActiveIndicator />}
               </button>
 
               <div className="absolute top-full left-0 pt-6 w-[700px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
@@ -632,7 +724,6 @@ export default function Navbar() {
                 </div>
               </Link>
             ) : (
-              // ✅ Logic Auto-Close ditambahkan pada tombol LOGIN di mobile
               <Link
                 href={`/login?next=${encodeURIComponent(pathname)}`}
                 onClick={() => setIsOpen(false)}

@@ -17,7 +17,6 @@ export default function BookmarkMenu() {
     { id: "chapter", label: "Chapter" },
   ];
 
-  // Mengambil data Bookmark dari localStorage
   useEffect(() => {
     const fetchBookmarks = () => {
       const rawData = localStorage.getItem("mangnime_bookmarks");
@@ -28,7 +27,6 @@ export default function BookmarkMenu() {
     return () => window.removeEventListener("bookmarksUpdated", fetchBookmarks);
   }, []);
 
-  // Menutup dropdown saat klik di luar area
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target))
@@ -38,7 +36,6 @@ export default function BookmarkMenu() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Filter bookmark sesuai tab aktif (fallback "anime" untuk data lama)
   const filteredBookmarks = bookmarks.filter(
     (b) => (b.type || "anime") === activeTab,
   );

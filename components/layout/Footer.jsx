@@ -4,12 +4,10 @@ import Image from "next/image";
 export default function Footer() {
   return (
     <footer className="bg-[#08060F] border-t border-white/5 pt-16 pb-8 relative overflow-hidden mt-20">
-      {/* Garis cahaya di bagian atas footer */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-celestia-lavender to-transparent opacity-50"></div>
 
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-16 mb-12">
-          {/* Brand Column */}
           <div className="md:col-span-1 space-y-6">
             <Link href="/" className="inline-block relative h-12 w-40">
               <Image

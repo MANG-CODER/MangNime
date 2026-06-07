@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 export function useBookmark() {
   const [bookmarks, setBookmarks] = useState({ anime: [], episode: [] });
 
-  // Mengambil data dari localStorage saat komponen dimuat
   useEffect(() => {
     const fetchBookmarks = () => {
       const stored = localStorage.getItem("mangnime_bookmarks");
@@ -19,7 +18,6 @@ export function useBookmark() {
 
     fetchBookmarks();
 
-    // Mendengarkan event kustom agar Navbar langsung ter-update jika ada perubahan
     window.addEventListener("bookmarksUpdated", fetchBookmarks);
     return () => window.removeEventListener("bookmarksUpdated", fetchBookmarks);
   }, []);
@@ -27,7 +25,6 @@ export function useBookmark() {
   const saveToStorage = (newBookmarks) => {
     setBookmarks(newBookmarks);
     localStorage.setItem("mangnime_bookmarks", JSON.stringify(newBookmarks));
-    // Memicu event agar komponen lain tahu ada perubahan
     window.dispatchEvent(new Event("bookmarksUpdated"));
   };
 

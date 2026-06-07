@@ -8,7 +8,6 @@ export default async function SchedulePage() {
     next: { revalidate: 86400 },
   });
 
-  // Ambil langsung array datanya berdasarkan JSON
   const scheduleData = res?.data || [];
 
   return (

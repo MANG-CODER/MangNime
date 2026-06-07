@@ -8,7 +8,6 @@ export async function GET(request) {
   if (!query)
     return NextResponse.json({ error: "Query kosong" }, { status: 400 });
 
-  // Panggil Search API Sankanime dengan delay 500ms
   const data = await fetchWithDelay(`${API_ENDPOINTS.SEARCH}${query}`, 500);
 
   if (!data) {

@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import KomikActionButtons from "@/components/komik/KomikActionButtons";
 import CommentSection from "@/components/ui/CommentSection";
 import BackButton from "@/components/ui/BackButton";
+import LastReadButton from "@/components/komik/LastReadButton";
 
 function formatDate(dateStr) {
   if (!dateStr) return null;
@@ -19,13 +20,62 @@ function formatDate(dateStr) {
 
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
-  const res = await fetchKomikAPI(`/komik/${resolvedParams.slug}`);
-  const komik = res?.data || null;
-  if (!komik) return { title: "Komik Tidak Ditemukan - MangNime" };
-  return {
-    title: `${komik.title} - MangNime`,
-    description: komik.synopsis?.slice(0, 150) + "...",
-  };
+  const slug = resolvedParams.slug;
+
+  try {
+    const res = await fetchKomikAPI(`/komik/${slug}`);
+    const komik = res?.data || null;
+
+    if (!komik) throw new Error("Data tidak ada");
+
+    const shortSynopsis = komik.synopsis
+      ? komik.synopsis.substring(0, 150) + "..."
+      : `Baca ${komik.title} bahasa Indonesia gratis di MangNime.`;
+
+    const cover = komik.cover || komik.backgroundImage;
+    const canonicalUrl = `https://mangnime.vercel.app/komik/${slug}`;
+
+    return {
+      title: `${komik.title} - MangNime`,
+      description: shortSynopsis,
+      openGraph: {
+        title: `${komik.title} - Baca Online | MangNime`,
+        description: shortSynopsis,
+        url: canonicalUrl,
+        siteName: "MangNime",
+        images: cover
+          ? [
+              {
+                url: cover,
+                width: 800,
+                height: 1200,
+                alt: komik.title,
+              },
+            ]
+          : [],
+        locale: "id_ID",
+        type: "book",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${komik.title} - Baca Online | MangNime`,
+        description: shortSynopsis,
+        images: cover ? [cover] : [],
+      },
+      alternates: {
+        canonical: canonicalUrl,
+      },
+    };
+  } catch (error) {
+    const fallbackTitle = slug
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+    return {
+      title: `${fallbackTitle} - MangNime`,
+      description:
+        "Baca komik manga manhwa manhua bahasa Indonesia di MangNime.",
+    };
+  }
 }
 
 export const revalidate = 86400;
@@ -162,6 +212,10 @@ export default async function DetailKomikPage({ params }) {
                   {genre.name}
                 </Link>
               ))}
+            </div>
+
+            <div className="mt-6 flex justify-center md:justify-start">
+              <LastReadButton slug={slug} />
             </div>
 
             <KomikActionButtons

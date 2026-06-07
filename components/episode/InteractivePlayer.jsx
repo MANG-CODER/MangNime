@@ -25,7 +25,6 @@ export default function InteractivePlayer({
 
   return (
     <div className="space-y-6 w-full">
-      {/* Video Iframe dengan Cosmic Glow Border */}
       <div className="w-full aspect-video bg-[#05040a] rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative group ring-1 ring-celestia-royal/20">
         {isLoading && (
           <div className="absolute inset-0 z-10 bg-celestia-night/90 flex flex-col items-center justify-center backdrop-blur-md">

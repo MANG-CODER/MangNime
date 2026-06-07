@@ -10,7 +10,7 @@ export default function robots() {
       allow: "/",
       disallow: "/komik/*/*", // Memblokir semua rute chapter
     },
-    // Opsional: Kalau nanti Anda punya sitemap
+    // Opsional
     // sitemap: 'https://mangnime.vercel.app/sitemap.xml',
   ]};
 }

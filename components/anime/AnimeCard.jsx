@@ -2,9 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export default function AnimeCard({ anime, index = 0 }) {
-  // Menangani berbagai format key dari API (slug, id, animeId)
   const targetUrl = `/anime/${anime.animeId || anime.slug || anime.id}`;
-  // Fallback gambar jika tidak ada poster
   const imageUrl =
     anime.poster ||
     anime.image ||
@@ -32,6 +30,11 @@ export default function AnimeCard({ anime, index = 0 }) {
 
         {/* Badges */}
         <div className="absolute top-2 right-2 flex flex-col gap-1.5 items-end">
+          {anime.releaseDay && (
+          <div className="bg-celestia-royal/90 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded-md border border-celestia-sky/20 uppercase shadow-glow-blue tracking-wider">
+            {anime.releaseDay}
+          </div>
+        )}
           {anime.score && (
             <div className="bg-celestia-night/90 backdrop-blur-md text-celestia-gold text-[10px] font-black px-2 py-1 rounded-md border border-celestia-gold/20 flex items-center gap-1 shadow-glow-gold">
               ★ {anime.score}

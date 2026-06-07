@@ -9,8 +9,6 @@ export const metadata = { title: "Anime Ongoing - MangNime" };
 export default async function OngoingPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams?.page || 1);
-
-  // LOGIKA BARU: Jika halaman 1, jangan gunakan /page/1
   const endpoint =
     page === 1
       ? API_ENDPOINTS.ONGOING
@@ -31,9 +29,7 @@ export default async function OngoingPage({ searchParams }) {
 
   return (
     <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-0">
-      {/* Header Celestia */}
       <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 md:p-12 relative overflow-hidden mt-6 shadow-2xl backdrop-blur-xl">
-        {/* Cahaya Kosmik */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-celestia-sky/15 blur-[120px] rounded-full pointer-events-none"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
@@ -53,7 +49,6 @@ export default async function OngoingPage({ searchParams }) {
 
       {animeList.length > 0 ? (
         <>
-          {/* SUNTIKAN KEY DAN ANIMASI DI SINI */}
           <div 
             key={`ongoing-${page}`} 
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 animate-fade-in-up"

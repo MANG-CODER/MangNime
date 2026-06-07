@@ -1,16 +1,13 @@
-// services/api.js
-
-// Mengambil Base URL dari .env.local, fallback ke URL langsung jika tidak terbaca
 const BASE_URL =
   process.env.SANKANIME_BASE_URL || "https://www.sankavollerei.com/anime";
 
-// Daftar semua endpoint berdasarkan dokumentasi Anda
+
 export const API_ENDPOINTS = {
   HOME: "/home",
   ONGOING: "/ongoing-anime/",
   COMPLETE: "/complete-anime",
   SEARCH: "/search/",
-  ANIME: "/anime/", // Digunakan untuk detail
+  ANIME: "/anime/",
   BATCH: "/batch/",
   GENRE: "/genre",
   SCHEDULE: "/schedule",
@@ -19,7 +16,6 @@ export const API_ENDPOINTS = {
 };
 
 /**
- * Fungsi pembantu untuk membuat delay (jeda waktu)
  * @param {number} ms - Milidetik (contoh: 1000 = 1 detik)
  */
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -48,6 +44,6 @@ export async function fetchWithDelay(endpoint, delayMs = 1500, options = {}) {
     return await response.json();
   } catch (error) {
     console.error(`API Error on ${endpoint}:`, error);
-    return null; // Kembalikan null jika gagal agar aplikasi tidak crash
+    return null;
   }
 }

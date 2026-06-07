@@ -1,31 +1,30 @@
 "use client";
-
 import { useEffect } from "react";
 
 export default function ChapterHistoryTracker({
   slug,
   title,
-  image,
   chapterIndex,
+  image,
 }) {
   useEffect(() => {
-    // Jalankan hanya setelah komponen di-render di browser
-    const hist = JSON.parse(localStorage.getItem("mangnime_history")) || {
-      anime: {},
-      komik: {},
+    if (!slug || !chapterIndex) return;
+
+    const savedHistory = JSON.parse(
+      localStorage.getItem("mangnime_history") || "{}",
+    );
+
+    // Simpan/Update chapter terbaru yang dibaca untuk komik ini
+    savedHistory[slug] = {
+      title,
+      chapter: chapterIndex,
+      image,
+      url: `/komik/${slug}/chapter-${chapterIndex}`,
+      timestamp: Date.now(),
     };
 
-    hist.komik[slug] = {
-      title: title || `Chapter ${chapterIndex}`,
-      image: image || "https://placehold.co/300x400",
-      chapterIndex: chapterIndex,
-      url: window.location.pathname,
-      updatedAt: new Date().toISOString(),
-    };
+    localStorage.setItem("mangnime_history", JSON.stringify(savedHistory));
+  }, [slug, chapterIndex, title, image]);
 
-    localStorage.setItem("mangnime_history", JSON.stringify(hist));
-  }, [slug, title, image, chapterIndex]);
-
-  // Komponen ini tidak me-render UI apapun secara visual, hanya logic di background
-  return null;
+  return null; // Komponen ini tidak menampilkan apa-apa (bekerja di belakang layar)
 }

@@ -37,7 +37,7 @@ export default function ProfilePage() {
         return;
       }
 
-      // AMBIL HISTORY DAN BERSIHKAN DATA SAMPAH (PLACEHOLDER LAMA)
+      // AMBIL HISTORY DAN BERSIHKAN DATA SAMPAH
       const histData = JSON.parse(localStorage.getItem("mangnime_history")) || {
         anime: {},
         komik: {},
@@ -45,8 +45,6 @@ export default function ProfilePage() {
 
       const rawAnimeHistory = Object.values(histData.anime || {});
       const rawKomikHistory = Object.values(histData.komik || {});
-
-      // Membuang item yang judulnya mengandung "{", akibat bug placeholder sebelumnya
       const cleanAnime = rawAnimeHistory.filter((h) => !h.title.includes("{"));
       const cleanKomik = rawKomikHistory.filter((h) => !h.title.includes("{"));
 
@@ -61,7 +59,7 @@ export default function ProfilePage() {
 
       // JIKA ADMIN, AMBIL DATA KOMENTAR & TOTAL USER
       if (currentUser.user_metadata?.role === "admin") {
-        // 1. Ambil Data Komentar (Eksplisit meminta topic_id)
+        // 1. Ambil Data Komentar
         const { data: commentsData } = await supabase
           .from("comments")
           .select("id, content, user_name, topic_id, created_at")

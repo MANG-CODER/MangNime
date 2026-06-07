@@ -7,7 +7,6 @@ export default async function GenreListPage() {
   let genreList = [];
 
   try {
-    // Kita tembak LANGSUNG ke string '/genre' tanpa fallback yang aneh-aneh
     const res = await fetchWithDelay("/genre", 500, {
       next: { revalidate: 86400 },
     });
@@ -43,16 +42,13 @@ export default async function GenreListPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {genreList.map((genre, idx) => (
             <Link
-              // Menggunakan genreId dari JSON Anda
               href={`/genre/${genre.genreId}`}
               key={idx}
               className="group relative overflow-hidden rounded-2xl p-6 bg-white/[0.02] border border-white/5 hover:border-celestia-lavender/40 hover:shadow-glow-purple transition-all duration-300 flex items-center justify-center text-center"
             >
-              {/* Efek Cahaya Kosmik saat Hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-celestia-royal/0 to-celestia-lavender/0 group-hover:from-celestia-royal/20 group-hover:to-celestia-lavender/10 transition-colors duration-500"></div>
               <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-celestia-sky/30 blur-[30px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-              {/* Menggunakan title dari JSON Anda */}
               <h3 className="relative z-10 font-heading text-lg md:text-xl font-bold text-gray-300 group-hover:text-white transition-colors">
                 {genre.title}
               </h3>

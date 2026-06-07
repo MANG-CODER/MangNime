@@ -9,8 +9,6 @@ export async function GET(request) {
   // 1. Ambil parameter 'next' dan terjemahkan (Decode) %2F menjadi /
   let nextRaw = requestUrl.searchParams.get("next");
   let next = nextRaw ? decodeURIComponent(nextRaw) : "/";
-
-  // Pastikan selalu diawali dengan slash (/) agar Next.js tidak bingung
   if (!next.startsWith("/")) next = `/${next}`;
 
   // 2. Proteksi Load Balancer (Vercel vs Localhost)
@@ -39,7 +37,6 @@ export async function GET(request) {
                 cookieStore.set(name, value, options),
               );
             } catch (error) {
-              // Abaikan error di server component
             }
           },
         },
@@ -49,7 +46,6 @@ export async function GET(request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // ✅ SUCCESS: Redirect tepat ke halaman sebelumnya
       return NextResponse.redirect(`${baseUrl}${next}`);
     }
   }

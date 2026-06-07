@@ -9,7 +9,6 @@ export default function EpisodeHistoryTracker({
   episodeNumber,
 }) {
   useEffect(() => {
-    // Berjalan aman di sisi browser (Client-side)
     const hist = JSON.parse(localStorage.getItem("mangnime_history")) || {
       anime: {},
       komik: {},
@@ -26,6 +25,5 @@ export default function EpisodeHistoryTracker({
     localStorage.setItem("mangnime_history", JSON.stringify(hist));
   }, [slug, title, image, episodeNumber]);
 
-  // Komponen ini "gaib" (tidak merender UI apa-apa), hanya menjalankan fungsi tracking
   return null;
 }

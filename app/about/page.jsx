@@ -24,7 +24,6 @@ export default function AboutPage() {
         </div>
 
         {/* IMAGE PLACEHOLDER (Rasio 16:9) */}
-        {/* Ganti URL 'src' di bawah ini dengan path gambar GFX Anda (misal: '/images/about-gfx.jpg') */}
         <div className="relative w-full aspect-[21/9] rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(76,201,255,0.15)] border border-white/10 mb-12 group">
           <Image
             src="/img/GFX.png"
@@ -33,7 +32,6 @@ export default function AboutPage() {
             className="object-cover group-hover:scale-105 transition-transform duration-700"
             priority
           />
-          {/* Efek Gradasi di bawah gambar agar menyatu dengan background */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0D0B1A] via-transparent to-transparent opacity-80"></div>
         </div>
 
