@@ -242,37 +242,92 @@ export default async function AnimeDetail({ params }) {
                 <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-5 md:p-8 max-h-[550px] overflow-y-auto custom-scrollbar backdrop-blur-xl shadow-lg">
                   {episodeList.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 pr-2">
-                      {episodeList.map((ep, idx) => (
-                        <Link
-                          key={idx}
-                          href={`/episode/${ep.episodeId}`}
-                          prefetch={false}
-                          className="bg-black/20 border border-white/5 hover:border-celestia-sky/50 hover:bg-celestia-sky/5 hover:shadow-glow-blue p-4 rounded-2xl flex items-center gap-4 group transition-all"
-                        >
-                          <div className="w-12 h-12 rounded-xl bg-celestia-night flex items-center justify-center text-celestia-sky font-black text-sm border border-white/5 group-hover:border-celestia-sky/50 shrink-0 transition-colors">
-                            EP {ep.eps}
-                          </div>
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <span className="font-bold text-sm text-gray-300 group-hover:text-white transition-colors line-clamp-1">
-                              Episode {ep.eps}
-                            </span>
-                            {ep.date && (
-                              <span className="text-[11px] text-gray-600 mt-1">
-                                {ep.date}
-                              </span>
+                      {episodeList.map((ep, idx) => {
+                        const isEnd = ep.title?.toLowerCase().includes("(end)");
+
+                        return (
+                          <Link
+                            key={idx}
+                            href={`/episode/${ep.episodeId}`}
+                            prefetch={false}
+                            className={`relative bg-black/20 border hover:shadow-glow-blue p-4 rounded-2xl flex items-center gap-4 group transition-all ${
+                              isEnd
+                                ? "border-celestia-pink/30 hover:border-celestia-pink/60 hover:bg-celestia-pink/5"
+                                : "border-white/5 hover:border-celestia-sky/50 hover:bg-celestia-sky/5"
+                            }`}
+                          >
+                            {isEnd && (
+                              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-celestia-pink/5 to-celestia-lavender/5 pointer-events-none" />
                             )}
-                          </div>
-                          <span className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                            <svg
-                              className="w-4 h-4 text-celestia-sky ml-0.5"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
+
+                            <div
+                              className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-sm border shrink-0 transition-colors ${
+                                isEnd
+                                  ? "bg-celestia-pink/10 text-celestia-pink border-celestia-pink/30 group-hover:border-celestia-pink/60"
+                                  : "bg-celestia-night text-celestia-sky border-white/5 group-hover:border-celestia-sky/50"
+                              }`}
                             >
-                              <path d="M4 4l12 6-12 6z" />
-                            </svg>
-                          </span>
-                        </Link>
-                      ))}
+                              EP {ep.eps}
+                            </div>
+
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span
+                                  className={`font-bold text-sm transition-colors line-clamp-1 ${
+                                    isEnd
+                                      ? "text-white group-hover:text-white"
+                                      : "text-gray-300 group-hover:text-white"
+                                  }`}
+                                >
+                                  Episode {ep.eps}
+                                </span>
+
+                                {/* Badge (End) */}
+                                {isEnd && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-celestia-pink/20 text-celestia-pink border border-celestia-pink/40 shadow-[0_0_8px_rgba(255,120,198,0.3)] shrink-0">
+                                    <svg
+                                      className="w-2.5 h-2.5"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                    End
+                                  </span>
+                                )}
+                              </div>
+
+                              {ep.date && (
+                                <span className="text-[11px] text-gray-600 mt-1">
+                                  {ep.date}
+                                </span>
+                              )}
+                            </div>
+
+                            <span
+                              className={`w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shrink-0 ${
+                                isEnd ? "bg-celestia-pink/10" : "bg-white/5"
+                              }`}
+                            >
+                              <svg
+                                className={`w-4 h-4 ml-0.5 ${
+                                  isEnd
+                                    ? "text-celestia-pink"
+                                    : "text-celestia-sky"
+                                }`}
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M4 4l12 6-12 6z" />
+                              </svg>
+                            </span>
+                          </Link>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-16 text-gray-500 bg-black/20 rounded-2xl border border-white/5">
