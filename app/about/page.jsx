@@ -23,7 +23,7 @@ export default function AboutPage() {
           </p>
         </div>
 
-        {/* IMAGE PLACEHOLDER (Rasio 16:9) */}
+        {/* IMAGE */}
         <div className="relative w-full aspect-[21/9] rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(76,201,255,0.15)] border border-white/10 mb-12 group">
           <Image
             src="/img/GFX.png"
@@ -49,10 +49,11 @@ export default function AboutPage() {
               hambatan.
             </p>
             <p>
-              Berawal dari kecintaan terhadap anime dan keresahan terhadap iklan yang menggangu serta ketertarikan terhadap tampilan
-              yang elegan, MangNime dibangun dari nol untuk memberikan
-              alternatif platform streaming yang tidak hanya fungsional, tetapi
-              juga memanjakan mata secara visual.
+              Berawal dari kecintaan terhadap anime dan keresahan terhadap iklan
+              yang menggangu serta ketertarikan terhadap tampilan yang elegan,
+              MangNime dibangun dari nol untuk memberikan alternatif platform
+              streaming yang tidak hanya fungsional, tetapi juga memanjakan mata
+              secara visual.
             </p>
           </div>
 
@@ -64,13 +65,14 @@ export default function AboutPage() {
             <p className="mb-4">
               Kami percaya bahwa menonton anime haruslah menjadi kegiatan
               bersantai yang menyenangkan, bukan malah membuat pusing karena
-              tampilan web yang berantakan atau <strong>server</strong> yang lambat.
+              tampilan web yang berantakan atau <strong>server</strong> yang
+              lambat.
             </p>
             <ul className="list-disc list-inside space-y-2 text-gray-400 ml-2">
               <li>
                 <strong className="text-gray-300">Desain Premium:</strong>{" "}
-                Menyajikan antarmuka (UI/UX) yang modern, gelap (<strong>dark mode</strong>),
-                dan responsif di semua perangkat.
+                Menyajikan antarmuka (UI/UX) yang modern, gelap (
+                <strong>dark mode</strong>), dan responsif di semua perangkat.
               </li>
               <li>
                 <strong className="text-gray-300">Kualitas Terbaik:</strong>{" "}
@@ -85,18 +87,91 @@ export default function AboutPage() {
             </ul>
           </div>
 
+          {/* SECTION HUBUNGI KAMI */}
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-celestia-pink rounded-full shadow-glow-pink"></span>
+              Hubungi Kami
+            </h2>
+            <p className="mb-6 text-gray-400">
+              Ada pertanyaan, saran, atau ingin bekerja sama dengan kami? Jangan
+              ragu untuk menghubungi tim MangNime melalui email di bawah ini.
+              Kami akan membalas sesegera mungkin.
+            </p>
+            <a
+              href="mailto:pani@mangnime.my.id"
+              className="inline-flex items-center gap-3 bg-white/5 hover:bg-celestia-pink/10 border border-white/10 hover:border-celestia-pink/50 px-6 py-4 rounded-2xl transition-all group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-celestia-pink/10 border border-celestia-pink/20 flex items-center justify-center text-celestia-pink shrink-0">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500 mb-0.5">Email Kami</div>
+                <div className="text-white font-bold group-hover:text-celestia-pink transition-colors">
+                  pani@mangnime.my.id
+                </div>
+              </div>
+              <svg
+                className="w-4 h-4 text-gray-600 group-hover:text-celestia-pink group-hover:translate-x-1 transition-all ml-auto"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </a>
+          </div>
+
           <div className="p-6 bg-black/30 rounded-2xl border border-white/5 text-center mt-6">
             <p className="text-sm text-gray-400 italic">
               "Terima kasih telah memilih MangNime sebagai tempat Anda menonton.
               Kami akan terus berkembang dan memberikan yang terbaik untuk
               komunitas ini."
             </p>
-            <p className="font-bold text-white mt-3">— MangCoder by Mamang Organization</p>
+            <p className="font-bold text-white mt-3">
+              — MangCoder by Mamang Organization
+            </p>
           </div>
         </div>
 
-        {/* Tombol Kembali */}
-        <div className="mt-10 text-center">
+        {/* Tombol Navigasi */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+          <Link
+            href="/report"
+            className="inline-flex items-center gap-2 px-8 py-3 bg-white/5 border border-white/10 hover:border-celestia-pink/50 hover:bg-celestia-pink/10 rounded-full text-white font-bold hover:scale-105 transition-all"
+          >
+            <svg
+              className="w-4 h-4 text-celestia-pink"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            Lapor Link Rusak
+          </Link>
           <Link
             href="/"
             className="inline-flex px-8 py-3 bg-gradient-to-r from-celestia-royal to-celestia-lavender rounded-full text-white font-bold hover:scale-105 transition-transform shadow-glow-purple"

@@ -33,7 +33,7 @@ export async function generateMetadata({ params }) {
       : `Baca ${komik.title} bahasa Indonesia gratis di MangNime.`;
 
     const cover = komik.cover || komik.backgroundImage;
-    const canonicalUrl = `https://mangnime.vercel.app/komik/${slug}`;
+    const canonicalUrl = `https://mangnime.my.id/komik/${slug}`;
 
     return {
       title: `${komik.title} - MangNime`,

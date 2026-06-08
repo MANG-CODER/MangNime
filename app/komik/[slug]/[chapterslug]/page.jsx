@@ -50,7 +50,7 @@ export async function generateMetadata({ params }) {
       }
     }
 
-    const canonicalUrl = `https://mangnime.vercel.app/komik/${slug}/${currentChapter}`;
+    const canonicalUrl = `https://mangnime.my.id/komik/${slug}/${currentChapter}`;
 
     return {
       title: ogTitle,

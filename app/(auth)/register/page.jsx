@@ -20,7 +20,8 @@ export default function RegisterPage() {
     const rawNext = searchParams.get("next");
     const nextParam =
       rawNext && rawNext !== "/" ? `?next=${encodeURIComponent(rawNext)}` : "";
-    return `${window.location.origin}/callback${nextParam}`;
+    const base = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    return `${base}/callback${nextParam}`;
   };
 
   const handleSignUp = async (e) => {

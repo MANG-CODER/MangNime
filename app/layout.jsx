@@ -17,27 +17,35 @@ const poppins = Poppins({
 });
 
 export const metadata = {
+  metadataBase: new URL("https://mangnime.my.id"),
   title: "MangNime",
   description:
     "Tempat nonton anime subtitle Indonesia gratis dengan kualitas HD dan tanpa iklan yang menggangu.",
-    icons: {
+  icons: {
     icon: "/img/Icon2.png",
     apple: "/img/Icon2.png",
   },
   openGraph: {
     title: "MangNime - Streaming Anime Sub Indo Gratis",
     description: "Nonton anime subtitle Indonesia terbaik dengan kualitas HD.",
-    url: "https://mangnime.vercel.app",
+    url: "https://mangnime.my.id",
     siteName: "MangNime",
-    images: [
+    iimages: [
       {
-        url: "/img/Icon2.png",
+        url: "/img/og-banner.png",
         width: 1200,
         height: 630,
+        alt: "MangNime - Streaming Anime Sub Indo Gratis",
       },
     ],
     locale: "id_ID",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MangNime - Streaming Anime Sub Indo Gratis",
+    description: "Nonton anime subtitle Indonesia terbaik dengan kualitas HD.",
+    images: ["/img/Banner.png"],
   },
 };
 

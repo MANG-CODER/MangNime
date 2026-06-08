@@ -12,14 +12,11 @@ export async function GET(request) {
   if (!next.startsWith("/")) next = `/${next}`;
 
   // 2. Proteksi Load Balancer (Vercel vs Localhost)
-  const forwardedHost = request.headers.get("x-forwarded-host");
   const isLocalEnv = process.env.NODE_ENV === "development";
   const baseUrl = isLocalEnv
     ? requestUrl.origin
-    : forwardedHost
-      ? `https://${forwardedHost}`
-      : requestUrl.origin;
-
+    : process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin;
+    
   // 3. Proses Tukar Code dengan Sesi Login
   if (code) {
     const cookieStore = await cookies();

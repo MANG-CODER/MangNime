@@ -58,7 +58,7 @@ export async function generateMetadata({ params }) {
 
     const ogDescription = `Nonton ${epData.title} subtitle Indonesia gratis di MangNime. Streaming anime berkualitas HD tanpa iklan.`;
 
-    const canonicalUrl = `https://mangnime.vercel.app/episode/${slug}`;
+    const canonicalUrl = `https://mangnime.my.id/episode/${slug}`;
 
     return {
       title: ogTitle,

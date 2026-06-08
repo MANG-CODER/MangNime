@@ -25,7 +25,7 @@ export async function generateMetadata({ params }) {
         : `Nonton ${anime.title} subtitle Indonesia gratis di MangNime.`;
 
     const poster = anime.poster || anime.image;
-    const canonicalUrl = `https://mangnime.vercel.app/anime/${slug}`;
+    const canonicalUrl = `https://mangnime.my.id/anime/${slug}`;
 
     return {
       title: `${anime.title} Sub Indo - MangNime`,
