@@ -30,9 +30,9 @@ export const metadata = {
     description: "Nonton anime subtitle Indonesia terbaik dengan kualitas HD.",
     url: "https://mangnime.my.id",
     siteName: "MangNime",
-    iimages: [
+    images: [
       {
-        url: "/img/og-banner.png",
+        url: "/img/Banner.png",
         width: 1200,
         height: 630,
         alt: "MangNime - Streaming Anime Sub Indo Gratis",
