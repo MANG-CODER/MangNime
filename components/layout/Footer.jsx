@@ -108,6 +108,7 @@ export default function Footer() {
                 { label: "Completed", path: "/completed" },
                 { label: "Jadwal Rilis", path: "/schedule" },
                 { label: "Daftar Genre", path: "/genre" },
+                { label: "Movies", path: "/movies" },
               ].map((item) => (
                 <li key={item.path}>
                   <Link

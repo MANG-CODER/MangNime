@@ -1,8 +1,8 @@
 import AnimeCard from "@/components/anime/AnimeCard";
 import KomikCard from "@/components/komik/KomikCard";
 import Link from "next/link";
-import { fetchWithDelay, API_ENDPOINTS } from "@/services/api";
 import { fetchKomikAPI } from "@/services/komikApi";
+import { searchAllAnime } from "@/services/animeAction";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export const metadata = { title: "Pencarian - MangNime" };
@@ -27,9 +27,7 @@ export default async function SearchPage({ searchParams }) {
   let animeList = [];
   let komikList = [];
   let komikPagination = null;
-  // ==========================================
-  // 1. FETCH KOMIK (Mendukung Paginasi)
-  // ==========================================
+
   if (type === "all" || type === "komik") {
     const params = new URLSearchParams();
     params.append("page", page.toString());
@@ -62,9 +60,6 @@ export default async function SearchPage({ searchParams }) {
     }
   }
 
-  // ==========================================
-  // 2. FETCH ANIME (TIDAK mendukung paginasi pencarian)
-  // ==========================================
   if (
     (type === "all" || type === "anime") &&
     !genreIds &&
@@ -72,14 +67,7 @@ export default async function SearchPage({ searchParams }) {
     page === 1
   ) {
     try {
-      const animeEndpoint = `${API_ENDPOINTS.SEARCH}${encodeURIComponent(keyword)}`;
-      const animeRes = await fetchWithDelay(animeEndpoint, 500, {
-        next: { revalidate: 3600 },
-      });
-
-      if (animeRes?.data?.animeList) animeList = animeRes.data.animeList;
-      else if (Array.isArray(animeRes?.data)) animeList = animeRes.data;
-      else if (Array.isArray(animeRes)) animeList = animeRes;
+      animeList = await searchAllAnime(keyword);
     } catch (error) {
       console.error("Gagal fetch pencarian anime:", error);
     }
@@ -144,6 +132,7 @@ export default async function SearchPage({ searchParams }) {
               {/* SUNTIKAN SCROLL REVEAL DI SINI */}
               {animeList.map((anime, idx) => (
                 <ScrollReveal key={idx}>
+                  {/* AnimeCard otomatis tahu routing ke Otakudesu / Alqanime dari properti 'source' */}
                   <AnimeCard anime={anime} index={idx} />
                 </ScrollReveal>
               ))}
@@ -213,10 +202,6 @@ export default async function SearchPage({ searchParams }) {
     </div>
   );
 }
-
-// ==========================================
-// KOMPONEN PAGINATION
-// ==========================================
 
 function CustomSearchPagination({
   pagination,

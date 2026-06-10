@@ -53,7 +53,6 @@ export default function ScheduleTabs({ scheduleData }) {
 
       {/* Konten Area Jadwal */}
       <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
-        {/* Dekorasi Cahaya Sudut */}
         <div className="absolute -top-20 -left-20 w-64 h-64 bg-celestia-pink/10 blur-[80px] rounded-full pointer-events-none"></div>
 
         <div className="relative z-10 flex items-center gap-4 mb-8 pb-4 border-b border-white/5">
@@ -75,7 +74,7 @@ export default function ScheduleTabs({ scheduleData }) {
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 animate-fade-in-up"
           >
             {activeData.map((anime, idx) => (
-              <AnimeCard key={idx} anime={anime} index={idx} />
+              <AnimeCard key={idx} anime={anime} index={idx} hideMeta />
             ))}
           </div>
         ) : (

@@ -21,6 +21,15 @@ export const metadata = {
   title: "MangNime",
   description:
     "Tempat nonton anime subtitle Indonesia gratis dengan kualitas HD dan tanpa iklan yang menggangu.",
+  keywords: [
+    "nonton anime",
+    "anime sub indo",
+    "streaming anime",
+    "download anime",
+    "anime ongoing",
+    "nonton anime gratis",
+    "mangnime",
+  ],
   icons: {
     icon: "/img/Icon2.png",
     apple: "/img/Icon2.png",

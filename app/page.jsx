@@ -2,8 +2,8 @@ import HeroCarousel from "@/components/home/HeroCarousel";
 import AnimeCard from "@/components/anime/AnimeCard";
 import KomikCard from "@/components/komik/KomikCard";
 import Link from "next/link";
-import { fetchWithDelay, API_ENDPOINTS } from "@/services/api";
 import { fetchKomikAPI } from "@/services/komikApi";
+import { AnimeProvider } from "@/services/providers";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import CommentSection from "@/components/ui/CommentSection";
 
@@ -21,25 +21,13 @@ export default async function Home() {
 
   try {
     const [animeRes, komikRes] = await Promise.all([
-      fetchWithDelay(API_ENDPOINTS.HOME, 500, { next: { revalidate: 3600 } }),
+      AnimeProvider.Otakudesu.getHome(),
       fetchKomikAPI("/home"),
     ]);
 
     // Parsing Anime
-    const dataObj = animeRes?.data || animeRes || {};
-    const rawOngoing = dataObj["ongoing"];
-    const rawCompleted = dataObj["completed"];
-
-    if (rawOngoing) {
-      ongoingList = Array.isArray(rawOngoing)
-        ? rawOngoing
-        : rawOngoing.animeList || rawOngoing.data || [];
-    }
-    if (rawCompleted) {
-      completedList = Array.isArray(rawCompleted)
-        ? rawCompleted
-        : rawCompleted.animeList || rawCompleted.data || [];
-    }
+    ongoingList = animeRes?.ongoing || [];
+    completedList = animeRes?.completed || [];
 
     // Parsing Komik
     popularKomik = komikRes?.data?.popular || [];
@@ -56,9 +44,45 @@ export default async function Home() {
       )}
 
       <div className="container mx-auto px-4 md:px-6 max-w-[1400px] space-y-20 mt-10">
-        {/* =========================================
-            SEGMEN ANIME
-        ============================================= */}
+        <ScrollReveal>
+          <div className="bg-gradient-to-r from-celestia-royal/10 via-celestia-lavender/5 to-transparent border border-celestia-sky/20 p-5 md:p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_0_20px_rgba(76,201,255,0.05)] backdrop-blur-md relative overflow-hidden">
+            {/* Aksen Dekoratif */}
+            <div className="absolute -left-10 -top-10 w-32 h-32 bg-celestia-sky/10 blur-[50px] rounded-full pointer-events-none"></div>
+
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-12 h-12 bg-celestia-sky/10 rounded-xl flex items-center justify-center shrink-0 border border-celestia-sky/30 shadow-glow-blue">
+                <svg
+                  className="w-6 h-6 text-celestia-sky drop-shadow-[0_0_8px_rgba(76,201,255,0.6)]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg">
+                  Mencari Anime Lama atau Movie?
+                </h3>
+                <p className="text-gray-400 text-sm mt-1">
+                  Jika anime yang kamu cari tidak ada di halaman ini, silakan
+                  gunakan fitur{" "}
+                  <span className="text-celestia-sky font-bold">
+                    Pencarian (Search)
+                  </span>{" "}
+                  yang kini lebih lengkap!
+                </p>
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
+
         {/* Ongoing Anime */}
         <section>
           <div className="flex justify-between items-center mb-8">
@@ -94,7 +118,7 @@ export default async function Home() {
             </div>
           )}
         </section>
-        
+
         {/* Completed Anime */}
         <section>
           <div className="flex justify-between items-center mb-8 border-t border-white/5 pt-10">
@@ -131,12 +155,9 @@ export default async function Home() {
           )}
         </section>
 
-        {/* =========================================
-            SEGMEN KOMIK
-        ============================================= */}
         {/* Populer Komik */}
         <section>
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex justify-between items-center mb-8 border-t border-white/5 pt-10">
             <h2 className="font-heading text-2xl md:text-4xl font-black flex items-center gap-4 text-white drop-shadow-lg">
               <span className="w-2 h-10 bg-celestia-gold rounded-full shadow-glow-gold"></span>
               Komik{" "}
@@ -205,14 +226,14 @@ export default async function Home() {
             </div>
           )}
         </section>
-
-        
       </div>
 
-      <CommentSection
-        topicId="komunitas-homepage"
-        title="💬 Komunitas MangNime"
-      />
+      <div className="container mx-auto px-4 md:px-6 max-w-[1400px]">
+        <CommentSection
+          topicId="komunitas-homepage"
+          title="💬 Komunitas MangNime"
+        />
+      </div>
     </div>
   );
 }

@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { searchKomikServer } from "@/services/searchAction";
-
-const ANIME_API = "https://www.sankavollerei.com/anime";
+import { searchAllAnime } from "@/services/animeAction";
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");
@@ -38,25 +37,26 @@ export default function SearchBar() {
       setIsLoading(true);
       try {
         const [animeRes, komikRes] = await Promise.allSettled([
-          fetch(`${ANIME_API}/search/${encodeURIComponent(query)}`).then((r) =>
-            r.json(),
-          ),
+          searchAllAnime(query),
           searchKomikServer(query),
         ]);
 
         let combinedResults = [];
 
-        if (animeRes.status === "fulfilled") {
-          const aData =
-            animeRes.value?.data?.animeList || animeRes.value?.data || [];
-          const slicedAnime = Array.isArray(aData)
-            ? aData.slice(0, 3).map((item) => ({ ...item, _type: "anime" }))
-            : [];
+        if (animeRes.status === "fulfilled" && Array.isArray(animeRes.value)) {
+          const slicedAnime = animeRes.value.slice(0, 8).map((item) => ({
+            ...item,
+            _type: "anime",
+            slugHref:
+              item.source === "alqanime"
+                ? `/anime/alqanime/detail/${item.slug}`
+                : `/anime/${item.animeId || item.id || item.slug}`,
+          }));
           combinedResults = [...combinedResults, ...slicedAnime];
         }
 
+        // 2. Olah Hasil Komik (Tetap sama seperti aslinya)
         if (komikRes.status === "fulfilled" && komikRes.value) {
-          // Parsing untuk API Komikcast yang baru
           const kData = komikRes.value?.data?.data || [];
           const slicedKomik = Array.isArray(kData)
             ? kData.slice(0, 3).map((item) => ({ ...item, _type: "komik" }))
@@ -120,15 +120,15 @@ export default function SearchBar() {
         )}
       </form>
 
+      {/* RENDER HASIL PENCARIAN */}
       {isFocused && query.length >= 3 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-[#120F24]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-2 animate-fade-in flex flex-col max-h-[50vh] md:max-h-[400px]">
           <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             {results.length > 0 ? (
               results.map((item, idx) => {
                 const isAnime = item._type === "anime";
-                const href = isAnime
-                  ? `/anime/${item.animeId || item.slug || item.id}`
-                  : `/komik/${item.slug}`;
+                // Gunakan slugHref yang sudah diracik di atas
+                const href = isAnime ? item.slugHref : `/komik/${item.slug}`;
                 const title = item.title;
                 const image =
                   item.cover ||
@@ -137,7 +137,7 @@ export default function SearchBar() {
                   item.coverImage ||
                   "https://placehold.co/100x140/151226/ff6c9b?text=Image";
                 const subText = isAnime
-                  ? item.status || item.type || ""
+                  ? item.type || item.status || "Anime"
                   : item.format || "Komik";
 
                 return (

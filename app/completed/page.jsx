@@ -1,28 +1,68 @@
 import AnimeCard from "@/components/anime/AnimeCard";
 import Pagination from "@/components/ui/Pagination";
-import { fetchWithDelay, API_ENDPOINTS } from "@/services/api";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import { AnimeProvider } from "@/services/providers";
+import { mergeAnimeLists } from "@/utils/mergeAnime";
 
 export const metadata = { title: "Anime Completed - MangNime" };
+
+  const animeList = mergeAnimeLists(otakuList, alqaList);
 
 export default async function CompletedPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams?.page || 1);
-  const baseEndpoint = API_ENDPOINTS.COMPLETE.replace(/\/$/, "");
-  const endpoint = page === 1 ? baseEndpoint : `${baseEndpoint}?page=${page}`;
 
-  let animeList = [];
+
+  let otakuList = [];
+  let alqaList = [];
   let paginationData = null;
 
   try {
-    const res = await fetchWithDelay(endpoint, 500, {
-      next: { revalidate: 3600 },
-    });
-    animeList = res?.data?.animeList || res?.data || [];
-    paginationData = res?.pagination || null;
+    const promises = [AnimeProvider.Otakudesu.getCompleted(page)];
+
+    if (page === 1) {
+      promises.push(AnimeProvider.Alqanime.getCompleted(page));
+    }
+
+    const results = await Promise.allSettled(promises);
+    if (results[0].status === "fulfilled" && results[0].value) {
+      otakuList = results[0].value.data || [];
+      paginationData = results[0].value.pagination || null;
+    }
+
+    if (page === 1 && results[1]?.status === "fulfilled" && results[1].value) {
+      alqaList = results[1].value.data || results[1].value.animeList || [];
+    }
   } catch (error) {
     console.error("Gagal memuat Completed:", error);
   }
+
+  const animeMap = new Map();
+
+  otakuList.forEach((anime) => {
+    const key = getMergeKey(anime.title);
+    if (key) animeMap.set(key, anime);
+  });
+
+  alqaList.forEach((anime) => {
+    const status = (anime.status || "").toLowerCase();
+    if (status.includes("ongoing")) return;
+
+    const key = getMergeKey(anime.title);
+
+    if (key && !animeMap.has(key)) {
+      animeMap.set(key, anime);
+    } else if (key && animeMap.has(key)) {
+      const existing = animeMap.get(key);
+      animeMap.set(key, {
+        ...existing,
+        poster: existing.poster || anime.poster,
+        score: existing.score || anime.score || anime.rating,
+      });
+    }
+  });
+
+  const animeList = Array.from(animeMap.values());
 
   return (
     <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-0">
@@ -47,16 +87,20 @@ export default async function CompletedPage({ searchParams }) {
 
       {animeList.length > 0 ? (
         <>
-          <div 
-            key={`completed-${page}`} 
+          <div
+            key={`completed-${page}`}
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 animate-fade-in-up"
           >
-            {animeList.map((anime, idx) => (
-              <ScrollReveal key={idx}>
-                <AnimeCard anime={anime} index={idx} />
-              </ScrollReveal>
-            ))}
+            {animeList.map((anime, idx) => {
+              const uniqueKey = anime.animeId || anime.slug || `comp-${idx}`;
+              return (
+                <ScrollReveal key={uniqueKey}>
+                  <AnimeCard anime={anime} index={idx} />
+                </ScrollReveal>
+              );
+            })}
           </div>
+          {/* Pagination tetap menggunakan Otakudesu sebagai patokan nomor halaman */}
           {paginationData && (
             <Pagination pagination={paginationData} basePath="/completed" />
           )}

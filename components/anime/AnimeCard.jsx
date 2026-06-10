@@ -1,13 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function AnimeCard({ anime, index = 0 }) {
-  const targetUrl = `/anime/${anime.animeId || anime.slug || anime.id}`;
+export default function AnimeCard({ anime, index = 0, hideMeta = false }) {
+  const targetUrl =
+    anime.source === "alqanime"
+      ? `/anime/alqanime/detail/${anime.slug}`
+      : `/anime/${anime.animeId || anime.slug || anime.id}`;
+
   const imageUrl =
     anime.poster ||
     anime.image ||
     anime.thumb ||
     "https://placehold.co/300x400/0d0b1a/8b6cff?text=No+Image";
+
+  const typeOrDay = anime.releaseDay || anime.type || anime.status;
+  const score = anime.score || anime.rating;
+  const episodes = anime.episodes || anime.episode;
 
   return (
     <Link
@@ -25,29 +33,33 @@ export default function AnimeCard({ anime, index = 0 }) {
           priority={index < 8}
         />
 
-        {/* Latar Belakang Blur Cosmic saat Hover */}
+        {/* Hover Overlay */}
         <div className="absolute inset-0 bg-celestia-night/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
         {/* Badges */}
-        <div className="absolute top-2 right-2 flex flex-col gap-1.5 items-end">
-          {anime.releaseDay && (
-          <div className="bg-celestia-royal/90 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded-md border border-celestia-sky/20 uppercase shadow-glow-blue tracking-wider">
-            {anime.releaseDay}
+        {!hideMeta && (
+          <div className="absolute top-2 right-2 flex flex-col gap-1.5 items-end">
+            {typeOrDay && (
+              <div className="bg-celestia-royal/90 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded-md border border-celestia-sky/20 uppercase shadow-glow-blue tracking-wider">
+                {typeOrDay}
+              </div>
+            )}
+
+            {score && (
+              <div className="bg-celestia-night/90 backdrop-blur-md text-celestia-gold text-[10px] font-black px-2 py-1 rounded-md border border-celestia-gold/20 flex items-center gap-1 shadow-glow-gold">
+                ★ {score}
+              </div>
+            )}
+
+            {episodes && episodes !== "?" && (
+              <div className="bg-celestia-night/90 backdrop-blur-md text-celestia-pink text-[10px] font-bold px-2 py-1 rounded-md border border-celestia-pink/20">
+                Ep {episodes}
+              </div>
+            )}
           </div>
         )}
-          {anime.score && (
-            <div className="bg-celestia-night/90 backdrop-blur-md text-celestia-gold text-[10px] font-black px-2 py-1 rounded-md border border-celestia-gold/20 flex items-center gap-1 shadow-glow-gold">
-              ★ {anime.score}
-            </div>
-          )}
-          {anime.episodes && (
-            <div className="bg-celestia-night/90 backdrop-blur-md text-celestia-pink text-[10px] font-bold px-2 py-1 rounded-md border border-celestia-pink/20">
-              Ep {anime.episodes}
-            </div>
-          )}
-        </div>
 
-        {/* Tombol Play Hover */}
+        {/* Play Button */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
           <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-celestia-royal to-celestia-lavender flex items-center justify-center shadow-glow-purple transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
             <svg
@@ -65,9 +77,10 @@ export default function AnimeCard({ anime, index = 0 }) {
         <h3 className="text-sm font-bold text-gray-200 group-hover:text-celestia-sky transition-colors line-clamp-2 leading-snug">
           {anime.title}
         </h3>
-        {anime.studios && (
+
+        {(anime.studios || anime.studio) && (
           <p className="text-[11px] text-celestia-lavender/70 mt-1.5 line-clamp-1">
-            {anime.studios}
+            {anime.studios || anime.studio}
           </p>
         )}
       </div>

@@ -1,11 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { fetchWithDelay } from "@/services/api";
 import BookmarkButton from "@/components/ui/BookmarkButton";
 import BackButton from "@/components/ui/BackButton";
 import CommentSection from "@/components/ui/CommentSection";
 import AnimeActionButtons from "@/components/anime/AnimeActionButtons";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import { AnimeProvider } from "@/services/providers"; // Provider Baru
 
 export const revalidate = 3600;
 
@@ -14,8 +14,7 @@ export async function generateMetadata({ params }) {
   const slug = resolvedParams.slug;
 
   try {
-    const res = await fetchWithDelay(`/anime/${slug}`, 0);
-    const anime = res?.data;
+    const anime = await AnimeProvider.Otakudesu.getDetail(slug);
 
     if (!anime) throw new Error("Data tidak ada");
 
@@ -73,8 +72,7 @@ export default async function AnimeDetail({ params }) {
   let animeData = null;
 
   try {
-    const res = await fetchWithDelay(`/anime/${slug}`, 500);
-    animeData = res?.data || null;
+    animeData = await AnimeProvider.Otakudesu.getDetail(slug);
   } catch (error) {
     console.error("Gagal fetch detail anime:", error);
   }

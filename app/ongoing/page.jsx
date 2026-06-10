@@ -1,31 +1,79 @@
-// app/ongoing/page.jsx
 import AnimeCard from "@/components/anime/AnimeCard";
 import Pagination from "@/components/ui/Pagination";
-import { fetchWithDelay, API_ENDPOINTS } from "@/services/api";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import { AnimeProvider } from "@/services/providers";
+import { getMergeKey } from "@/utils/mergeAnime";
 
 export const metadata = { title: "Anime Ongoing - MangNime" };
+const OTAKU_SCAN_PAGES = 5;
+const ALQ_SCAN_PAGES = 3;
+const ALQ_PER_PAGE = 3;
 
 export default async function OngoingPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams?.page || 1);
-  const endpoint =
-    page === 1
-      ? API_ENDPOINTS.ONGOING
-      : `${API_ENDPOINTS.ONGOING}?page=${page}`;
 
-  const res = await fetchWithDelay(endpoint, 500, {
-    next: { revalidate: 3600 },
-  });
+  let otakuList = [];
+  let paginationData = null;
+  let alqaSlice = [];
 
-  let animeList = [];
-  if (res?.data?.animeList) animeList = res.data.animeList;
-  else if (res?.data?.ongoing?.animeList)
-    animeList = res.data.ongoing.animeList;
-  else if (Array.isArray(res?.data)) animeList = res.data;
-  else if (Array.isArray(res)) animeList = res;
+  try {
+    const [otakuCurrentRes, ...restResults] = await Promise.allSettled([
+      AnimeProvider.Otakudesu.getOngoing(page),
+      ...[...Array(OTAKU_SCAN_PAGES)].map((_, i) =>
+        AnimeProvider.Otakudesu.getOngoing(i + 1),
+      ),
+      ...[...Array(ALQ_SCAN_PAGES)].map((_, i) =>
+        AnimeProvider.Alqanime.getOngoing(i + 1),
+      ),
+    ]);
 
-  const paginationData = res?.pagination || null; 
+    const otakuAllResults = restResults.slice(0, OTAKU_SCAN_PAGES);
+    const alqaAllResults = restResults.slice(OTAKU_SCAN_PAGES);
+
+    if (otakuCurrentRes.status === "fulfilled" && otakuCurrentRes.value) {
+      otakuList = otakuCurrentRes.value.data || [];
+      paginationData = otakuCurrentRes.value.pagination || null;
+    }
+
+    const otakuAllKeys = new Set();
+    otakuAllResults.forEach((res) => {
+      if (res.status === "fulfilled" && res.value) {
+        (res.value.data || []).forEach((anime) => {
+          const key = getMergeKey(anime.title);
+          if (key) otakuAllKeys.add(key);
+        });
+      }
+    });
+
+    const alqaSeen = new Set();
+    const alqaExclusives = [];
+
+    alqaAllResults.forEach((res) => {
+      if (res.status !== "fulfilled" || !res.value) return;
+      const items = res.value.data || res.value.animeList || [];
+
+      items.forEach((anime) => {
+        const status = (anime.status || "").toLowerCase();
+        if (status.includes("completed") || status.includes("tamat")) return;
+
+        const key = getMergeKey(anime.title);
+        if (!key) return;
+        if (alqaSeen.has(key)) return;
+        alqaSeen.add(key);
+        if (otakuAllKeys.has(key)) return;
+
+        alqaExclusives.push(anime);
+      });
+    });
+
+    const alqaStart = (page - 1) * ALQ_PER_PAGE;
+    alqaSlice = alqaExclusives.slice(alqaStart, alqaStart + ALQ_PER_PAGE);
+  } catch (error) {
+    console.error("Gagal memuat Ongoing:", error);
+  }
+
+  const animeList = [...otakuList, ...alqaSlice];
 
   return (
     <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-0">
@@ -49,21 +97,27 @@ export default async function OngoingPage({ searchParams }) {
 
       {animeList.length > 0 ? (
         <>
-          <div 
-            key={`ongoing-${page}`} 
+          <div
+            key={`ongoing-${page}`}
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 animate-fade-in-up"
           >
-            {animeList.map((anime, idx) => (
-              <ScrollReveal key={idx}>
-                <AnimeCard anime={anime} index={idx} />
-              </ScrollReveal>
-            ))}
+            {animeList.map((anime, idx) => {
+              const uniqueKey = anime.animeId || anime.slug || `ong-${idx}`;
+              return (
+                <ScrollReveal key={uniqueKey}>
+                  <AnimeCard anime={anime} index={idx} />
+                </ScrollReveal>
+              );
+            })}
           </div>
-          <Pagination pagination={paginationData} basePath="/ongoing" />
+          {paginationData && (
+            <Pagination pagination={paginationData} basePath="/ongoing" />
+          )}
         </>
       ) : (
-        <div className="text-center py-20 text-gray-500 border border-white/5 rounded-2xl bg-white/5">
-          Memuat data ongoing...
+        <div className="flex flex-col items-center justify-center py-20 text-celestia-lavender">
+          <span className="w-10 h-10 border-4 border-celestia-sky border-t-transparent rounded-full animate-spin mb-4"></span>
+          <p className="font-light">Mencari tayangan terbaru...</p>
         </div>
       )}
     </div>

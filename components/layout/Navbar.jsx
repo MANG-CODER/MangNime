@@ -2,15 +2,31 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import SearchBar from "./SearchBar";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
-
   const [pillStyle, setPillStyle] = useState({ left: 0, width: 0, opacity: 0 });
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+        setIsNavVisible(false);
+      } else {
+        setIsNavVisible(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const menuContainerRef = useRef(null);
   const homeRef = useRef(null);
@@ -19,7 +35,12 @@ export default function Navbar() {
 
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -53,13 +74,12 @@ export default function Navbar() {
     "/ongoing",
     "/completed",
     "/genre",
+    "/movies",
     "/anime",
     "/episode",
     "/batch",
   ].some((p) => pathname.startsWith(p));
-  const isKomikSection = ["/komik", "/search"].some((p) =>
-    pathname.startsWith(p),
-  );
+  const isKomikSection = ["/komik"].some((p) => pathname.startsWith(p));
 
   const movePillToActive = useCallback(() => {
     let activeRef = null;
@@ -109,7 +129,13 @@ export default function Navbar() {
   );
 
   return (
-    <nav className="w-full bg-[#0D0B1A]/95 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
+    <nav
+      className={`w-full bg-[#0D0B1A]/95 backdrop-blur-xl border-b border-white/5 sticky z-50 transition-all duration-300 ease-in-out ${
+        isNavVisible
+          ? "top-0 translate-y-0 opacity-100"
+          : "-top-full -translate-y-full opacity-0 pointer-events-none"
+      }`}
+    >
       <div className="container mx-auto px-4 lg:px-8 py-4">
         <div className="flex items-center justify-between gap-4">
           {/* LOGO */}
@@ -130,7 +156,6 @@ export default function Navbar() {
             className="hidden lg:flex items-center gap-2 text-sm font-heading font-bold relative"
             onMouseLeave={handleMouseLeave}
           >
-            {/* ✨ FLOATING PILL BACKGROUND ✨ */}
             <div
               className="absolute top-1 bottom-1 bg-white/10 rounded-xl transition-all duration-300 ease-out z-0 pointer-events-none"
               style={{
@@ -311,6 +336,36 @@ export default function Navbar() {
                       <h4 className="text-white font-bold mb-1">Genre</h4>
                       <p className="text-xs text-gray-400 font-body leading-relaxed">
                         Eksplorasi berbagai anime berdasarkan genre favoritmu.
+                      </p>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/movies"
+                    className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
+                  >
+                    <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-gold text-gray-400 transition-colors">
+                      <svg
+                        className="w-5 h-5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M4 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
+                        <path d="M8 3l-2 4" />
+                        <path d="M14 3l-2 4" />
+                        <path d="M20 3l-2 4" />
+                        <path d="M2 7h20" />
+                      </svg>
+                    </div>
+
+                    <div>
+                      <h4 className="text-white font-bold mb-1">Movies</h4>
+                      <p className="text-xs text-gray-400 font-body leading-relaxed">
+                        Kumpulan anime movie dan film animasi terbaru yang siap
+                        ditonton.
                       </p>
                     </div>
                   </Link>
@@ -633,11 +688,12 @@ export default function Navbar() {
               { label: "Ongoing", path: "/ongoing" },
               { label: "Completed", path: "/completed" },
               { label: "Genre", path: "/genre" },
+              { label: "Movies", path: "/movies" },
             ].map((item) => (
               <Link
                 key={item.label}
                 href={item.path}
-                onClick={() => setIsOpen(false)}
+                // (Tidak perlu onClick setIsOpen lagi di sini karena sudah ditangani oleh useEffect!)
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 {item.label}
@@ -670,7 +726,6 @@ export default function Navbar() {
               <Link
                 key={item.label}
                 href={item.path}
-                onClick={() => setIsOpen(false)}
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 {item.label}
@@ -682,7 +737,6 @@ export default function Navbar() {
           <div className="sm:hidden mt-4 border-t border-white/10 pt-4 flex flex-col gap-4">
             <Link
               href="/bookmark"
-              onClick={() => setIsOpen(false)}
               className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl p-3 text-sm font-bold text-white hover:bg-white/10"
             >
               <svg
@@ -703,7 +757,6 @@ export default function Navbar() {
             {user ? (
               <Link
                 href="/profile"
-                onClick={() => setIsOpen(false)}
                 className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl p-3 hover:bg-white/10"
               >
                 <div className="w-10 h-10 rounded-full overflow-hidden border border-celestia-pink shrink-0">
@@ -726,7 +779,6 @@ export default function Navbar() {
             ) : (
               <Link
                 href={`/login?next=${encodeURIComponent(pathname)}`}
-                onClick={() => setIsOpen(false)}
                 className="px-6 py-2.5 bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white font-bold text-sm rounded-xl hover:scale-105 hover:shadow-glow-purple transition-all text-center flex justify-center"
               >
                 LOGIN

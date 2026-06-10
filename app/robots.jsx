@@ -1,16 +1,20 @@
 export default function robots() {
   return {
     rules: [
-    {
-        userAgent: ['ClaudeBot', 'GPTBot', 'ChatGPT-User', 'CCBot'],
-        disallow: '/',
+      {
+        userAgent: ["ClaudeBot", "GPTBot", "ChatGPT-User", "CCBot"],
+        disallow: "/",
       },
       {
-      userAgent: "*",
-      allow: "/",
-      disallow: "/komik/*/*", // Memblokir semua rute chapter
-    },
-    // Opsional
-    // sitemap: 'https://mangnime.vercel.app/sitemap.xml',
-  ]};
+        userAgent: "*",
+        allow: "/",
+        disallow: [
+          "/komik/*/*",
+          "/api/",
+          "/_next/",
+        ],
+      },
+    ],
+    sitemap: "https://mangnime.my.id/sitemap.xml",
+  };
 }
