@@ -4,14 +4,13 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 import { AnimeProvider } from "@/services/providers";
 import { mergeAnimeLists } from "@/utils/mergeAnime";
 
-export const metadata = { title: "Anime Completed - MangNime" };
-
-  const animeList = mergeAnimeLists(otakuList, alqaList);
+export const metadata = {
+  title: "Anime Completed - MangNime",
+};
 
 export default async function CompletedPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams?.page || 1);
-
 
   let otakuList = [];
   let alqaList = [];
@@ -25,6 +24,7 @@ export default async function CompletedPage({ searchParams }) {
     }
 
     const results = await Promise.allSettled(promises);
+
     if (results[0].status === "fulfilled" && results[0].value) {
       otakuList = results[0].value.data || [];
       paginationData = results[0].value.pagination || null;
@@ -37,32 +37,8 @@ export default async function CompletedPage({ searchParams }) {
     console.error("Gagal memuat Completed:", error);
   }
 
-  const animeMap = new Map();
-
-  otakuList.forEach((anime) => {
-    const key = getMergeKey(anime.title);
-    if (key) animeMap.set(key, anime);
-  });
-
-  alqaList.forEach((anime) => {
-    const status = (anime.status || "").toLowerCase();
-    if (status.includes("ongoing")) return;
-
-    const key = getMergeKey(anime.title);
-
-    if (key && !animeMap.has(key)) {
-      animeMap.set(key, anime);
-    } else if (key && animeMap.has(key)) {
-      const existing = animeMap.get(key);
-      animeMap.set(key, {
-        ...existing,
-        poster: existing.poster || anime.poster,
-        score: existing.score || anime.score || anime.rating,
-      });
-    }
-  });
-
-  const animeList = Array.from(animeMap.values());
+  // Merge Otakudesu + Alqanime
+  const animeList = mergeAnimeLists(otakuList, alqaList);
 
   return (
     <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-0">
@@ -77,6 +53,7 @@ export default async function CompletedPage({ searchParams }) {
                 Completed
               </span>
             </h1>
+
             <p className="text-celestia-lavender/70 font-light text-sm md:text-base tracking-wide max-w-xl mx-auto md:mx-0">
               Tonton anime favoritmu sampai tamat tanpa perlu menunggu episode
               rilis setiap minggu.
@@ -92,7 +69,9 @@ export default async function CompletedPage({ searchParams }) {
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 animate-fade-in-up"
           >
             {animeList.map((anime, idx) => {
-              const uniqueKey = anime.animeId || anime.slug || `comp-${idx}`;
+              const uniqueKey =
+                anime.animeId || anime.slug || anime.anime_id || `comp-${idx}`;
+
               return (
                 <ScrollReveal key={uniqueKey}>
                   <AnimeCard anime={anime} index={idx} />
@@ -100,7 +79,7 @@ export default async function CompletedPage({ searchParams }) {
               );
             })}
           </div>
-          {/* Pagination tetap menggunakan Otakudesu sebagai patokan nomor halaman */}
+
           {paginationData && (
             <Pagination pagination={paginationData} basePath="/completed" />
           )}
@@ -108,6 +87,7 @@ export default async function CompletedPage({ searchParams }) {
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-celestia-lavender">
           <span className="w-10 h-10 border-4 border-celestia-royal border-t-transparent rounded-full animate-spin mb-4"></span>
+
           <p className="font-light">
             Mencari serpihan bintang (Memuat data)...
           </p>
