@@ -1,8 +1,7 @@
 "use client";
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import SearchBar from "./SearchBar";
 
@@ -32,15 +31,12 @@ export default function Navbar() {
   const homeRef = useRef(null);
   const animeRef = useRef(null);
   const komikRef = useRef(null);
-
-  const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const supabase = createClient();
 
   useEffect(() => {
     setIsOpen(false);
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   useEffect(() => {
     const checkUser = async () => {
