@@ -6,11 +6,13 @@ export default function LastReadButton({ slug }) {
   const [lastRead, setLastRead] = useState(null);
 
   useEffect(() => {
-    const savedHistory = JSON.parse(
-      localStorage.getItem("mangnime_history") || "{}",
-    );
-    if (savedHistory[slug]) {
-      setLastRead(savedHistory[slug]);
+    const savedHistory =
+      JSON.parse(localStorage.getItem("mangnime_history")) || {};
+
+    const komikHistory = savedHistory.komik || {};
+
+    if (komikHistory[slug]) {
+      setLastRead(komikHistory[slug]);
     }
   }, [slug]);
 
@@ -33,7 +35,7 @@ export default function LastReadButton({ slug }) {
           clipRule="evenodd"
         />
       </svg>
-      Lanjut Ch. {lastRead.chapter}
+      Lanjut Ch. {lastRead.chapterIndex || lastRead.chapter}
     </Link>
   );
 }

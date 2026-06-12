@@ -8,12 +8,12 @@ export default function KomikActionButtons({ komik, slug, firstChapter }) {
   const [history, setHistory] = useState(null);
   const [showToast, setShowToast] = useState(false);
 
-  // Cek History Terakhir Dibaca
   useEffect(() => {
-    const histData = JSON.parse(localStorage.getItem("mangnime_history")) || {
-      komik: {},
-    };
-    if (histData.komik[slug]) setHistory(histData.komik[slug]);
+    const histData = JSON.parse(localStorage.getItem("mangnime_history")) || {};
+    const komikHistory = histData.komik || {};
+    if (komikHistory[slug]) {
+      setHistory(komikHistory[slug]);
+    }
   }, [slug]);
 
   const handleShare = () => {
@@ -27,6 +27,7 @@ export default function KomikActionButtons({ komik, slug, firstChapter }) {
     : firstChapter
       ? `/komik/${slug}/chapter-${firstChapter.chapterIndex}`
       : "#";
+
   const readText = history
     ? `Lanjut Ch. ${history.chapterIndex}`
     : firstChapter

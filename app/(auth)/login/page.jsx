@@ -10,11 +10,24 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [alertInfo, setAlertInfo] = useState({
+    show: false,
+    type: "",
+    text: "",
+  });
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
+
+  const showAlert = (type, text) => {
+    setAlertInfo({ show: true, type, text });
+    setTimeout(() => {
+      setAlertInfo({ show: false, type: "", text: "" });
+    }, 5000);
+  };
+
+  const closeAlert = () => setAlertInfo({ show: false, type: "", text: "" });
 
   const getRedirectUrl = () => {
     const rawNext = searchParams.get("next");
@@ -26,21 +39,24 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
+    closeAlert();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: getRedirectUrl() },
     });
     if (error) {
-      setError("Gagal login dengan Google.");
+      showAlert("error", "Gagal login dengan Google.");
       setLoading(false);
     }
   };
 
   const handleSignIn = async (e) => {
     e.preventDefault();
-    if (!email || !password) return setError("Email dan password wajib diisi!");
+    if (!email || !password)
+      return showAlert("error", "Email dan password wajib diisi!");
+
     setLoading(true);
-    setError(null);
+    closeAlert();
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -49,11 +65,12 @@ export default function LoginPage() {
 
     if (error) {
       if (error.message.includes("Email not confirmed")) {
-        setError("Email belum dikonfirmasi. Cek kotak masuk Anda!");
+        showAlert("error", "Email belum dikonfirmasi. Cek kotak masuk Anda!");
       } else {
-        setError("Email atau password salah.");
+        showAlert("error", "Email atau password salah.");
       }
     } else {
+      showAlert("success", "Berhasil masuk! Mengalihkan...");
       const rawNext = searchParams.get("next");
       router.push(rawNext && rawNext !== "/" ? rawNext : "/");
       router.refresh();
@@ -67,7 +84,75 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#0D0B1A] flex items-center justify-center relative px-4 overflow-hidden py-12">
-      <div className="w-full max-w-md bg-[#151226]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10 animate-fade-in">
+      {/* --- FLOATING ALERT (Lolos dari halangan Navbar) --- */}
+      {alertInfo.show && (
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[100] animate-fade-in w-[90%] max-w-md">
+          <div
+            className={`flex items-start justify-between p-4 rounded-2xl border backdrop-blur-xl shadow-2xl ${alertInfo.type === "error" ? "bg-red-500/10 border-red-500/50" : "bg-green-500/10 border-green-500/50"}`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`p-2 rounded-full ${alertInfo.type === "error" ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"}`}
+              >
+                {alertInfo.type === "error" ? (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                )}
+              </div>
+              <p
+                className={`text-sm font-medium ${alertInfo.type === "error" ? "text-red-200" : "text-green-200"}`}
+              >
+                {alertInfo.text}
+              </p>
+            </div>
+            <button
+              onClick={closeAlert}
+              className={`ml-4 p-1.5 rounded-lg transition-colors ${alertInfo.type === "error" ? "text-red-400 hover:bg-red-500/20" : "text-green-400 hover:bg-green-500/20"}`}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="w-full max-w-md bg-[#151226]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10 animate-fade-in mt-4">
         <div className="flex justify-center mb-8">
           <Link href="/">
             <Image
@@ -81,14 +166,8 @@ export default function LoginPage() {
         </div>
 
         <h2 className="text-2xl font-black text-white text-center mb-6">
-          Masuk ke <span className="text-celestia-pink">Akun</span>
+          Masuk ke <span className="text-[#FF78C6]">Anak Tangga</span>
         </h2>
-
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm px-4 py-3 rounded-xl mb-4 text-center">
-            {error}
-          </div>
-        )}
 
         <button
           onClick={handleGoogleLogin}
@@ -134,7 +213,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="nama@email.com"
-              className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-celestia-lavender focus:bg-white/5 transition-all"
+              className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-[#8B6CFF] focus:bg-white/5 transition-all"
             />
           </div>
           <div>
@@ -146,14 +225,14 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-celestia-lavender focus:bg-white/5 transition-all"
+              className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-[#8B6CFF] focus:bg-white/5 transition-all"
             />
           </div>
           <div className="pt-2 flex flex-col gap-3">
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-glow-purple disabled:opacity-50"
+              className="w-full py-3 bg-gradient-to-r from-[#5538A8] to-[#8B6CFF] text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-lg disabled:opacity-50"
             >
               {loading ? "MEMPROSES..." : "MASUK"}
             </button>
