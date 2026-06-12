@@ -1,7 +1,4 @@
-import { headers } from "next/headers";
-
-const KOMIK_API_URL =
-  "https://komikcast-api-cf.komikcast-api-cf-pani.workers.dev";
+const KOMIK_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -9,29 +6,23 @@ export const fetchKomikAPI = async (endpoint, delayMs = 0, options = {}) => {
   try {
     if (delayMs > 0) await delay(delayMs);
 
-    const headersList = await headers();
-
-    const clientIp =
-      headersList.get("x-forwarded-for") ||
-      headersList.get("x-real-ip") ||
-      "Unknown IP";
-
-      const clientUserAgent = headersList.get("user-agent") || "node";
-
-    const res = await fetch(`${KOMIK_API_URL}${endpoint}`, {
+    // Otomatis menambahkan /api agar tidak error 404 NotFound di Cloudflare
+    const res = await fetch(`${KOMIK_API_URL}/api${endpoint}`, {
       headers: {
         Accept: "application/json",
-        "x-forwarded-for": clientIp,
-        "User-Agent": clientUserAgent,
+        // x-forwarded-for dan User-Agent dihapus. Biar Cloudflare yang deteksi!
         Authorization: `Bearer ${process.env.KOMIK_API_SECRET}`,
       },
+      next: { revalidate: 3600 },
       ...options,
     });
 
     if (!res.ok) {
+      const errDetail = await res.json().catch(() => ({}));
       console.warn(
-        `⚠️ Komik API gagal merespons. Status: ${res.status} | Endpoint: ${endpoint}`,
+        `⚠️ Komik API gagal. Status: ${res.status} | Endpoint: ${endpoint}`,
       );
+      console.warn(`🕵️‍♂️ Alasan Asli:`, errDetail.message || "Tidak diketahui");
       return null;
     }
 
