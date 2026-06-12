@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
-const KOMIK_API_URL = "https://komikcastapi.vestiapani.deno.net/api";
+const KOMIK_API_URL =
+  "https://komikcast-api-cf.komikcast-api-cf-pani.workers.dev";
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
