@@ -9,6 +9,14 @@ export const metadata = {
 };
 export const revalidate = 7200;
 
+const withTimeout = (promise, ms = 8000) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout")), ms),
+    ),
+  ]);
+
 export default async function CompletedPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams?.page || 1);
@@ -16,12 +24,13 @@ export default async function CompletedPage({ searchParams }) {
   let otakuList = [];
   let alqaList = [];
   let paginationData = null;
+  let fetchError = false;
 
   try {
-    const promises = [AnimeProvider.Otakudesu.getCompleted(page)];
+    const promises = [withTimeout(AnimeProvider.Otakudesu.getCompleted(page))];
 
     if (page === 1) {
-      promises.push(AnimeProvider.Alqanime.getCompleted(page));
+      promises.push(withTimeout(AnimeProvider.Alqanime.getCompleted(page)));
     }
 
     const results = await Promise.allSettled(promises);
@@ -34,11 +43,15 @@ export default async function CompletedPage({ searchParams }) {
     if (page === 1 && results[1]?.status === "fulfilled" && results[1].value) {
       alqaList = results[1].value.data || results[1].value.animeList || [];
     }
+
+    // Kalau semua gagal, set error
+    const allFailed = results.every((r) => r.status === "rejected");
+    if (allFailed) fetchError = true;
   } catch (error) {
     console.error("Gagal memuat Completed:", error);
+    fetchError = true;
   }
 
-  // Merge Otakudesu + Alqanime
   const animeList = mergeAnimeLists(otakuList, alqaList);
 
   return (
@@ -54,7 +67,6 @@ export default async function CompletedPage({ searchParams }) {
                 Completed
               </span>
             </h1>
-
             <p className="text-celestia-lavender/70 font-light text-sm md:text-base tracking-wide max-w-xl mx-auto md:mx-0">
               Tonton anime favoritmu sampai tamat tanpa perlu menunggu episode
               rilis setiap minggu.
@@ -72,7 +84,6 @@ export default async function CompletedPage({ searchParams }) {
             {animeList.map((anime, idx) => {
               const uniqueKey =
                 anime.animeId || anime.slug || anime.anime_id || `comp-${idx}`;
-
               return (
                 <ScrollReveal key={uniqueKey}>
                   <AnimeCard anime={anime} index={idx} />
@@ -85,13 +96,17 @@ export default async function CompletedPage({ searchParams }) {
             <Pagination pagination={paginationData} basePath="/completed" />
           )}
         </>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-celestia-lavender">
-          <span className="w-10 h-10 border-4 border-celestia-royal border-t-transparent rounded-full animate-spin mb-4"></span>
-
-          <p className="font-light">
-            Mencari serpihan bintang (Memuat data)...
+      ) : fetchError ? (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-500 border border-white/5 rounded-2xl bg-white/[0.02]">
+          <p className="text-4xl mb-4">😵</p>
+          <p className="font-bold text-white">Gagal memuat data</p>
+          <p className="text-sm mt-2 text-gray-400">
+            Server sedang tidak bisa diakses, coba beberapa saat lagi.
           </p>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-500 border border-white/5 rounded-2xl bg-white/[0.02]">
+          <p className="font-light">Tidak ada anime completed tersedia.</p>
         </div>
       )}
     </div>

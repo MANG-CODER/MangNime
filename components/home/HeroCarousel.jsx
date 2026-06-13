@@ -42,7 +42,7 @@ export default function HeroCarousel({ items }) {
           fill
           quality={75}
           className="object-cover object-top opacity-40 blur-xl scale-110"
-          priority
+          priority={currentIndex === 0}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-celestia-night via-celestia-night/80 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-celestia-night via-celestia-night/60 to-transparent" />
@@ -101,8 +101,9 @@ export default function HeroCarousel({ items }) {
                 alt={currentAnime.title}
                 fill
                 sizes="(max-width: 768px) 1px, (max-width: 1024px) 224px, 288px"
+                quality={75}
+                priority={currentIndex === 0}
                 className="object-cover"
-                priority
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
             </div>

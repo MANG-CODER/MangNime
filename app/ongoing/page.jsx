@@ -7,9 +7,14 @@ import { getMergeKey } from "@/utils/mergeAnime";
 export const metadata = { title: "Anime Ongoing - MangNime" };
 export const revalidate = 1800;
 
-const OTAKU_SCAN_PAGES = 2;
-const ALQ_SCAN_PAGES = 1;
-const ALQ_PER_PAGE = 3;
+const withTimeout = (promise, ms = 8000) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout")), ms),
+    ),
+  ]);
+
 export default async function OngoingPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams?.page || 1);
@@ -17,61 +22,51 @@ export default async function OngoingPage({ searchParams }) {
   let otakuList = [];
   let paginationData = null;
   let alqaSlice = [];
+  let fetchError = false;
 
   try {
-    const [otakuCurrentRes, ...restResults] = await Promise.allSettled([
-      AnimeProvider.Otakudesu.getOngoing(page),
-      ...[...Array(OTAKU_SCAN_PAGES)].map((_, i) =>
-        AnimeProvider.Otakudesu.getOngoing(i + 1),
-      ),
-      ...[...Array(ALQ_SCAN_PAGES)].map((_, i) =>
-        AnimeProvider.Alqanime.getOngoing(i + 1),
-      ),
+    const [otakuRes, alqaRes] = await Promise.allSettled([
+      withTimeout(AnimeProvider.Otakudesu.getOngoing(page)),
+      withTimeout(AnimeProvider.Alqanime.getOngoing(page)),
     ]);
 
-    const otakuAllResults = restResults.slice(0, OTAKU_SCAN_PAGES);
-    const alqaAllResults = restResults.slice(OTAKU_SCAN_PAGES);
-
-    if (otakuCurrentRes.status === "fulfilled" && otakuCurrentRes.value) {
-      otakuList = otakuCurrentRes.value.data || [];
-      paginationData = otakuCurrentRes.value.pagination || null;
+    if (otakuRes.status === "fulfilled" && otakuRes.value) {
+      otakuList = otakuRes.value.data || [];
+      paginationData = otakuRes.value.pagination || null;
     }
 
-    const otakuAllKeys = new Set();
-    otakuAllResults.forEach((res) => {
-      if (res.status === "fulfilled" && res.value) {
-        (res.value.data || []).forEach((anime) => {
-          const key = getMergeKey(anime.title);
-          if (key) otakuAllKeys.add(key);
-        });
-      }
-    });
+    if (alqaRes.status === "fulfilled" && alqaRes.value) {
+      const alqaItems = alqaRes.value.data || alqaRes.value.animeList || [];
 
-    const alqaSeen = new Set();
-    const alqaExclusives = [];
+      // Kumpulkan key otakudesu buat dedup
+      const otakuKeys = new Set(
+        otakuList.map((a) => getMergeKey(a.title)).filter(Boolean),
+      );
 
-    alqaAllResults.forEach((res) => {
-      if (res.status !== "fulfilled" || !res.value) return;
-      const items = res.value.data || res.value.animeList || [];
+      const alqaSeen = new Set();
+      const alqaExclusives = [];
 
-      items.forEach((anime) => {
+      alqaItems.forEach((anime) => {
         const status = (anime.status || "").toLowerCase();
         if (status.includes("completed") || status.includes("tamat")) return;
 
         const key = getMergeKey(anime.title);
-        if (!key) return;
-        if (alqaSeen.has(key)) return;
-        alqaSeen.add(key);
-        if (otakuAllKeys.has(key)) return;
+        if (!key || alqaSeen.has(key) || otakuKeys.has(key)) return;
 
+        alqaSeen.add(key);
         alqaExclusives.push(anime);
       });
-    });
 
-    const alqaStart = (page - 1) * ALQ_PER_PAGE;
-    alqaSlice = alqaExclusives.slice(alqaStart, alqaStart + ALQ_PER_PAGE);
+      alqaSlice = alqaExclusives.slice(0, 3);
+    }
+
+    // Kalau dua-duanya gagal, set error
+    if (otakuRes.status === "rejected" && alqaRes.status === "rejected") {
+      fetchError = true;
+    }
   } catch (error) {
     console.error("Gagal memuat Ongoing:", error);
+    fetchError = true;
   }
 
   const animeList = [...otakuList, ...alqaSlice];
@@ -115,10 +110,17 @@ export default async function OngoingPage({ searchParams }) {
             <Pagination pagination={paginationData} basePath="/ongoing" />
           )}
         </>
+      ) : fetchError ? (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-500 border border-white/5 rounded-2xl bg-white/[0.02]">
+          <p className="text-4xl mb-4">😵</p>
+          <p className="font-bold text-white">Gagal memuat data</p>
+          <p className="text-sm mt-2 text-gray-400">
+            Server sedang tidak bisa diakses, coba beberapa saat lagi.
+          </p>
+        </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-celestia-lavender">
-          <span className="w-10 h-10 border-4 border-celestia-sky border-t-transparent rounded-full animate-spin mb-4"></span>
-          <p className="font-light">Mencari tayangan terbaru...</p>
+        <div className="flex flex-col items-center justify-center py-20 text-gray-500 border border-white/5 rounded-2xl bg-white/[0.02]">
+          <p className="font-light">Tidak ada anime ongoing tersedia.</p>
         </div>
       )}
     </div>
