@@ -40,6 +40,7 @@ export default function HeroCarousel({ items }) {
           src={imageUrl}
           alt="Background Blur"
           fill
+          quality={75}
           className="object-cover object-top opacity-40 blur-xl scale-110"
           priority
         />

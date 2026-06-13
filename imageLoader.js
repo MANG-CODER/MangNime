@@ -4,6 +4,11 @@ export default function animeImageLoader({ src, width, quality }) {
     "otakudesu.blog",
     "cdn.alqanime.net",
     "otakudesu.cloud",
+    "komikcast.com",
+    "cdn.komikcast.com",
+    "placehold.co",
+    "sv1.imgkc1.my.id",
+    "minio.imgkc1.my.id",
   ];
 
   const isBypass = bypassDomains.some((domain) => src.includes(domain));

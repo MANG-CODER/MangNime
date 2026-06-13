@@ -22,13 +22,18 @@ export default function KomikCard({ komik }) {
   const type = itemData.type || itemData.format || "";
 
   return (
-    <Link href={`/komik/${slug}`} prefetch={false} className="group flex flex-col gap-2">
+    <Link
+      href={`/komik/${slug}`}
+      prefetch={false}
+      className="group flex flex-col gap-2"
+    >
       <div className="aspect-[3/4] rounded-xl overflow-hidden relative border border-white/10 bg-[#151226]">
         <Image
           src={image}
           alt={title}
           fill
           sizes="(max-width: 768px) 50vw, 20vw"
+          quality={75}
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
 
