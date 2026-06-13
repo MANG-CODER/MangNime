@@ -103,7 +103,6 @@ export async function coreFetcher(url, options = {}) {
 
       if (i === retries) {
         // Semua retry gagal → coba fallback otakudesu
-        // BASE_URL diambil dari url itu sendiri (sebelum path /alqanime/...)
         const baseUrl = url
           .split("/alqanime/")[0]
           .replace(/\/anime$/, "/anime");

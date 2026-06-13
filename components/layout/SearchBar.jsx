@@ -6,7 +6,7 @@ import Link from "next/link";
 import { searchKomikServer } from "@/services/searchAction";
 import { searchAllAnime } from "@/services/animeAction";
 
-const SEARCH_CACHE_TTL = 5 * 60 * 1000; // 5 menit
+const SEARCH_CACHE_TTL = 5 * 60 * 1000;
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");
@@ -16,7 +16,7 @@ export default function SearchBar() {
 
   const router = useRouter();
   const searchContainerRef = useRef(null);
-  const searchCache = useRef(new Map()); // ← cache per sesi
+  const searchCache = useRef(new Map());
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -44,7 +44,7 @@ export default function SearchBar() {
       const cached = searchCache.current.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < SEARCH_CACHE_TTL) {
         setResults(cached.data);
-        return; // langsung balik, gak perlu loading
+        return;
       }
 
       setIsLoading(true);
