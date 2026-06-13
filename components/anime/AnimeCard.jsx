@@ -20,6 +20,7 @@ export default function AnimeCard({ anime, index = 0, hideMeta = false }) {
   return (
     <Link
       href={targetUrl}
+      prefetch={false}
       className="group relative flex flex-col gap-3 rounded-2xl p-2.5 transition-all duration-500 hover:bg-white/[0.02] border border-transparent hover:border-celestia-lavender/30 hover:shadow-glow-purple"
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-celestia-deep shadow-lg">

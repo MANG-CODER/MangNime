@@ -13,7 +13,7 @@ export const fetchKomikAPI = async (endpoint, delayMs = 0, options = {}) => {
         // x-forwarded-for dan User-Agent dihapus. Biar Cloudflare yang deteksi!
         Authorization: `Bearer ${process.env.KOMIK_API_SECRET}`,
       },
-      next: { revalidate: 3600 },
+      next: { revalidate: 3600},
       ...options,
     });
 
