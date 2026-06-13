@@ -10,21 +10,27 @@ export default function ChapterHistoryTracker({
   useEffect(() => {
     if (!slug || !chapterIndex) return;
 
-    const savedHistory = JSON.parse(
-      localStorage.getItem("mangnime_history") || "{}",
-    );
+    try {
+      const raw = JSON.parse(localStorage.getItem("mangnime_history")) || {};
+      const hist = {
+        anime: raw.anime || {},
+        komik: raw.komik || {},
+      };
 
-    // Simpan/Update chapter terbaru yang dibaca untuk komik ini
-    savedHistory[slug] = {
-      title,
-      chapter: chapterIndex,
-      image,
-      url: `/komik/${slug}/chapter-${chapterIndex}`,
-      timestamp: Date.now(),
-    };
+      hist.komik[slug] = {
+        title,
+        chapter: chapterIndex,
+        chapterIndex,
+        image: image || "https://placehold.co/300x400",
+        url: `/komik/${slug}/chapter-${chapterIndex}`,
+        updatedAt: new Date().toISOString(),
+      };
 
-    localStorage.setItem("mangnime_history", JSON.stringify(savedHistory));
+      localStorage.setItem("mangnime_history", JSON.stringify(hist));
+    } catch (e) {
+      localStorage.removeItem("mangnime_history");
+    }
   }, [slug, chapterIndex, title, image]);
 
-  return null; // Komponen ini tidak menampilkan apa-apa (bekerja di belakang layar)
+  return null;
 }
