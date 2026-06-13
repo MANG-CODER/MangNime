@@ -31,6 +31,7 @@ export default function ProfilePage() {
   const [cropScale, setCropScale] = useState(1);
   const [cropX, setCropX] = useState(0);
   const [cropY, setCropY] = useState(0);
+  const [minScale, setMinScale] = useState(1);
   const [finalBlob, setFinalBlob] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
 
@@ -104,11 +105,18 @@ export default function ProfilePage() {
   // --- LOGIKA DRAW CANVAS UNTUK MANIPULASI GAMBAR ---
   useEffect(() => {
     if (cropModal && rawImageSrc && canvasRef.current) {
-      const canvas = canvasRef.current;
       const img = new Image();
       img.src = rawImageSrc;
       img.onload = () => {
         imageRef.current = img;
+        const fitScale = Math.max(
+          250 / img.naturalWidth,
+          250 / img.naturalHeight,
+        );
+        setMinScale(fitScale);
+        setCropScale(fitScale);
+        setCropX(0);
+        setCropY(0);
         drawCanvas();
       };
     }
@@ -120,22 +128,22 @@ export default function ProfilePage() {
     }
   }, [cropScale, cropX, cropY]);
 
- const getMaxOffset = () => {
-   if (!imageRef.current) return { maxX: 0, maxY: 0 };
-   const img = imageRef.current;
-   const scaledW = img.naturalWidth * cropScale;
-   const scaledH = img.naturalHeight * cropScale;
-   const maxX = Math.max(0, (scaledW - 250) / 2);
-   const maxY = Math.max(0, (scaledH - 250) / 2);
-   return { maxX, maxY };
- };
+const getMaxOffset = () => {
+  if (!imageRef.current) return { maxX: 0, maxY: 0 };
+  const img = imageRef.current;
+  const scaledW = img.naturalWidth * cropScale;
+  const scaledH = img.naturalHeight * cropScale;
+  const maxX = Math.max(0, (scaledW - 250) / 2);
+  const maxY = Math.max(0, (scaledH - 250) / 2);
+  return { maxX, maxY };
+};
 
 const drawCanvas = () => {
   const canvas = canvasRef.current;
   if (!canvas || !imageRef.current) return;
   const ctx = canvas.getContext("2d");
   const img = imageRef.current;
-  const SIZE = canvas.width; // 250
+  const SIZE = canvas.width;
 
   const scaledW = img.naturalWidth * cropScale;
   const scaledH = img.naturalHeight * cropScale;
@@ -212,7 +220,7 @@ const drawCanvas = () => {
     const reader = new FileReader();
     reader.onload = () => {
       setRawImageSrc(reader.result);
-      setCropScale(1);
+      setCropScale(0);
       setCropX(0);
       setCropY(0);
       setCropModal(true);
@@ -319,12 +327,12 @@ const drawCanvas = () => {
   const currentAvatar =
     user.user_metadata?.avatar_url || "https://placehold.co/200";
 
-  const sliderMaxX = imageRef.current
-    ? Math.max(0, (imageRef.current.naturalWidth * cropScale - 250) / 2)
-    : 0;
-  const sliderMaxY = imageRef.current
-    ? Math.max(0, (imageRef.current.naturalHeight * cropScale - 250) / 2)
-    : 0;
+ const sliderMaxX = imageRef.current
+   ? Math.max(0, (imageRef.current.naturalWidth * cropScale - 250) / 2)
+   : 0;
+ const sliderMaxY = imageRef.current
+   ? Math.max(0, (imageRef.current.naturalHeight * cropScale - 250) / 2)
+   : 0;
 
   return (
     <div className="min-h-screen bg-[#0D0B1A] pt-32 pb-20 px-4 relative">
@@ -431,9 +439,9 @@ const drawCanvas = () => {
                 </label>
                 <input
                   type="range"
-                  min="1"
-                  max="3"
-                  step="0.1"
+                  min={minScale}
+                  max={minScale * 3}
+                  step={0.01}
                   value={cropScale}
                   onChange={(e) => setCropScale(parseFloat(e.target.value))}
                   className="w-full h-1 bg-gray-700 rounded-lg accent-[#FF78C6]"
