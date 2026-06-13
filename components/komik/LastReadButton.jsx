@@ -9,10 +9,8 @@ export default function LastReadButton({ slug }) {
     const savedHistory =
       JSON.parse(localStorage.getItem("mangnime_history")) || {};
 
-    const komikHistory = savedHistory.komik || {};
-
-    if (komikHistory[slug]) {
-      setLastRead(komikHistory[slug]);
+    if (savedHistory[slug]) {
+      setLastRead(savedHistory[slug]);
     }
   }, [slug]);
 
