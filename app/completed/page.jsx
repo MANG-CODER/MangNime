@@ -7,6 +7,7 @@ import { mergeAnimeLists } from "@/utils/mergeAnime";
 export const metadata = {
   title: "Anime Completed - MangNime",
 };
+export const revalidate = 7200;
 
 export default async function CompletedPage({ searchParams }) {
   const resolvedParams = await searchParams;

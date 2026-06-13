@@ -5,10 +5,11 @@ import { AnimeProvider } from "@/services/providers";
 import { getMergeKey } from "@/utils/mergeAnime";
 
 export const metadata = { title: "Anime Ongoing - MangNime" };
-const OTAKU_SCAN_PAGES = 5;
-const ALQ_SCAN_PAGES = 3;
-const ALQ_PER_PAGE = 3;
+export const revalidate = 1800;
 
+const OTAKU_SCAN_PAGES = 2;
+const ALQ_SCAN_PAGES = 1;
+const ALQ_PER_PAGE = 3;
 export default async function OngoingPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams?.page || 1);
