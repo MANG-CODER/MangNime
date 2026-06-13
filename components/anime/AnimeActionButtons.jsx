@@ -9,10 +9,13 @@ export default function AnimeActionButtons({ anime, slug, latestEpisode }) {
   const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
-    const histData = JSON.parse(localStorage.getItem("mangnime_history")) || {
-      anime: {},
-    };
-    if (histData.anime[slug]) setHistory(histData.anime[slug]);
+    try {
+      const histData =
+        JSON.parse(localStorage.getItem("mangnime_history")) || {};
+      const animeHistory = histData.anime || {};
+      if (animeHistory[slug]) setHistory(animeHistory[slug]);
+    } catch (e) {
+    }
   }, [slug]);
 
   const handleShare = () => {
