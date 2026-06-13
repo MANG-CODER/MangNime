@@ -114,61 +114,41 @@ export default function ProfilePage() {
     }
   }, [cropModal, rawImageSrc]);
 
-  // Re-draw setiap kali cropScale/cropX/cropY berubah
   useEffect(() => {
     if (cropModal && imageRef.current) {
       drawCanvas();
     }
   }, [cropScale, cropX, cropY]);
 
-  const getMaxOffset = () => {
-    if (!imageRef.current) return { maxX: 0, maxY: 0 };
-    const img = imageRef.current;
-    const size = Math.min(img.width, img.height);
-    const maxX = (img.width - size) / 2;
-    const maxY = (img.height - size) / 2;
-    return { maxX, maxY };
-  };
+ const getMaxOffset = () => {
+   if (!imageRef.current) return { maxX: 0, maxY: 0 };
+   const img = imageRef.current;
+   const scaledW = img.naturalWidth * cropScale;
+   const scaledH = img.naturalHeight * cropScale;
+   const maxX = Math.max(0, (scaledW - 250) / 2);
+   const maxY = Math.max(0, (scaledH - 250) / 2);
+   return { maxX, maxY };
+ };
 
 const drawCanvas = () => {
   const canvas = canvasRef.current;
   if (!canvas || !imageRef.current) return;
-
   const ctx = canvas.getContext("2d");
   const img = imageRef.current;
+  const SIZE = canvas.width; // 250
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const scaledW = img.naturalWidth * cropScale;
+  const scaledH = img.naturalHeight * cropScale;
 
-  const scale = cropScale;
+  const drawX = (SIZE - scaledW) / 2 + cropX;
+  const drawY = (SIZE - scaledH) / 2 + cropY;
 
-  const baseScale = Math.max(
-    canvas.width / img.width,
-    canvas.height / img.height,
-  );
-
-  const drawWidth = img.width * baseScale * cropScale;
-
-  const drawHeight = img.height * baseScale * cropScale;
-
-  const targetX = (canvas.width - drawWidth) / 2 + cropX;
-
-  const targetY = (canvas.height - drawHeight) / 2 + cropY;
-
+  ctx.clearRect(0, 0, SIZE, SIZE);
   ctx.save();
-
   ctx.beginPath();
-  ctx.arc(
-    canvas.width / 2,
-    canvas.height / 2,
-    canvas.width / 2,
-    0,
-    Math.PI * 2,
-  );
-
+  ctx.arc(SIZE / 2, SIZE / 2, SIZE / 2, 0, Math.PI * 2);
   ctx.clip();
-
-  ctx.drawImage(img, targetX, targetY, drawWidth, drawHeight);
-
+  ctx.drawImage(img, drawX, drawY, scaledW, scaledH);
   ctx.restore();
 };
 
@@ -182,16 +162,12 @@ const drawCanvas = () => {
   const handleMouseMove = (e) => {
     if (!isDragging || !imageRef.current) return;
     const img = imageRef.current;
-    const size = Math.min(img.width, img.height);
     const { maxX, maxY } = getMaxOffset();
-
-    // Konversi gerakan pixel layar → koordinat gambar asli
-    const sensitivity = size / canvasRef.current.width;
-    const dx = (e.clientX - dragStart.x) * sensitivity;
-    const dy = (e.clientY - dragStart.y) * sensitivity;
-
-    setCropX(Math.max(-maxX, Math.min(maxX, dragStartCrop.x + dx)));
-    setCropY(Math.max(-maxY, Math.min(maxY, dragStartCrop.y + dy)));
+    const ratio = (img.naturalWidth * cropScale) / 250;
+    const newX = dragStartCrop.x + (e.clientX - dragStart.x) * ratio;
+    const newY = dragStartCrop.y + (e.clientY - dragStart.y) * ratio;
+    setCropX(Math.max(-maxX, Math.min(maxX, newX)));
+    setCropY(Math.max(-maxY, Math.min(maxY, newY)));
   };
 
   const handleMouseUp = () => setIsDragging(false);
@@ -208,15 +184,12 @@ const drawCanvas = () => {
     if (!isDragging || !imageRef.current) return;
     const touch = e.touches[0];
     const img = imageRef.current;
-    const size = Math.min(img.width, img.height);
     const { maxX, maxY } = getMaxOffset();
-
-    const scaleRatio = size / 250;
-    const dx = (touch.clientX - dragStart.x) * scaleRatio;
-    const dy = (touch.clientY - dragStart.y) * scaleRatio;
-
-    setCropX(Math.max(-maxX, Math.min(maxX, dragStartCrop.x + dx)));
-    setCropY(Math.max(-maxY, Math.min(maxY, dragStartCrop.y + dy)));
+    const ratio = (img.naturalWidth * cropScale) / 250;
+    const newX = dragStartCrop.x + (touch.clientX - dragStart.x) * ratio;
+    const newY = dragStartCrop.y + (touch.clientY - dragStart.y) * ratio;
+    setCropX(Math.max(-maxX, Math.min(maxX, newX)));
+    setCropY(Math.max(-maxY, Math.min(maxY, newY)));
   };
 
   const handleTouchEnd = () => setIsDragging(false);
@@ -346,20 +319,11 @@ const drawCanvas = () => {
   const currentAvatar =
     user.user_metadata?.avatar_url || "https://placehold.co/200";
 
-  // Hitung max offset untuk slider (dinamis berdasarkan gambar)
   const sliderMaxX = imageRef.current
-    ? Math.floor(
-        (imageRef.current.width -
-          Math.min(imageRef.current.width, imageRef.current.height)) /
-          2,
-      )
+    ? Math.max(0, (imageRef.current.naturalWidth * cropScale - 250) / 2)
     : 0;
   const sliderMaxY = imageRef.current
-    ? Math.floor(
-        (imageRef.current.height -
-          Math.min(imageRef.current.width, imageRef.current.height)) /
-          2,
-      )
+    ? Math.max(0, (imageRef.current.naturalHeight * cropScale - 250) / 2)
     : 0;
 
   return (
