@@ -6,6 +6,8 @@ import Link from "next/link";
 import { searchKomikServer } from "@/services/searchAction";
 import { searchAllAnime } from "@/services/animeAction";
 
+const SEARCH_CACHE_TTL = 5 * 60 * 1000; // 5 menit
+
 export default function SearchBar() {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -14,6 +16,7 @@ export default function SearchBar() {
 
   const router = useRouter();
   const searchContainerRef = useRef(null);
+  const searchCache = useRef(new Map()); // ← cache per sesi
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -30,15 +33,25 @@ export default function SearchBar() {
 
   useEffect(() => {
     const fetchSearchResults = async () => {
-      if (query.trim().length < 3) {
+      const trimmed = query.trim();
+      if (trimmed.length < 3) {
         setResults([]);
         return;
       }
+
+      // Cek cache dulu
+      const cacheKey = trimmed.toLowerCase();
+      const cached = searchCache.current.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < SEARCH_CACHE_TTL) {
+        setResults(cached.data);
+        return; // langsung balik, gak perlu loading
+      }
+
       setIsLoading(true);
       try {
         const [animeRes, komikRes] = await Promise.allSettled([
-          searchAllAnime(query),
-          searchKomikServer(query),
+          searchAllAnime(trimmed),
+          searchKomikServer(trimmed),
         ]);
 
         let combinedResults = [];
@@ -55,7 +68,6 @@ export default function SearchBar() {
           combinedResults = [...combinedResults, ...slicedAnime];
         }
 
-        // 2. Olah Hasil Komik (Tetap sama seperti aslinya)
         if (komikRes.status === "fulfilled" && komikRes.value) {
           const kData = komikRes.value?.data?.data || [];
           const slicedKomik = Array.isArray(kData)
@@ -64,8 +76,14 @@ export default function SearchBar() {
           combinedResults = [...combinedResults, ...slicedKomik];
         }
 
+        // Simpan ke cache
+        searchCache.current.set(cacheKey, {
+          data: combinedResults,
+          timestamp: Date.now(),
+        });
+
         setResults(combinedResults);
-      } catch (error) {
+      } catch {
         setResults([]);
       } finally {
         setIsLoading(false);

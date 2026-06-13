@@ -50,89 +50,128 @@ export const OtakudesuProvider = {
   },
 
   getHome: async () => {
-    const res = await coreFetcher(`${BASE_URL}${OTAKUDESU_ENDPOINTS.HOME}`);
-    return {
-      ongoing: OtakudesuProvider.normalizeList(
-        res?.data?.ongoing?.animeList || [],
-      ),
-      completed: OtakudesuProvider.normalizeList(
-        res?.data?.completed?.animeList || [],
-      ),
-    };
+    try {
+      const res = await coreFetcher(`${BASE_URL}${OTAKUDESU_ENDPOINTS.HOME}`);
+      return {
+        ongoing: OtakudesuProvider.normalizeList(
+          res?.data?.ongoing?.animeList || [],
+        ),
+        completed: OtakudesuProvider.normalizeList(
+          res?.data?.completed?.animeList || [],
+        ),
+      };
+    } catch {
+      return { ongoing: [], completed: [] };
+    }
   },
 
   getOngoing: async (page = 1) => {
-    const res = await coreFetcher(`${BASE_URL}/ongoing-anime?page=${page}`);
-    const list = res?.data?.animeList || res?.data || [];
-
-    return {
-      data: OtakudesuProvider.normalizeList(list),
-      pagination: OtakudesuProvider.normalizePagination(res?.pagination),
-    };
+    try {
+      const res = await coreFetcher(`${BASE_URL}/ongoing-anime?page=${page}`);
+      const list = res?.data?.animeList || res?.data || [];
+      return {
+        data: OtakudesuProvider.normalizeList(list),
+        pagination: OtakudesuProvider.normalizePagination(res?.pagination),
+      };
+    } catch {
+      return { data: [], pagination: null };
+    }
   },
 
   getCompleted: async (page = 1) => {
-    const res = await coreFetcher(`${BASE_URL}/complete-anime?page=${page}`);
-    const list = res?.data?.animeList || res?.data || [];
-
-    return {
-      data: OtakudesuProvider.normalizeList(list),
-      pagination: OtakudesuProvider.normalizePagination(res?.pagination),
-    };
+    try {
+      const res = await coreFetcher(`${BASE_URL}/complete-anime?page=${page}`);
+      const list = res?.data?.animeList || res?.data || [];
+      return {
+        data: OtakudesuProvider.normalizeList(list),
+        pagination: OtakudesuProvider.normalizePagination(res?.pagination),
+      };
+    } catch {
+      return { data: [], pagination: null };
+    }
   },
 
   search: async (query) => {
-    const res = await coreFetcher(
-      `${BASE_URL}${OTAKUDESU_ENDPOINTS.SEARCH}${encodeURIComponent(query)}`,
-    );
-    const data = res?.data?.animeList || res?.data || [];
-    return OtakudesuProvider.normalizeList(data);
+    try {
+      const res = await coreFetcher(
+        `${BASE_URL}${OTAKUDESU_ENDPOINTS.SEARCH}${encodeURIComponent(query)}`,
+      );
+      const data = res?.data?.animeList || res?.data || [];
+      return OtakudesuProvider.normalizeList(data);
+    } catch {
+      return [];
+    }
   },
 
   getDetail: async (slug) => {
-    const res = await coreFetcher(
-      `${BASE_URL}${OTAKUDESU_ENDPOINTS.ANIME}${slug}`,
-    );
-    return OtakudesuProvider.normalizeDetail(res?.data);
+    try {
+      const res = await coreFetcher(
+        `${BASE_URL}${OTAKUDESU_ENDPOINTS.ANIME}${slug}`,
+      );
+      return OtakudesuProvider.normalizeDetail(res?.data);
+    } catch {
+      return null;
+    }
   },
 
   getEpisode: async (slug) => {
-    const res = await coreFetcher(
-      `${BASE_URL}${OTAKUDESU_ENDPOINTS.EPISODE}${slug}`,
-    );
-    return res?.data || null;
+    try {
+      const res = await coreFetcher(
+        `${BASE_URL}${OTAKUDESU_ENDPOINTS.EPISODE}${slug}`,
+      );
+      return res?.data || null;
+    } catch {
+      return null;
+    }
   },
 
   getSchedule: async () => {
-    const res = await coreFetcher(`${BASE_URL}${OTAKUDESU_ENDPOINTS.SCHEDULE}`);
-    return res?.data || [];
+    try {
+      const res = await coreFetcher(
+        `${BASE_URL}${OTAKUDESU_ENDPOINTS.SCHEDULE}`,
+      );
+      return res?.data || [];
+    } catch {
+      return [];
+    }
   },
 
   getGenres: async () => {
-    const res = await coreFetcher(`${BASE_URL}${OTAKUDESU_ENDPOINTS.GENRE}`);
-    return res?.data || [];
+    try {
+      const res = await coreFetcher(`${BASE_URL}${OTAKUDESU_ENDPOINTS.GENRE}`);
+      return res?.data || [];
+    } catch {
+      return [];
+    }
   },
 
   getAnimeByGenre: async (slug, page = 1) => {
-    const endpoint =
-      page === 1
-        ? `${OTAKUDESU_ENDPOINTS.GENRE}/${slug}`
-        : `${OTAKUDESU_ENDPOINTS.GENRE}/${slug}?page=${page}`;
+    try {
+      const endpoint =
+        page === 1
+          ? `${OTAKUDESU_ENDPOINTS.GENRE}/${slug}`
+          : `${OTAKUDESU_ENDPOINTS.GENRE}/${slug}?page=${page}`;
 
-    const res = await coreFetcher(`${BASE_URL}${endpoint}`);
+      const res = await coreFetcher(`${BASE_URL}${endpoint}`);
+      const data = res?.data?.animeList || res?.data || [];
 
-    const data = res?.data?.animeList || res?.data || [];
-
-    return {
-      data: OtakudesuProvider.normalizeList(data),
-      pagination: res?.pagination || null,
-    };
+      return {
+        data: OtakudesuProvider.normalizeList(data),
+        pagination: res?.pagination || null,
+      };
+    } catch {
+      return { data: [], pagination: null };
+    }
   },
 
   getBatch: async (slug) => {
-    const res = await coreFetcher(
-      `${BASE_URL}${OTAKUDESU_ENDPOINTS.BATCH}${slug}`,
-    );
-    return res?.data || null;
+    try {
+      const res = await coreFetcher(
+        `${BASE_URL}${OTAKUDESU_ENDPOINTS.BATCH}${slug}`,
+      );
+      return res?.data || null;
+    } catch {
+      return null;
+    }
   },
 };

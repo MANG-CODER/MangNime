@@ -144,7 +144,7 @@ export default async function Home() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8">
               {completedList.slice(0, 10).map((anime, idx) => (
                 <ScrollReveal key={idx}>
-                  <AnimeCard anime={anime} index={idx} />
+                  <AnimeCard anime={anime} index={idx + 10} />
                 </ScrollReveal>
               ))}
             </div>

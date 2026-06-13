@@ -29,9 +29,9 @@ export default function AnimeCard({ anime, index = 0, hideMeta = false }) {
           alt={anime.title || "Anime Poster"}
           fill
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-          quality={100}
+          quality={75}
           className="object-cover transition-transform duration-700 group-hover:scale-110"
-          priority={index < 8}
+          priority={index < 4}
         />
 
         {/* Hover Overlay */}
