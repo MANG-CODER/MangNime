@@ -1,5 +1,7 @@
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const cache = new Map();
+
 const CACHE_TTL_MAP = {
   "/home": 5 * 60 * 1000,
   "/ongoing": 10 * 60 * 1000,
@@ -7,13 +9,10 @@ const CACHE_TTL_MAP = {
   "/popular": 15 * 60 * 1000,
   "/schedule": 60 * 60 * 1000,
   "/genres": 24 * 60 * 60 * 1000,
+  "/genre": 24 * 60 * 60 * 1000,
   default: 60 * 1000,
 };
 
-function getTTL(url) {
-  const matched = Object.keys(CACHE_TTL_MAP).find((k) => url.includes(k));
-  return matched ? CACHE_TTL_MAP[matched] : CACHE_TTL_MAP["default"];
-}
 const ENDPOINT_FALLBACK = {
   "/alqanime/home": "/home",
   "/alqanime/ongoing": "/ongoing-anime",
@@ -30,13 +29,30 @@ const ENDPOINT_FALLBACK = {
   "/alqanime/season/": null,
 };
 
+function getTTL(url) {
+  const matched = Object.keys(CACHE_TTL_MAP).find((k) => url.includes(k));
+  return matched ? CACHE_TTL_MAP[matched] : CACHE_TTL_MAP["default"];
+}
+
+function getCached(key) {
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.timestamp < getTTL(key)) return hit.data;
+  return null;
+}
+
+// Return cache lama meski expired — daripada kosong
+function getStaleCache(key) {
+  const hit = cache.get(key);
+  if (hit) return hit.data;
+  return null;
+}
+
 function buildFallbackUrl(originalUrl, baseUrl) {
   try {
     const parsed = new URL(originalUrl);
     const fullPath = parsed.pathname;
     const search = parsed.search;
 
-    // Cari prefix alqanime yang cocok
     const alqPrefix = Object.keys(ENDPOINT_FALLBACK).find((prefix) =>
       fullPath.includes(prefix),
     );
@@ -45,18 +61,12 @@ function buildFallbackUrl(originalUrl, baseUrl) {
 
     const fallbackSuffix = ENDPOINT_FALLBACK[alqPrefix];
     if (fallbackSuffix === null) return null;
-    const afterPrefix = fullPath.split(alqPrefix)[1] || "";
 
+    const afterPrefix = fullPath.split(alqPrefix)[1] || "";
     return `${baseUrl}${fallbackSuffix}${afterPrefix}${search}`;
   } catch {
     return null;
   }
-}
-
-function getCached(key) {
-  const hit = cache.get(key);
-  if (hit && Date.now() - hit.timestamp < CACHE_TTL) return hit.data;
-  return null;
 }
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
@@ -77,7 +87,7 @@ export async function coreFetcher(url, options = {}) {
   const timeoutMs = options.timeout || 5000;
   const useCache = options.cache !== false;
 
-  // Cek cache
+  // Cek cache fresh
   if (useCache) {
     const cached = getCached(url);
     if (cached) {
@@ -86,7 +96,20 @@ export async function coreFetcher(url, options = {}) {
     }
   }
 
-  // Coba primary (alqanime)
+  // Tentukan fallback URL
+  let fallbackUrl = null;
+  try {
+    const fullPath = new URL(url).pathname;
+    const alqPrefix = Object.keys(ENDPOINT_FALLBACK).find((prefix) =>
+      fullPath.includes(prefix),
+    );
+    if (alqPrefix) {
+      const baseUrl = url.split("/alqanime/")[0];
+      fallbackUrl = buildFallbackUrl(url, baseUrl);
+    }
+  } catch {}
+
+  // Retry loop — primary source
   for (let i = 1; i <= retries; i++) {
     try {
       const res = await fetchWithTimeout(url, options, timeoutMs);
@@ -102,17 +125,9 @@ export async function coreFetcher(url, options = {}) {
       );
 
       if (i === retries) {
-        // Semua retry gagal → coba fallback otakudesu
-        const baseUrl = url
-          .split("/alqanime/")[0]
-          .replace(/\/anime$/, "/anime");
-        const fallbackUrl = buildFallbackUrl(
-          url,
-          baseUrl.endsWith("/anime") ? baseUrl : baseUrl + "/anime",
-        );
-
+        // Coba fallback otakudesu
         if (fallbackUrl) {
-          console.warn(`[Fetcher] Fallback ke otakudesu: ${fallbackUrl}`);
+          console.warn(`[Fetcher] Fallback ke: ${fallbackUrl}`);
           try {
             const fallbackRes = await fetchWithTimeout(
               fallbackUrl,
@@ -127,14 +142,20 @@ export async function coreFetcher(url, options = {}) {
               cache.set(url, { data: fallbackData, timestamp: Date.now() });
             return fallbackData;
           } catch (fallbackErr) {
-            console.error(
-              `[Fetcher] Fallback juga gagal: ${fallbackErr.message}`,
-            );
+            console.warn(`[Fetcher] Fallback gagal: ${fallbackErr.message}`);
           }
-        } else {
-          console.warn(`[Fetcher] Gak ada fallback untuk: ${url}`);
         }
 
+        // Semua gagal — return stale cache kalau ada
+        if (useCache) {
+          const stale = getStaleCache(url);
+          if (stale) {
+            console.warn(`[Fetcher] Return stale cache untuk: ${url}`);
+            return stale;
+          }
+        }
+
+        console.error(`[Fetcher] Semua opsi gagal untuk: ${url}`);
         throw err;
       }
 

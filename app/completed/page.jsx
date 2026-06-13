@@ -2,7 +2,7 @@ import AnimeCard from "@/components/anime/AnimeCard";
 import Pagination from "@/components/ui/Pagination";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { AnimeProvider } from "@/services/providers";
-import { mergeAnimeLists } from "@/utils/mergeAnime";
+import { getMergeKey } from "@/utils/mergeAnime";
 
 export const metadata = {
   title: "Anime Completed - MangNime",
@@ -22,37 +22,57 @@ export default async function CompletedPage({ searchParams }) {
   const page = parseInt(resolvedParams?.page || 1);
 
   let otakuList = [];
-  let alqaList = [];
   let paginationData = null;
+  let alqaSlice = [];
   let fetchError = false;
 
   try {
-    const promises = [withTimeout(AnimeProvider.Otakudesu.getCompleted(page))];
+    const [otakuRes, alqaRes] = await Promise.allSettled([
+      withTimeout(AnimeProvider.Otakudesu.getCompleted(page)),
+      withTimeout(AnimeProvider.Alqanime.getCompleted(page)),
+    ]);
 
-    if (page === 1) {
-      promises.push(withTimeout(AnimeProvider.Alqanime.getCompleted(page)));
+    // Otakudesu = primary
+    if (otakuRes.status === "fulfilled" && otakuRes.value) {
+      otakuList = otakuRes.value.data || [];
+      paginationData = otakuRes.value.pagination || null;
     }
 
-    const results = await Promise.allSettled(promises);
+    // Alqanime = filler exclusive aja (yg gak ada di otakudesu)
+    if (alqaRes.status === "fulfilled" && alqaRes.value) {
+      const alqaItems = alqaRes.value.data || alqaRes.value.animeList || [];
 
-    if (results[0].status === "fulfilled" && results[0].value) {
-      otakuList = results[0].value.data || [];
-      paginationData = results[0].value.pagination || null;
+      const otakuKeys = new Set(
+        otakuList.map((a) => getMergeKey(a.title)).filter(Boolean),
+      );
+
+      const alqaSeen = new Set();
+      const alqaExclusives = [];
+
+      alqaItems.forEach((anime) => {
+        const status = (anime.status || "").toLowerCase();
+        if (status.includes("ongoing") || status.includes("tayang")) return;
+
+        const key = getMergeKey(anime.title);
+        if (!key || alqaSeen.has(key) || otakuKeys.has(key)) return;
+
+        alqaSeen.add(key);
+        alqaExclusives.push(anime);
+      });
+
+      alqaSlice = alqaExclusives.slice(0, 3);
     }
 
-    if (page === 1 && results[1]?.status === "fulfilled" && results[1].value) {
-      alqaList = results[1].value.data || results[1].value.animeList || [];
+    // Kalau dua-duanya gagal, set error
+    if (otakuRes.status === "rejected" && alqaRes.status === "rejected") {
+      fetchError = true;
     }
-
-    // Kalau semua gagal, set error
-    const allFailed = results.every((r) => r.status === "rejected");
-    if (allFailed) fetchError = true;
   } catch (error) {
     console.error("Gagal memuat Completed:", error);
     fetchError = true;
   }
 
-  const animeList = mergeAnimeLists(otakuList, alqaList);
+  const animeList = [...otakuList, ...alqaSlice];
 
   return (
     <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-0">
