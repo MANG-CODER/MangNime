@@ -159,6 +159,7 @@ export default async function ReadChapterPage({ params }) {
                 alt={`Page ${idx + 1}`}
                 width={800}
                 height={1200}
+                quality={75}
                 sizes="(max-width: 768px) 100vw, 768px"
                 loading={idx === 0 ? "eager" : "lazy"}
                 priority={idx === 0}
