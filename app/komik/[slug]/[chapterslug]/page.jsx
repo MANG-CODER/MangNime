@@ -152,12 +152,17 @@ export default async function ReadChapterPage({ params }) {
         {images.length > 0 ? (
           <div className="w-full flex flex-col items-center sm:rounded-xl overflow-hidden sm:shadow-[0_0_40px_rgba(0,0,0,0.5)] sm:border border-white/5 bg-black">
             {images.map((imgUrl, idx) => (
-              <img
+              <Image
                 key={idx}
                 src={imgUrl}
                 alt={`Page ${idx + 1}`}
-                loading="lazy"
+                width={800}
+                height={1200}
+                sizes="(max-width: 768px) 100vw, 768px"
+                loading={idx === 0 ? "eager" : "lazy"}
+                priority={idx === 0}
                 className="w-full h-auto block m-0 p-0 animate-fade-in-up"
+                style={{ width: "100%", height: "auto" }}
               />
             ))}
           </div>

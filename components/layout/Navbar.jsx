@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import SearchBar from "./SearchBar";
+import Image from "next/image";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -139,10 +140,13 @@ export default function Navbar() {
             href="/"
             className="flex-shrink-0 ml-8 md:ml-12 lg:ml-16 transition-transform hover:scale-105"
           >
-            <img
+            <Image
               src="/img/logo.png"
               alt="MangNime"
-              className="h-8 md:h-10 object-contain"
+              width={150}
+              height={40}
+              priority
+              className="h-8 md:h-10 object-contain w-auto"
             />
           </Link>
 
@@ -608,12 +612,14 @@ export default function Navbar() {
                 className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full pr-4 p-1 transition-all"
               >
                 <div className="w-8 h-8 rounded-full overflow-hidden border border-celestia-pink shrink-0">
-                  <img
+                  <Image
                     src={
                       user.user_metadata?.avatar_url ||
                       "https://placehold.co/100x100/151226/ffffff?text=U"
                     }
                     alt="Profile"
+                    width={32}
+                    height={32}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -635,6 +641,7 @@ export default function Navbar() {
           <button
             className="lg:hidden w-10 h-10 flex items-center justify-center text-gray-300"
             onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
           >
             <svg
               className="w-6 h-6"
@@ -756,12 +763,14 @@ export default function Navbar() {
                 className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl p-3 hover:bg-white/10"
               >
                 <div className="w-10 h-10 rounded-full overflow-hidden border border-celestia-pink shrink-0">
-                  <img
+                  <Image
                     src={
                       user.user_metadata?.avatar_url ||
                       "https://placehold.co/100"
                     }
                     alt="Profile"
+                    width={40}
+                    height={40}
                     className="w-full h-full object-cover"
                   />
                 </div>

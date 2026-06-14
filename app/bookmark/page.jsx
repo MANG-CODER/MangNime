@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -103,10 +103,12 @@ export default function BookmarkPage() {
               >
                 <Link href={item.url || `/${item.type}/${item.slug}`}>
                   <div className="relative aspect-[3/4] overflow-hidden">
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      fill
+                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0D0B1A] via-[#0D0B1A]/40 to-transparent"></div>
                   </div>

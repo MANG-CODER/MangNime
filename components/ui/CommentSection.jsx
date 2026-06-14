@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import EmojiPicker from "emoji-picker-react";
@@ -235,9 +235,11 @@ export default function CommentSection({ topicId, title = "Comments" }) {
             : "mt-8"
         }`}
       >
-        <img
+        <Image
           src={comment.user_avatar}
-          alt="Avatar"
+          alt={`Avatar ${comment.user_name}`}
+          width={isReply ? 32 : 40}
+          height={isReply ? 32 : 40}
           className={`rounded-full object-cover shrink-0 border border-white/10 bg-[#151226] ${
             isReply ? "w-8 h-8 md:w-10 md:h-10" : "w-10 h-10"
           }`}
@@ -272,13 +274,14 @@ export default function CommentSection({ topicId, title = "Comments" }) {
           </p>
 
           {comment.image_url && (
-            <img
+            <Image
               src={comment.image_url}
               alt="Attachment"
-              className="max-h-60 rounded-xl border border-white/10 bg-black/30 object-contain mb-2"
+              width={400}
+              height={240}
+              className="max-h-60 w-auto rounded-xl border border-white/10 bg-black/30 object-contain mb-2"
             />
           )}
-
           <div className="flex flex-wrap items-center gap-3 relative">
             <button
               type="button"

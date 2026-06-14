@@ -1,5 +1,5 @@
 "use client";
-
+import NextImage from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -538,11 +538,23 @@ const drawCanvas = () => {
         <div className="bg-[#151226]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden mb-8">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
             <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-[#FF78C6] overflow-hidden shrink-0 bg-[#0D0B1A] shadow-lg">
-              <img
-                src={previewUrl || currentAvatar}
-                alt="Avatar"
-                className="w-full h-full object-cover"
-              />
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Avatar Preview"
+                  width={160}
+                  height={160}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <NextImage
+                  src={currentAvatar}
+                  alt="Avatar"
+                  width={160}
+                  height={160}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
 
             <div className="flex-1 text-center md:text-left w-full">
@@ -650,8 +662,11 @@ const drawCanvas = () => {
                     href={h.url}
                     className="flex gap-3 hover:bg-white/5 p-2 rounded-xl transition-colors"
                   >
-                    <img
+                    <NextImage
                       src={h.image}
+                      alt={h.title}
+                      width={48}
+                      height={64}
                       className="w-12 h-16 object-cover rounded bg-black/50 border border-white/5"
                     />
                     <div>
@@ -695,8 +710,11 @@ const drawCanvas = () => {
                     href={h.url}
                     className="flex gap-3 hover:bg-white/5 p-2 rounded-xl transition-colors group"
                   >
-                    <img
+                    <NextImage
                       src={h.image}
+                      alt={h.title}
+                      width={48}
+                      height={64}
                       className="w-12 h-16 object-cover rounded bg-black/50 border border-white/5"
                     />
                     <div>
