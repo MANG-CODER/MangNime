@@ -3,6 +3,7 @@ import { fetchKomikAPI } from "@/services/komikApi";
 import CommentSection from "@/components/ui/CommentSection";
 import ChapterHistoryTracker from "@/components/komik/ChapterHistoryTracker";
 import ReaderStickyBar from "@/components/komik/ReaderStickyBar";
+import Image from "next/image";
 
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
