@@ -51,7 +51,7 @@ export default function Footer() {
 
               {/* Instagram */}
               <a
-                href="https://instagram.com/vestiapani"
+                href="https://instagram.com/vestiapani_"
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Instagram"
