@@ -1,4 +1,4 @@
-const BASE_URL =
+export const BASE_URL =
   process.env.SANKANIME_BASE_URL || "https://www.sankavollerei.com/anime";
 
 

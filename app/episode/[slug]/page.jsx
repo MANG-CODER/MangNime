@@ -1,6 +1,6 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { API_ENDPOINTS } from "@/services/api";
+import { API_ENDPOINTS, BASE_URL } from "@/services/api";
 import Button from "@/components/ui/Button";
 import BookmarkButton from "@/components/ui/BookmarkButton";
 import CommentSection from "@/components/ui/CommentSection";
@@ -144,9 +144,10 @@ export default async function EpisodePage({ params }) {
   async function fetchServerUrl(serverId) {
     "use server";
     try {
-      const res = await fetch(`${API_ENDPOINTS.SERVER}${serverId}`, {
+      const res = await fetch(`${BASE_URL}${API_ENDPOINTS.SERVER}${serverId}`, {
         cache: "no-store",
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       return json?.data?.url || json?.url || json;
     } catch (error) {
