@@ -17,11 +17,13 @@ export async function generateSitemaps() {
 
 // 2. GENERATE SITEMAP BERDASARKAN ID (Nomor Halaman)
 export default async function sitemap({ id }) {
+  const resolvedId = await id;
+
   const baseUrl = "https://mangnime.my.id";
 
   // Rute statis HANYA dimunculkan di sitemap pertama (id = 1) agar tidak duplikat
   let staticRoutes = [];
-  if (id === 1) {
+  if (resolvedId === 1) {
     staticRoutes = [
       "",
       "/ongoing",
@@ -51,14 +53,13 @@ export default async function sitemap({ id }) {
       komikLatest,
       komikPopular,
     ] = await Promise.allSettled([
-      AnimeProvider.Otakudesu.getOngoing(id),
-      AnimeProvider.Otakudesu.getCompleted(id),
-      AnimeProvider.Alqanime.getOngoing(id),
-      AnimeProvider.Alqanime.getCompleted(id),
-      getLatestKomik(id),
-      getPopularKomik(id),
+      AnimeProvider.Otakudesu.getOngoing(resolvedId),
+      AnimeProvider.Otakudesu.getCompleted(resolvedId),
+      AnimeProvider.Alqanime.getOngoing(resolvedId),
+      AnimeProvider.Alqanime.getCompleted(resolvedId),
+      getLatestKomik(resolvedId),
+      getPopularKomik(resolvedId),
     ]);
-
     const getAnimeData = (result) =>
       result.status === "fulfilled" ? result.value?.data || [] : [];
 
