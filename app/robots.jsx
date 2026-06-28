@@ -9,6 +9,7 @@ export default function robots() {
           "CCBot",
           "meta-externalagent",
           "facebookexternalhit",
+          "HeadlessChrome",
         ],
         disallow: "/",
       },
