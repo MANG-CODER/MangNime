@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-// Menyimpan data request IP secara in-memory
+// PENTING: In-memory Map di Middleware (Vercel Edge) akan sering ter-reset.
+// Ini cukup untuk perlindungan dasar, tapi tidak akurat untuk rate-limiting global.
 const rateLimitMap = new Map();
 
 export function middleware(request) {
@@ -8,8 +9,9 @@ export function middleware(request) {
   const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown";
 
   // 1. BLOKIR USER AGENT BOT NAKAL
+  // Diperbarui dengan alternatif bot AI dan scraper yang umum
   const badBots =
-    /meta-externalagent|facebookexternalhit|claudebot|gptbot|chatgpt-user|ccbot|headlesschrome/i;
+    /claude-searchbot|claudebot|anthropic|gptbot|chatgpt-user|oai-searchbot|meta-externalagent|facebookexternalhit|facebot|ccbot|headlesschrome|google-extended|bytespider|amazonbot|petalbot/i;
 
   if (badBots.test(userAgent)) {
     // Kembalikan status 403 Forbidden tanpa menyentuh halaman Next.js
@@ -17,7 +19,6 @@ export function middleware(request) {
   }
 
   // 2. RATE LIMITING BERDASARKAN IP
-  // Konfigurasi batas request
   const LIMIT = 40; // Maksimal request per IP
   const TIME_WINDOW_MS = 60 * 1000; // 1 Menit
 
@@ -39,7 +40,7 @@ export function middleware(request) {
     // Simpan kembali data terbaru ke map
     rateLimitMap.set(ip, requestData);
 
-    // Jika IP melebihi batas request, blokir dengan status 429 (Too Many Requests)
+    // Jika IP melebihi batas request, blokir dengan status 429
     if (requestData.count > LIMIT) {
       console.log(
         `[BLOCKED] IP ${ip} melebihi limit. Count: ${requestData.count}`,
@@ -60,16 +61,8 @@ export function middleware(request) {
   return NextResponse.next();
 }
 
-// Konfigurasi path mana saja yang akan dicek oleh middleware ini
 export const config = {
   matcher: [
-    /*
-     * Cek semua halaman kecuali:
-     * - api (jika api punya proteksi sendiri)
-     * - _next/static (file statis)
-     * - _next/image (optimasi gambar)
-     * - favicon.ico, sitemap.xml, robots.txt (file publik standar)
-     */
     "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };
