@@ -5,30 +5,32 @@ export default function robots() {
         // Daftar bot yang diblokir sepenuhnya
         userAgent: [
           "ClaudeBot",
-          "Claude-SearchBot", // Bot spesifik yang muncul di log kamu
+          "Claude-SearchBot",
           "anthropic-ai",
           "GPTBot",
           "ChatGPT-User",
           "OAI-SearchBot",
-          "Google-Extended", // Bot AI Google
+          "Google-Extended",
           "CCBot",
           "meta-externalagent",
           "facebookexternalhit",
           "Facebot",
           "HeadlessChrome",
-          "Bytespider", // Bot scraping agresif milik Bytedance
+          "Bytespider",
           "Amazonbot",
           "PetalBot",
         ],
         disallow: "/",
       },
       {
-        // Aturan untuk bot biasa (seperti Googlebot normal, Bingbot, dll)
+        // Aturan untuk bot biasa (Googlebot, Bingbot, dll)
         userAgent: "*",
         allow: "/",
-        disallow: ["/komik/*/*", "/api/", "/_next/"],
+        // PERHATIKAN: /_next/ sudah dihapus dari sini!
+        disallow: ["/komik/*/*", "/api/"],
       },
     ],
-    sitemap: "https://mangnime.my.id/sitemap.xml",
+    // PERHATIKAN: Gunakan URL publik yang lengkap
+    sitemap: "https://mangnime.my.id/sitemap-index.xml",
   };
 }
