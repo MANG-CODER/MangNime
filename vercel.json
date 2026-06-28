@@ -1,0 +1,16 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(meta-externalagent|facebookexternalhit|claudebot|gptbot|chatgpt-user|ccbot).*"
+        }
+      ],
+      "destination": "https://http.cat/403",
+      "permanent": false
+    }
+  ]
+}
