@@ -1,30 +1,48 @@
 import { AnimeProvider } from "@/services/providers";
 import { getLatestKomik, getPopularKomik } from "@/services/komikApi";
 
-export const revalidate = 86400; // cache 24 jam
+export const revalidate = 86400;
 
-export default async function sitemap() {
+// 1. TENTUKAN BERAPA BANYAK SITEMAP YANG MAU DIBUAT
+export async function generateSitemaps() {
+  // Misalnya, kamu ingin meng-generate data dari halaman 1 sampai halaman 50.
+  // (Kamu bisa menyesuaikan angka ini, atau mengambil "total halaman" dari API kamu jika ada)
+  const totalPagesToScrape = 50;
+
+  // Ini akan menghasilkan array [{ id: 1 }, { id: 2 }, ..., { id: 50 }]
+  return Array.from({ length: totalPagesToScrape }, (_, i) => ({
+    id: i + 1,
+  }));
+}
+
+// 2. GENERATE SITEMAP BERDASARKAN ID (Nomor Halaman)
+export default async function sitemap({ id }) {
   const baseUrl = "https://mangnime.my.id";
 
-  const staticRoutes = [
-    "",
-    "/ongoing",
-    "/completed",
-    "/movies",
-    "/search",
-    "/komik/latest",
-    "/komik/popular",
-    "/komik/genres",
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date(),
-    changeFrequency: "daily",
-    priority: route === "" ? 1.0 : 0.8,
-  }));
+  // Rute statis HANYA dimunculkan di sitemap pertama (id = 1) agar tidak duplikat
+  let staticRoutes = [];
+  if (id === 1) {
+    staticRoutes = [
+      "",
+      "/ongoing",
+      "/completed",
+      "/movies",
+      "/search",
+      "/komik/latest",
+      "/komik/popular",
+      "/komik/genres",
+    ].map((route) => ({
+      url: `${baseUrl}${route}`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: route === "" ? 1.0 : 0.8,
+    }));
+  }
 
   let dynamicRoutes = [];
 
   try {
+    // Gunakan parameter 'id' sebagai nomor halaman yang akan di-fetch
     const [
       otakuOngoing,
       otakuCompleted,
@@ -33,18 +51,18 @@ export default async function sitemap() {
       komikLatest,
       komikPopular,
     ] = await Promise.allSettled([
-      AnimeProvider.Otakudesu.getOngoing(1),
-      AnimeProvider.Otakudesu.getCompleted(1),
-      AnimeProvider.Alqanime.getOngoing(1),
-      AnimeProvider.Alqanime.getCompleted(1),
-      getLatestKomik(1),
-      getPopularKomik(1),
+      AnimeProvider.Otakudesu.getOngoing(id),
+      AnimeProvider.Otakudesu.getCompleted(id),
+      AnimeProvider.Alqanime.getOngoing(id),
+      AnimeProvider.Alqanime.getCompleted(id),
+      getLatestKomik(id),
+      getPopularKomik(id),
     ]);
 
     const getAnimeData = (result) =>
       result.status === "fulfilled" ? result.value?.data || [] : [];
 
-    // ANIME (Otakudesu + Alqanime, gabung & dedup by animeId/slug)
+    // Proses gabung & dedup ANIME
     const animeMap = new Map();
     [
       ...getAnimeData(otakuOngoing),
@@ -64,7 +82,7 @@ export default async function sitemap() {
     });
     const animeRoutes = Array.from(animeMap.values());
 
-    // KOMIK (struktur: value.data.data adalah array)
+    // Proses gabung & dedup KOMIK
     const getKomikData = (result) =>
       result.status === "fulfilled" ? result.value?.data?.data || [] : [];
 
@@ -86,7 +104,7 @@ export default async function sitemap() {
 
     dynamicRoutes = [...animeRoutes, ...komikRoutes];
   } catch (error) {
-    console.error("Gagal generate sitemap dinamis:", error);
+    console.error(`Gagal generate sitemap dinamis untuk ID ${id}:`, error);
   }
 
   return [...staticRoutes, ...dynamicRoutes];
