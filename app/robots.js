@@ -26,11 +26,9 @@ export default function robots() {
         // Aturan untuk bot biasa (Googlebot, Bingbot, dll)
         userAgent: "*",
         allow: "/",
-        // PERHATIKAN: /_next/ sudah dihapus dari sini!
         disallow: ["/komik/*/*", "/api/"],
       },
     ],
-    // PERHATIKAN: Gunakan URL publik yang lengkap
-    sitemap: "https://mangnime.my.id/sitemap-index.xml",
+    sitemap: "https://mangnime.my.id/sitemap.xml",
   };
 }
