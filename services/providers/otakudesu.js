@@ -1,7 +1,7 @@
 import { coreFetcher } from "../core/fetcher";
 
 const BASE_URL =
-  process.env.SANKANIME_BASE_URL || "https://www.sankavollerei.com/anime";
+  process.env.SANKANIME_BASE_URL || "https://www.sankavollerei.web.id/anime";
 
 export const OTAKUDESU_ENDPOINTS = {
   HOME: "/home",
