@@ -152,21 +152,26 @@ export default async function ReadChapterPage({ params }) {
       <div className="container mx-auto max-w-3xl px-0 sm:px-4 flex flex-col items-center">
         {images.length > 0 ? (
           <div className="w-full flex flex-col items-center sm:rounded-xl overflow-hidden sm:shadow-[0_0_40px_rgba(0,0,0,0.5)] sm:border border-white/5 bg-black">
-            {images.map((imgUrl, idx) => (
-              <Image
-                key={idx}
-                src={imgUrl}
-                alt={`Page ${idx + 1}`}
-                width={800}
-                height={1200}
-                quality={75}
-                sizes="(max-width: 768px) 100vw, 768px"
-                loading={idx === 0 ? "eager" : "lazy"}
-                priority={idx === 0}
-                className="w-full h-auto block m-0 p-0 animate-fade-in-up"
-                style={{ width: "100%", height: "auto" }}
-              />
-            ))}
+            {images.map((imgUrl, idx) => {
+              const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imgUrl)}`;
+
+              return (
+                <Image
+                  key={idx}
+                  src={proxyUrl} // Menggunakan proxy
+                  alt={`Page ${idx + 1}`}
+                  width={800}
+                  height={1200}
+                  quality={75}
+                  sizes="(max-width: 768px) 100vw, 768px"
+                  loading={idx === 0 ? "eager" : "lazy"}
+                  priority={idx === 0}
+                  className="w-full h-auto block m-0 p-0 animate-fade-in-up"
+                  style={{ width: "100%", height: "auto" }}
+                  unoptimized={true}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="py-32 text-center text-gray-500 bg-white/5 rounded-2xl w-full border border-white/10">
