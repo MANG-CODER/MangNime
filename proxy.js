@@ -3,6 +3,15 @@ import { NextResponse } from "next/server";
 const rateLimitMap = new Map();
 
 export function proxy(request) {
+  // 0. BYPASS ASET STATIS & GAMBAR DI AWAL (Agar log bersih)
+  const pathname = request.nextUrl.pathname;
+  if (
+    pathname.startsWith("/_next/") ||
+    pathname.match(/\.(ico|png|jpg|jpeg|svg|webp|gif|avif)$/i)
+  ) {
+    return NextResponse.next();
+  }
+
   const userAgent = request.headers.get("user-agent") || "";
   const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown";
 
@@ -14,7 +23,6 @@ export function proxy(request) {
   }
 
   // 2. BYPASS NEXT.JS PREFETCH
-  // Mencegah prefetch dari <Link> dihitung sebagai spam request
   const isPrefetch =
     request.headers.get("next-router-prefetch") === "1" ||
     request.headers.get("purpose") === "prefetch";
@@ -23,7 +31,7 @@ export function proxy(request) {
     return NextResponse.next();
   }
 
-  // Pengecualian untuk bot mesin pencari yang sah (Good Bots)
+  // Pengecualian untuk bot mesin pencari yang sah
   const goodBots = /googlebot|bingbot|yandexbot|slurp/i;
 
   if (goodBots.test(userAgent)) {
