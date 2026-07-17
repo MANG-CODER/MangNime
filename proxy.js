@@ -2,10 +2,26 @@ import { NextResponse } from "next/server";
 
 const rateLimitMap = new Map();
 
-// Ubah nama fungsi menjadi proxy
 export function proxy(request) {
   const userAgent = request.headers.get("user-agent") || "";
   const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown";
+
+  // 1. WHITELIST IP DEVELOPER (Jalur VIP)
+  const whitelistedIps = ["125.160.210.25", "127.0.0.1", "::1"];
+
+  if (whitelistedIps.includes(ip)) {
+    return NextResponse.next();
+  }
+
+  // 2. BYPASS NEXT.JS PREFETCH
+  // Mencegah prefetch dari <Link> dihitung sebagai spam request
+  const isPrefetch =
+    request.headers.get("next-router-prefetch") === "1" ||
+    request.headers.get("purpose") === "prefetch";
+
+  if (isPrefetch) {
+    return NextResponse.next();
+  }
 
   // Pengecualian untuk bot mesin pencari yang sah (Good Bots)
   const goodBots = /googlebot|bingbot|yandexbot|slurp/i;
@@ -14,7 +30,7 @@ export function proxy(request) {
     return NextResponse.next();
   }
 
-  // 1. BLOKIR USER AGENT BOT NAKAL
+  // 3. BLOKIR USER AGENT BOT NAKAL
   const badBots =
     /claude-searchbot|claudebot|anthropic|gptbot|chatgpt-user|oai-searchbot|meta-externalagent|facebookexternalhit|facebot|ccbot|headlesschrome|google-extended|bytespider|amazonbot|petalbot/i;
 
@@ -22,7 +38,7 @@ export function proxy(request) {
     return new NextResponse(null, { status: 403 });
   }
 
-  // 2. RATE LIMITING BERDASARKAN IP
+  // 4. RATE LIMITING BERDASARKAN IP
   const LIMIT = 40;
   const TIME_WINDOW_MS = 60 * 1000;
 

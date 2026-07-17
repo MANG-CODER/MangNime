@@ -14,8 +14,7 @@ export default function AnimeActionButtons({ anime, slug, latestEpisode }) {
         JSON.parse(localStorage.getItem("mangnime_history")) || {};
       const animeHistory = histData.anime || {};
       if (animeHistory[slug]) setHistory(animeHistory[slug]);
-    } catch (e) {
-    }
+    } catch (e) {}
   }, [slug]);
 
   const handleShare = () => {
@@ -38,6 +37,7 @@ export default function AnimeActionButtons({ anime, slug, latestEpisode }) {
       {/* Tombol Tonton */}
       <Link
         href={watchUrl}
+        prefetch={false}
         className={`flex items-center gap-3 px-10 py-4 rounded-2xl font-black text-sm transition-transform shadow-glow-purple ${
           latestEpisode
             ? "bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white hover:scale-105"
@@ -83,25 +83,27 @@ export default function AnimeActionButtons({ anime, slug, latestEpisode }) {
         Bagikan
       </button>
 
-      {/* Toast Notification */}
+      {/* Toast Notification - SUDAH DIPERBAIKI */}
       {showToast && (
-        <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex items-center gap-2.5 bg-[#151226] border border-celestia-sky/50 text-white px-5 py-3 rounded-2xl text-xs font-bold shadow-[0_0_20px_rgba(76,201,255,0.3)] animate-fade-in-up z-50 whitespace-nowrap pointer-events-none">
-          <div className="bg-celestia-sky/20 p-1 rounded-full">
-            <svg
-              className="w-4 h-4 text-celestia-sky"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="3"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none w-max max-w-[90vw]">
+          <div className="flex items-center gap-2.5 bg-[#151226] border border-celestia-sky/50 text-white px-5 py-3 rounded-2xl text-xs font-bold shadow-[0_0_20px_rgba(76,201,255,0.3)] animate-fade-in-up whitespace-nowrap">
+            <div className="bg-celestia-sky/20 p-1 rounded-full shrink-0">
+              <svg
+                className="w-4 h-4 text-celestia-sky"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="3"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            Tautan berhasil disalin!
           </div>
-          Tautan berhasil disalin!
         </div>
       )}
     </div>

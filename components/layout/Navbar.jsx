@@ -138,6 +138,7 @@ export default function Navbar() {
           {/* LOGO */}
           <Link
             href="/"
+            prefetch={false}
             className="flex-shrink-0 ml-8 md:ml-12 lg:ml-16 transition-transform hover:scale-105"
           >
             <Image
@@ -170,6 +171,7 @@ export default function Navbar() {
             {/* BERANDA */}
             <Link
               href="/"
+              prefetch={false}
               ref={homeRef}
               onMouseEnter={handleMouseEnter}
               className={`relative z-10 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-colors duration-300 ${
@@ -228,8 +230,10 @@ export default function Navbar() {
 
                   <Link
                     href="/schedule"
+                    prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
+                    {/* SVG Icon Omitted for brevity, keep your original SVG here */}
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-sky text-gray-400 transition-colors">
                       <svg
                         className="w-5 h-5"
@@ -265,6 +269,7 @@ export default function Navbar() {
 
                   <Link
                     href="/ongoing"
+                    prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-gold text-gray-400 transition-colors">
@@ -290,6 +295,7 @@ export default function Navbar() {
 
                   <Link
                     href="/completed"
+                    prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
@@ -316,6 +322,7 @@ export default function Navbar() {
 
                   <Link
                     href="/genre"
+                    prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-lavender text-gray-400 transition-colors">
@@ -339,8 +346,10 @@ export default function Navbar() {
                       </p>
                     </div>
                   </Link>
+
                   <Link
                     href="/movies"
+                    prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-gold text-gray-400 transition-colors">
@@ -360,7 +369,6 @@ export default function Navbar() {
                         <path d="M2 7h20" />
                       </svg>
                     </div>
-
                     <div>
                       <h4 className="text-white font-bold mb-1">Movies</h4>
                       <p className="text-xs text-gray-400 font-body leading-relaxed">
@@ -409,6 +417,7 @@ export default function Navbar() {
 
                   <Link
                     href="/komik/latest"
+                    prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
@@ -436,6 +445,7 @@ export default function Navbar() {
 
                   <Link
                     href="/komik/popular"
+                    prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
@@ -463,6 +473,7 @@ export default function Navbar() {
 
                   <Link
                     href="/komik/genres"
+                    prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
@@ -490,6 +501,7 @@ export default function Navbar() {
 
                   <Link
                     href="/komik/popular?category=manhwa"
+                    prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center text-gray-400 group-hover/item:text-celestia-gold transition-colors shadow-lg">
@@ -520,6 +532,7 @@ export default function Navbar() {
 
                   <Link
                     href="/komik/popular?category=manga"
+                    prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center text-gray-400 group-hover/item:text-celestia-pink transition-colors shadow-lg">
@@ -550,6 +563,7 @@ export default function Navbar() {
 
                   <Link
                     href="/komik/popular?category=manhua"
+                    prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center text-gray-400 group-hover/item:text-celestia-sky transition-colors shadow-lg">
@@ -588,6 +602,7 @@ export default function Navbar() {
 
             <Link
               href="/bookmark"
+              prefetch={false}
               className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-celestia-pink text-gray-300 hover:text-white transition-all border border-white/10 shrink-0"
               title="Bookmark Saya"
             >
@@ -609,6 +624,7 @@ export default function Navbar() {
             {user ? (
               <Link
                 href="/profile"
+                prefetch={false}
                 className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full pr-4 p-1 transition-all"
               >
                 <div className="w-8 h-8 rounded-full overflow-hidden border border-celestia-pink shrink-0">
@@ -630,6 +646,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href={`/login?next=${encodeURIComponent(pathname)}`}
+                prefetch={false}
                 className="px-6 py-2.5 bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white font-bold text-sm rounded-xl hover:scale-105 hover:shadow-glow-purple transition-all text-center flex justify-center"
               >
                 LOGIN
@@ -696,7 +713,7 @@ export default function Navbar() {
               <Link
                 key={item.label}
                 href={item.path}
-                // (Tidak perlu onClick setIsOpen lagi di sini karena sudah ditangani oleh useEffect!)
+                prefetch={false}
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 {item.label}
@@ -729,6 +746,7 @@ export default function Navbar() {
               <Link
                 key={item.label}
                 href={item.path}
+                prefetch={false}
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 {item.label}
@@ -740,6 +758,7 @@ export default function Navbar() {
           <div className="sm:hidden mt-4 border-t border-white/10 pt-4 flex flex-col gap-4">
             <Link
               href="/bookmark"
+              prefetch={false}
               className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl p-3 text-sm font-bold text-white hover:bg-white/10"
             >
               <svg
@@ -760,6 +779,7 @@ export default function Navbar() {
             {user ? (
               <Link
                 href="/profile"
+                prefetch={false}
                 className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl p-3 hover:bg-white/10"
               >
                 <div className="w-10 h-10 rounded-full overflow-hidden border border-celestia-pink shrink-0">
@@ -784,6 +804,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href={`/login?next=${encodeURIComponent(pathname)}`}
+                prefetch={false}
                 className="px-6 py-2.5 bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white font-bold text-sm rounded-xl hover:scale-105 hover:shadow-glow-purple transition-all text-center flex justify-center"
               >
                 LOGIN

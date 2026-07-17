@@ -263,6 +263,7 @@ export default async function EpisodePage({ params }) {
         <div className="lg:col-span-3 space-y-5 md:space-y-6">
           <Link
             href={`/anime/${epData.animeId}`}
+            prefetch={false}
             className="inline-flex items-center gap-2 text-celestia-lavender hover:text-white transition-colors text-xs md:text-sm font-medium bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/10 w-max backdrop-blur-md"
           >
             <svg
@@ -291,6 +292,7 @@ export default async function EpisodePage({ params }) {
             {epData.hasPrevEpisode && epData.prevEpisode ? (
               <Link
                 href={`/episode/${epData.prevEpisode.episodeId}`}
+                prefetch={false}
                 className="text-gray-300 hover:text-celestia-pink font-bold flex items-center gap-1 md:gap-2 transition-colors text-xs md:text-base group"
               >
                 <span className="transform group-hover:-translate-x-1 transition-transform">
@@ -308,6 +310,7 @@ export default async function EpisodePage({ params }) {
             {epData.hasNextEpisode && epData.nextEpisode ? (
               <Link
                 href={`/episode/${epData.nextEpisode.episodeId}`}
+                prefetch={false}
                 className="text-gray-300 hover:text-celestia-sky font-bold flex items-center gap-1 md:gap-2 transition-colors text-xs md:text-base group"
               >
                 <span className="hidden md:inline">Eps Selanjutnya</span>
@@ -336,6 +339,7 @@ export default async function EpisodePage({ params }) {
                 <Link
                   href={`/episode/${ep.episodeId}`}
                   key={ep.episodeId}
+                  prefetch={false}
                   className={`px-4 py-3 rounded-xl md:rounded-2xl border transition-all duration-300 text-xs md:text-sm font-medium flex justify-between items-center group ${
                     isCurrent
                       ? "bg-celestia-royal/20 border-celestia-lavender/50 text-white shadow-glow-purple"
