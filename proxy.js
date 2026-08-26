@@ -17,7 +17,8 @@ export function proxy(request) {
   if (
     MAINTENANCE_MODE &&
     pathname !== "/maintenance" &&
-    !pathname.startsWith("/_next/")
+    !pathname.startsWith("/_next/") &&
+    !pathname.startsWith("/img/")
   ) {
     return NextResponse.redirect(new URL("/maintenance", request.url));
   }
