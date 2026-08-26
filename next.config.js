@@ -2,6 +2,7 @@
 const nextConfig = {
   images: {
     qualities: [75],
+    minimumCacheTTL: 2592000,
     remotePatterns: [{ protocol: "https", hostname: "**" }],
     loader: "custom",
     loaderFile: "./imageLoader.js",

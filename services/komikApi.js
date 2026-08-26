@@ -57,11 +57,18 @@ function extractSlugFromLink(link) {
 
 function normalizeListCard(item) {
   const slug = extractSlugFromLink(item.link);
+  const originalHorizontal = item.image ? item.image.split("?")[0] : "";
+  const guessedVertical = originalHorizontal.replace(
+    "manga_img_horizontal",
+    "manga_thumbnail",
+  );
+
   return {
     title: item.title || "",
     slug,
-    image: item.image || "",
-    chapter: item.chapter || "", // string apa adanya, mis. "Chapter 96"
+    image: guessedVertical, // Coba pakai yang Vertikal dulu
+    imageFallback: originalHorizontal, // Simpan Horizontal
+    chapter: item.chapter || "",
     time_ago: item.time_ago || null,
     score: null,
     type: null,
@@ -71,10 +78,17 @@ function normalizeListCard(item) {
 
 function normalizeGenreCard(item) {
   const slug = extractSlugFromLink(item.link);
+  const originalHorizontal = item.image ? item.image.split("?")[0] : "";
+  const guessedVertical = originalHorizontal.replace(
+    "manga_img_horizontal",
+    "manga_thumbnail",
+  );
+
   return {
     title: item.title || "",
     slug,
-    image: item.image || "",
+    image: guessedVertical,
+    imageFallback: originalHorizontal,
     chapter: item.chapter || "",
     score: item.rating || null,
     type: item.status || null,

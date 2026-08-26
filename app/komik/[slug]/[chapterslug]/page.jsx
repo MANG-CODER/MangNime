@@ -145,12 +145,11 @@ export default async function ReadChapterPage({ params }) {
         {images.length > 0 ? (
           <div className="w-full flex flex-col items-center sm:rounded-xl overflow-hidden sm:shadow-[0_0_40px_rgba(0,0,0,0.5)] sm:border border-white/5 bg-black">
             {images.map((imgUrl, idx) => {
-              const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imgUrl)}`;
 
               return (
                 <Image
                   key={idx}
-                  src={proxyUrl}
+                  src={imgUrl}
                   alt={`Page ${idx + 1}`}
                   width={800}
                   height={1200}

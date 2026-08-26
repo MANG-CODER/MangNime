@@ -1,19 +1,30 @@
+"use client"; // Wajib ditambahkan agar bisa pakai useState
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function KomikCard({ komik }) {
   const itemData = komik.data ? komik.data : komik;
-  const slug = itemData.slug || "";
+
+  const slug = itemData.slug || itemData.endpoint || "";
   const title = itemData.title || "Judul Tidak Diketahui";
-  const image =
+
+  const primaryImage =
     itemData.image ||
+    itemData.cover ||
     "https://placehold.co/200x300/151226/8b6cff?text=No+Image";
 
-  // Chapter sekarang berupa string utuh (misal: "Chapter 96"), bukan array/object lagi
-  const latestChapter = itemData.chapter || "";
+  const fallbackImage = itemData.imageFallback || primaryImage;
 
-  const score = itemData.score || null;
-  const type = itemData.type || null;
+  const [imgSrc, setImgSrc] = useState(primaryImage);
+
+  const latestChapter =
+    itemData.chapter ||
+    (itemData.chapters?.length > 0 ? itemData.chapters[0].chapterIndex : "");
+
+  const score = itemData.score || itemData.rating || "";
+  const type = itemData.type || itemData.format || "";
 
   return (
     <Link
@@ -23,12 +34,17 @@ export default function KomikCard({ komik }) {
     >
       <div className="aspect-[3/4] rounded-xl overflow-hidden relative border border-white/10 bg-[#151226]">
         <Image
-          src={image}
+          src={imgSrc}
           alt={title}
           fill
           sizes="(max-width: 768px) 50vw, 20vw"
           quality={75}
           className="object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={() => {
+            if (imgSrc !== fallbackImage) {
+              setImgSrc(fallbackImage);
+            }
+          }}
         />
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
