@@ -39,7 +39,6 @@ export default function SearchBar() {
         return;
       }
 
-      // Cek cache dulu
       const cacheKey = trimmed.toLowerCase();
       const cached = searchCache.current.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < SEARCH_CACHE_TTL) {
@@ -56,6 +55,7 @@ export default function SearchBar() {
 
         let combinedResults = [];
 
+        // Anime
         if (animeRes.status === "fulfilled" && Array.isArray(animeRes.value)) {
           const slicedAnime = animeRes.value.slice(0, 8).map((item) => ({
             ...item,
@@ -68,15 +68,16 @@ export default function SearchBar() {
           combinedResults = [...combinedResults, ...slicedAnime];
         }
 
+        // Komik
         if (komikRes.status === "fulfilled" && komikRes.value) {
-          const kData = komikRes.value?.data?.data || [];
+          // searchKomikServer mereturn { data: [...], total: ... }
+          const kData = komikRes.value?.data || [];
           const slicedKomik = Array.isArray(kData)
-            ? kData.slice(0, 3).map((item) => ({ ...item, _type: "komik" }))
+            ? kData.slice(0, 5).map((item) => ({ ...item, _type: "komik" })) // Ambil 5 komik
             : [];
           combinedResults = [...combinedResults, ...slicedKomik];
         }
 
-        // Simpan ke cache
         searchCache.current.set(cacheKey, {
           data: combinedResults,
           timestamp: Date.now(),
@@ -145,7 +146,6 @@ export default function SearchBar() {
             {results.length > 0 ? (
               results.map((item, idx) => {
                 const isAnime = item._type === "anime";
-                // Gunakan slugHref yang sudah diracik di atas
                 const href = isAnime ? item.slugHref : `/komik/${item.slug}`;
                 const title = item.title;
                 const image =
@@ -156,7 +156,7 @@ export default function SearchBar() {
                   "https://placehold.co/100x140/151226/ff6c9b?text=Image";
                 const subText = isAnime
                   ? item.type || item.status || "Anime"
-                  : item.format || "Komik";
+                  : item.type || item.format || "Komik";
 
                 return (
                   <Link

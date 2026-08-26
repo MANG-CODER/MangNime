@@ -1,37 +1,19 @@
-import { fetchKomikAPI } from "@/services/komikApi";
-import KomikCard from "@/components/komik/KomikCard";
-import Pagination from "@/components/ui/Pagination";
-import ScrollReveal from "@/components/ui/ScrollReveal";
 import { getLatestKomik } from "@/services/komikApi";
+import KomikCard from "@/components/komik/KomikCard";
+import Link from "next/link";
+import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export const metadata = { title: "Komik Update Terbaru - MangNime" };
-
 
 export default async function LatestKomikPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams?.page || 1);
 
-  const res = await getLatestKomik(page, {
+  const res = await getLatestKomik(page, 30, {
     next: { revalidate: 3600 },
   });
-  const komikList = res?.data?.data || res?.data || [];
-  const meta = res?.data?.meta || res?.meta || null;
-
-  let paginationData = null;
-  if (meta) {
-    const currentPageNum = Number(meta.page || page || 1);
-    const totalPagesNum = Number(meta.lastPage || 1);
-
-    paginationData = {
-      currentPage: currentPageNum,
-      totalPages: totalPagesNum,
-      hasNextPage: currentPageNum < totalPagesNum,
-      hasPrevPage: currentPageNum > 1,
-      // TAMBAHAN WAJIB AGAR KOMPONEN ANDA TIDAK UNDEFINED
-      nextPage: currentPageNum < totalPagesNum ? currentPageNum + 1 : null,
-      prevPage: currentPageNum > 1 ? currentPageNum - 1 : null,
-    };
-  }
+  const komikList = res?.data || [];
+  const pagination = res?.pagination || null;
 
   return (
     <div className="min-h-screen bg-[#0D0B1A] pt-32 pb-20 px-4">
@@ -61,16 +43,17 @@ export default async function LatestKomikPage({ searchParams }) {
             >
               {komikList.map((komik, idx) => (
                 <ScrollReveal key={idx}>
-                <KomikCard komik={komik} />
+                  <KomikCard komik={komik} />
                 </ScrollReveal>
               ))}
             </div>
-            {paginationData && (
-              <Pagination
-                pagination={paginationData}
-                basePath="/komik/latest"
-              />
-            )}
+            {pagination &&
+              (pagination.hasNextPage || pagination.hasPrevPage) && (
+                <OpenEndedPagination
+                  pagination={pagination}
+                  basePath="/komik/latest"
+                />
+              )}
           </>
         ) : (
           <div className="text-center py-32 text-gray-500 bg-white/5 rounded-2xl border border-white/10">
@@ -78,6 +61,52 @@ export default async function LatestKomikPage({ searchParams }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// Pagination tanpa total halaman pasti — API baru cuma kasih tahu ada
+function OpenEndedPagination({ pagination, basePath }) {
+  const { currentPage, hasPrevPage, prevPage, hasNextPage, nextPage } =
+    pagination;
+
+  return (
+    <div className="flex items-center justify-center gap-2 mt-12">
+      {hasPrevPage ? (
+        <Link
+          href={`${basePath}?page=${prevPage}`}
+          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all"
+        >
+          &laquo; Prev
+        </Link>
+      ) : (
+        <button
+          disabled
+          className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
+        >
+          &laquo; Prev
+        </button>
+      )}
+
+      <div className="px-6 py-2 rounded-xl bg-purple-600/10 border border-purple-500/20 text-purple-300 font-bold flex items-center shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+        Halaman {currentPage}
+      </div>
+
+      {hasNextPage ? (
+        <Link
+          href={`${basePath}?page=${nextPage}`}
+          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all"
+        >
+          Next &raquo;
+        </Link>
+      ) : (
+        <button
+          disabled
+          className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
+        >
+          Next &raquo;
+        </button>
+      )}
     </div>
   );
 }

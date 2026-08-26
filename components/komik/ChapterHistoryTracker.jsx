@@ -4,11 +4,12 @@ import { useEffect } from "react";
 export default function ChapterHistoryTracker({
   slug,
   title,
-  chapterIndex,
+  chapterSlug,
+  chapterLabel,
   image,
 }) {
   useEffect(() => {
-    if (!slug || !chapterIndex) return;
+    if (!slug || !chapterSlug) return;
 
     try {
       const raw = JSON.parse(localStorage.getItem("mangnime_history")) || {};
@@ -19,10 +20,11 @@ export default function ChapterHistoryTracker({
 
       hist.komik[slug] = {
         title,
-        chapter: chapterIndex,
-        chapterIndex,
+        chapter: chapterLabel || chapterSlug,
+        chapterIndex: chapterLabel || chapterSlug,
+        chapterSlug,
         image: image || "https://placehold.co/300x400",
-        url: `/komik/${slug}/chapter-${chapterIndex}`,
+        url: `/komik/${slug}/${chapterSlug}`,
         updatedAt: new Date().toISOString(),
       };
 
@@ -30,7 +32,7 @@ export default function ChapterHistoryTracker({
     } catch (e) {
       localStorage.removeItem("mangnime_history");
     }
-  }, [slug, chapterIndex, title, image]);
+  }, [slug, chapterSlug, chapterLabel, title, image]);
 
   return null;
 }

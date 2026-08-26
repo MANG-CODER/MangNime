@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { fetchKomikAPI } from "@/services/komikApi";
+import { getKomikDetail, getLatestKomik } from "@/services/komikApi";
 import KomikCard from "@/components/komik/KomikCard";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import Button from "@/components/ui/Button";
@@ -11,7 +11,12 @@ import LastReadButton from "@/components/komik/LastReadButton";
 
 function formatDate(dateStr) {
   if (!dateStr) return null;
-  return new Date(dateStr).toLocaleDateString("id-ID", {
+  const parts = dateStr.split("/");
+  if (parts.length !== 3) return dateStr;
+  const [day, month, year] = parts;
+  const d = new Date(`${year}-${month}-${day}`);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -23,8 +28,7 @@ export async function generateMetadata({ params }) {
   const slug = resolvedParams.slug;
 
   try {
-    const res = await fetchKomikAPI(`/komik/${slug}`);
-    const komik = res?.data || null;
+    const komik = await getKomikDetail(slug);
 
     if (!komik) throw new Error("Data tidak ada");
 
@@ -78,19 +82,18 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 export default async function DetailKomikPage({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams.slug;
 
-  const [komikRes, latestRes] = await Promise.all([
-    fetchKomikAPI(`/komik/${slug}`),
-    fetchKomikAPI(`/latest?page=1`, 0, { next: { revalidate: 1800 } }),
+  const [komik, latestRes] = await Promise.all([
+    getKomikDetail(slug),
+    getLatestKomik(1, { next: { revalidate: 1800 } }),
   ]);
 
-  const komik = komikRes?.data || null;
-  const recommendations = (latestRes?.data?.data || latestRes?.data || [])
+  const recommendations = (latestRes?.data || [])
     .filter((item) => item.slug !== slug)
     .slice(0, 6);
 
@@ -179,9 +182,11 @@ export default async function DetailKomikPage({ params }) {
             </h1>
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2">
-              <span className="flex items-center gap-1.5 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-3 py-1.5 rounded-full text-sm font-bold shadow-[0_0_10px_rgba(234,179,8,0.2)]">
-                ★ {komik.rating} / 10
-              </span>
+              {komik.rating && komik.rating !== "?" && (
+                <span className="flex items-center gap-1.5 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-3 py-1.5 rounded-full text-sm font-bold shadow-[0_0_10px_rgba(234,179,8,0.2)]">
+                  ★ {komik.rating} / 10
+                </span>
+              )}
               <span
                 className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
                   komik.status?.toLowerCase() === "ongoing"
@@ -194,7 +199,7 @@ export default async function DetailKomikPage({ params }) {
               <span className="bg-white/5 text-gray-300 border border-white/10 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
                 {komik.totalChapters} Chapter
               </span>
-              {komik.author && (
+              {komik.author && komik.author !== "Unknown" && (
                 <span className="text-celestia-pink text-sm font-medium px-3 py-1.5">
                   By {komik.author}
                 </span>
@@ -205,7 +210,7 @@ export default async function DetailKomikPage({ params }) {
               {komik.genres?.map((genre, idx) => (
                 <Link
                   key={idx}
-                  href={`/search?type=komik&genreIds=${genre.id}`}
+                  href={`/komik/genre/${genre.slug}`}
                   prefetch={false}
                   className="text-[11px] font-black uppercase tracking-widest px-4 py-1.5 bg-white/5 text-gray-300 hover:text-white border border-white/10 hover:border-celestia-pink rounded-full transition-all"
                 >
@@ -267,17 +272,17 @@ export default async function DetailKomikPage({ params }) {
                       {chapters.map((ch, idx) => (
                         <Link
                           key={idx}
-                          href={`/komik/${slug}/chapter-${ch.chapterIndex}`}
+                          href={`/komik/${slug}/${ch.slug}`}
                           prefetch={false}
                           className="bg-black/20 border border-white/5 hover:border-celestia-sky/50 hover:bg-celestia-sky/5 hover:shadow-glow-blue px-5 py-4 rounded-2xl flex items-center justify-between group transition-all"
                         >
                           <div className="flex flex-col gap-1 min-w-0">
                             <span className="font-bold text-sm text-gray-300 group-hover:text-white transition-colors">
-                              Chapter {ch.chapterIndex}
+                              {ch.chapter}
                             </span>
-                            {ch.createdAt && (
+                            {ch.date && (
                               <span className="text-[11px] text-gray-600 group-hover:text-gray-400 transition-colors">
-                                {formatDate(ch.createdAt)}
+                                {formatDate(ch.date)}
                               </span>
                             )}
                           </div>
@@ -328,10 +333,7 @@ export default async function DetailKomikPage({ params }) {
                           {rec.title}
                         </h4>
                         <span className="text-xs text-gray-400 capitalize flex items-center gap-1.5 bg-black/30 w-max px-2 py-1 rounded-md border border-white/5">
-                          {rec.type} •{" "}
-                          <span className="text-celestia-gold font-bold">
-                            ★ {rec.score}
-                          </span>
+                          {rec.chapter}
                         </span>
                       </div>
                     </Link>

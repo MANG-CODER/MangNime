@@ -1,7 +1,7 @@
 import AnimeCard from "@/components/anime/AnimeCard";
 import KomikCard from "@/components/komik/KomikCard";
 import Link from "next/link";
-import { fetchKomikAPI } from "@/services/komikApi";
+import { searchKomikServer } from "@/services/searchAction";
 import { searchAllAnime } from "@/services/animeAction";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
@@ -10,62 +10,31 @@ export const metadata = { title: "Pencarian - MangNime" };
 export default async function SearchPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const keyword = resolvedParams?.q || "";
-  const page = parseInt(resolvedParams?.page || 1);
   const type = resolvedParams?.type || "all";
 
-  const genreIds = resolvedParams?.genreIds || "";
-  const formatKomik = resolvedParams?.format || "";
-
-  if (!keyword && !genreIds && !formatKomik) {
+  if (!keyword) {
     return (
       <div className="text-center py-32 text-gray-500 font-bold text-xl animate-fade-in">
-        Silakan masukkan kata kunci atau pilih filter pencarian.
+        Silakan masukkan kata kunci pencarian.
       </div>
     );
   }
 
   let animeList = [];
   let komikList = [];
-  let komikPagination = null;
 
+  // PENCARIAN KOMIK
   if (type === "all" || type === "komik") {
-    const params = new URLSearchParams();
-    params.append("page", page.toString());
-    if (keyword) params.append("search", keyword);
-    if (genreIds) params.append("genreIds", genreIds);
-    if (formatKomik) params.append("format", formatKomik);
-
     try {
-      const komikRes = await fetchKomikAPI(
-        `/advanceSearch?${params.toString()}`,
-      );
-      komikList = komikRes?.data?.data || komikRes?.data || [];
-
-      const kMeta = komikRes?.data?.meta || komikRes?.meta || null;
-      if (kMeta && kMeta.lastPage) {
-        const currentPageNum = Number(kMeta.page || page || 1);
-        const totalPagesNum = Number(kMeta.lastPage || 1);
-
-        komikPagination = {
-          currentPage: currentPageNum,
-          totalPages: totalPagesNum,
-          hasNextPage: currentPageNum < totalPagesNum,
-          hasPrevPage: currentPageNum > 1,
-          nextPage: currentPageNum < totalPagesNum ? currentPageNum + 1 : null,
-          prevPage: currentPageNum > 1 ? currentPageNum - 1 : null,
-        };
-      }
+      const komikRes = await searchKomikServer(keyword);
+      komikList = komikRes?.data || [];
     } catch (error) {
       console.error("Gagal fetch pencarian komik:", error);
     }
   }
 
-  if (
-    (type === "all" || type === "anime") &&
-    !genreIds &&
-    !formatKomik &&
-    page === 1
-  ) {
+  // PENCARIAN ANIME
+  if (type === "all" || type === "anime") {
     try {
       animeList = await searchAllAnime(keyword);
     } catch (error) {
@@ -74,8 +43,6 @@ export default async function SearchPage({ searchParams }) {
   }
 
   let judulTitle = `"${keyword}"`;
-  if (genreIds) judulTitle = "Kategori Genre";
-  if (formatKomik) judulTitle = `Format Komik: ${formatKomik.toUpperCase()}`;
 
   return (
     <div className="space-y-12 animate-fade-in max-w-[1400px] mx-auto pb-10 mt-10 px-4">
@@ -84,27 +51,25 @@ export default async function SearchPage({ searchParams }) {
           Hasil Pencarian:{" "}
           <span className="text-celestia-sky">{judulTitle}</span>
         </h1>
-        {page === 1 && (
-          <p className="text-gray-400 text-sm">
-            Menemukan{" "}
-            {animeList.length > 0 && (
-              <span className="text-celestia-sky font-bold">
-                {animeList.length} Anime
-              </span>
-            )}
-            {animeList.length > 0 && komikList.length > 0 && " dan "}
-            {komikList.length > 0 && (
-              <span className="text-celestia-pink font-bold">
-                {komikList.length} Komik
-              </span>
-            )}
-            .
-          </p>
-        )}
+        <p className="text-gray-400 text-sm">
+          Menemukan{" "}
+          {animeList.length > 0 && (
+            <span className="text-celestia-sky font-bold">
+              {animeList.length} Anime
+            </span>
+          )}
+          {animeList.length > 0 && komikList.length > 0 && " dan "}
+          {komikList.length > 0 && (
+            <span className="text-celestia-pink font-bold">
+              {komikList.length} Komik
+            </span>
+          )}
+          .
+        </p>
       </div>
 
       {/* SEGMEN ANIME */}
-      {type === "all" && !genreIds && !formatKomik && page === 1 && (
+      {(type === "all" || type === "anime") && (
         <section className="space-y-6">
           <div className="flex items-center gap-3 border-b border-white/10 pb-3">
             <svg
@@ -126,13 +91,11 @@ export default async function SearchPage({ searchParams }) {
 
           {animeList.length > 0 ? (
             <div
-              key={`anime-${keyword}-${page}`}
+              key={`anime-${keyword}`}
               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-5 animate-fade-in-up"
             >
-              {/* SUNTIKAN SCROLL REVEAL DI SINI */}
               {animeList.map((anime, idx) => (
                 <ScrollReveal key={idx}>
-                  {/* AnimeCard otomatis tahu routing ke Otakudesu / Alqanime dari properti 'source' */}
                   <AnimeCard anime={anime} index={idx} />
                 </ScrollReveal>
               ))}
@@ -167,107 +130,22 @@ export default async function SearchPage({ searchParams }) {
           </div>
 
           {komikList.length > 0 ? (
-            <>
-              <div
-                key={`komik-${keyword}-${genreIds}-${formatKomik}-${page}`}
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-5 animate-fade-in-up"
-              >
-                {/* SUNTIKAN SCROLL REVEAL DI SINI */}
-                {komikList.map((komik, idx) => (
-                  <ScrollReveal key={idx}>
-                    <KomikCard komik={komik} />
-                  </ScrollReveal>
-                ))}
-              </div>
-
-              {komikPagination && (
-                <div className="mt-8 flex justify-center">
-                  <CustomSearchPagination
-                    pagination={komikPagination}
-                    type={type}
-                    keyword={keyword}
-                    genreIds={genreIds}
-                    format={formatKomik}
-                  />
-                </div>
-              )}
-            </>
+            <div
+              key={`komik-${keyword}`}
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-5 animate-fade-in-up"
+            >
+              {komikList.map((komik, idx) => (
+                <ScrollReveal key={idx}>
+                  <KomikCard komik={komik} />
+                </ScrollReveal>
+              ))}
+            </div>
           ) : (
             <div className="text-center py-16 text-gray-500 border border-white/5 rounded-2xl bg-white/5 border-dashed">
               Komik tidak ditemukan untuk pencarian ini.
             </div>
           )}
         </section>
-      )}
-    </div>
-  );
-}
-
-function CustomSearchPagination({
-  pagination,
-  type,
-  keyword,
-  genreIds,
-  format,
-}) {
-  if (!pagination || pagination.totalPages <= 1) return null;
-
-  const {
-    currentPage,
-    hasPrevPage,
-    prevPage,
-    hasNextPage,
-    nextPage,
-    totalPages,
-  } = pagination;
-
-  const createUrl = (targetPage) => {
-    const p = new URLSearchParams();
-    if (type && type !== "all") p.append("type", type);
-    if (keyword) p.append("q", keyword);
-    if (genreIds) p.append("genreIds", genreIds);
-    if (format) p.append("format", format);
-    p.append("page", targetPage);
-    return `/search?${p.toString()}`;
-  };
-
-  return (
-    <div className="flex items-center justify-center gap-2 mt-12 w-full">
-      {hasPrevPage ? (
-        <Link
-          href={createUrl(prevPage)}
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all"
-        >
-          &laquo; Prev
-        </Link>
-      ) : (
-        <button
-          disabled
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
-        >
-          &laquo; Prev
-        </button>
-      )}
-
-      <div className="px-6 py-2 rounded-xl bg-purple-600/10 border border-purple-500/20 text-purple-300 font-bold flex items-center shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-        Halaman {currentPage} <span className="text-gray-500 mx-2">/</span>{" "}
-        {totalPages}
-      </div>
-
-      {hasNextPage ? (
-        <Link
-          href={createUrl(nextPage)}
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all"
-        >
-          Next &raquo;
-        </Link>
-      ) : (
-        <button
-          disabled
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
-        >
-          Next &raquo;
-        </button>
       )}
     </div>
   );

@@ -2,7 +2,7 @@ import HeroCarousel from "@/components/home/HeroCarousel";
 import AnimeCard from "@/components/anime/AnimeCard";
 import KomikCard from "@/components/komik/KomikCard";
 import Link from "next/link";
-import { fetchKomikAPI } from "@/services/komikApi";
+import { getHomeKomik } from "@/services/komikApi";
 import { AnimeProvider } from "@/services/providers";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import CommentSection from "@/components/ui/CommentSection";
@@ -22,7 +22,7 @@ export default async function Home() {
   try {
     const [animeRes, komikRes] = await Promise.all([
       AnimeProvider.Otakudesu.getHome(),
-      fetchKomikAPI("/home"),
+      getHomeKomik(), // Menggunakan fungsi gabungan dari API baru
     ]);
 
     // Parsing Anime
@@ -30,8 +30,8 @@ export default async function Home() {
     completedList = animeRes?.completed || [];
 
     // Parsing Komik
-    popularKomik = komikRes?.data?.popular || [];
-    newestKomik = komikRes?.data?.newest || [];
+    popularKomik = komikRes?.popular || [];
+    newestKomik = komikRes?.newest || [];
   } catch (error) {
     console.error("Gagal memuat Homepage:", error);
   }

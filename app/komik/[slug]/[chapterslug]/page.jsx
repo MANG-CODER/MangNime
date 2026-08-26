@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fetchKomikAPI } from "@/services/komikApi";
+import { getChapterDetail, getKomikDetail } from "@/services/komikApi";
 import CommentSection from "@/components/ui/CommentSection";
 import ChapterHistoryTracker from "@/components/komik/ChapterHistoryTracker";
 import ReaderStickyBar from "@/components/komik/ReaderStickyBar";
@@ -8,37 +8,32 @@ import Image from "next/image";
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams?.slug || "";
-  const currentChapter = resolvedParams?.chapterslug || "";
+  const chapterSlug = resolvedParams?.chapterslug || "";
 
   try {
-    const chapterIndexStr = currentChapter
-      .toLowerCase()
-      .replace("chapter-", "");
-    const res = await fetchKomikAPI(`/komik/${slug}/${chapterIndexStr}`);
-    const chapterData = res?.data ?? null;
+    const chapterData = await getChapterDetail(chapterSlug);
 
     if (!chapterData) throw new Error("Data tidak ada");
 
     const komikTitle =
       chapterData.komikTitle ||
       slug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-    const chapterIndex = chapterData.chapterIndex;
+    const chapterTitle = chapterData.chapterTitle || "";
 
-    const ogTitle = `${komikTitle} Chapter ${chapterIndex} Bahasa Indonesia | MangNime`;
-    const ogDescription = `Baca ${komikTitle} Chapter ${chapterIndex} bahasa Indonesia gratis di MangNime. Update chapter terbaru setiap hari.`;
+    const ogTitle = `${komikTitle} ${chapterTitle} Bahasa Indonesia | MangNime`;
+    const ogDescription = `Baca ${komikTitle} ${chapterTitle} bahasa Indonesia gratis di MangNime. Update chapter terbaru setiap hari.`;
 
-    const images = chapterData.data?.images ?? chapterData.images ?? [];
-    const coverImage = images[0] || null;
+    const coverImage = chapterData.images?.[0] || null;
 
     let komikCover = coverImage;
     if (!komikCover) {
       try {
-        const komikRes = await fetchKomikAPI(`/komik/${slug}`);
-        komikCover = komikRes?.data?.cover || null;
+        const komik = await getKomikDetail(slug);
+        komikCover = komik?.cover || null;
       } catch {}
     }
 
-    const canonicalUrl = `https://mangnime.my.id/komik/${slug}/${currentChapter}`;
+    const canonicalUrl = `https://mangnime.my.id/komik/${slug}/${chapterSlug}`;
 
     return {
       title: ogTitle,
@@ -54,7 +49,7 @@ export async function generateMetadata({ params }) {
                 url: komikCover,
                 width: 800,
                 height: 1200,
-                alt: `${komikTitle} Chapter ${chapterIndex}`,
+                alt: `${komikTitle} ${chapterTitle}`,
               },
             ]
           : [],
@@ -75,9 +70,8 @@ export async function generateMetadata({ params }) {
     const komikTitle = slug
       .replace(/-/g, " ")
       .replace(/\b\w/g, (l) => l.toUpperCase());
-    const chapterLabel = currentChapter.replace(/-/g, " ");
     return {
-      title: `${komikTitle} - ${chapterLabel} | MangNime`,
+      title: `${komikTitle} | MangNime`,
       description: "Baca komik bahasa Indonesia gratis di MangNime.",
     };
   }
@@ -88,12 +82,9 @@ export const revalidate = 604800;
 export default async function ReadChapterPage({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams?.slug;
-  const currentChapter = resolvedParams?.chapterslug || "";
+  const chapterSlug = resolvedParams?.chapterslug || "";
 
-  const chapterIndexStr = currentChapter.toLowerCase().replace("chapter-", "");
-
-  const res = await fetchKomikAPI(`/komik/${slug}/${chapterIndexStr}`);
-  const chapterData = res?.data ?? null;
+  const chapterData = await getChapterDetail(chapterSlug);
 
   if (!chapterData) {
     return (
@@ -105,7 +96,7 @@ export default async function ReadChapterPage({ params }) {
           Lembaran komik ini mungkin belum rilis atau terjadi kesalahan.
           <br />
           <span className="text-xs text-gray-600 mt-2 block">
-            (Endpoint: /komik/{slug}/{chapterIndexStr})
+            (Chapter slug: {chapterSlug})
           </span>
         </p>
         <Link
@@ -119,19 +110,17 @@ export default async function ReadChapterPage({ params }) {
     );
   }
 
-  const images = chapterData.data?.images ?? chapterData.images ?? [];
+  const images = chapterData.images || [];
   const komikTitle = chapterData.komikTitle ?? slug.replace(/-/g, " ");
-  const chapterIndex = chapterData.chapterIndex;
-  const pageTitle = `${komikTitle} - Chapter ${chapterIndex}`;
+  const chapterTitle = chapterData.chapterTitle || "";
+  const pageTitle = `${komikTitle} - ${chapterTitle}`;
 
-  const prevChapterUrl =
-    chapterData.prevChapterId != null
-      ? `/komik/${slug}/chapter-${chapterData.prevChapterId}`
-      : null;
-  const nextChapterUrl =
-    chapterData.nextChapterId != null
-      ? `/komik/${slug}/chapter-${chapterData.nextChapterId}`
-      : null;
+  const prevChapterUrl = chapterData.prevChapterSlug
+    ? `/komik/${slug}/${chapterData.prevChapterSlug}`
+    : null;
+  const nextChapterUrl = chapterData.nextChapterSlug
+    ? `/komik/${slug}/${chapterData.nextChapterSlug}`
+    : null;
 
   return (
     <div className="min-h-screen bg-[#0D0B1A] pt-20 md:pt-24 pb-20 animate-fade-in relative">
@@ -139,14 +128,17 @@ export default async function ReadChapterPage({ params }) {
         slug={slug}
         title={komikTitle}
         image={images[0] ?? ""}
-        chapterIndex={chapterIndex}
+        chapterSlug={chapterSlug}
+        chapterLabel={chapterTitle}
       />
       <ReaderStickyBar
         slug={slug}
-        currentChapter={currentChapter}
+        currentChapter={chapterSlug}
         pageTitle={pageTitle}
         createdAt={chapterData.createdAt}
         firstImage={images[0] ?? ""}
+        prevChapterSlug={chapterData.prevChapterSlug}
+        nextChapterSlug={chapterData.nextChapterSlug}
       />
 
       <div className="container mx-auto max-w-3xl px-0 sm:px-4 flex flex-col items-center">
@@ -158,7 +150,7 @@ export default async function ReadChapterPage({ params }) {
               return (
                 <Image
                   key={idx}
-                  src={proxyUrl} // Menggunakan proxy
+                  src={proxyUrl}
                   alt={`Page ${idx + 1}`}
                   width={800}
                   height={1200}
@@ -191,7 +183,7 @@ export default async function ReadChapterPage({ params }) {
               &laquo;
             </span>
             <span className="group-hover:text-celestia-sky transition-colors">
-              Chapter {chapterData.prevChapterId}
+              Chapter Sebelumnya
             </span>
           </Link>
         ) : (
@@ -218,7 +210,7 @@ export default async function ReadChapterPage({ params }) {
             className="w-full sm:w-auto px-6 py-3.5 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 hover:border-celestia-pink/50 transition-all text-center flex items-center justify-center gap-2 group"
           >
             <span className="group-hover:text-celestia-pink transition-colors">
-              Chapter {chapterData.nextChapterId}
+              Chapter Selanjutnya
             </span>
             <span className="transform group-hover:translate-x-1 transition-transform text-celestia-pink">
               &raquo;
@@ -236,7 +228,7 @@ export default async function ReadChapterPage({ params }) {
 
       <div className="container mx-auto max-w-4xl px-4 mt-8">
         <CommentSection
-          topicId={`chapter-${slug}-${currentChapter}`}
+          topicId={`chapter-${slug}-${chapterSlug}`}
           title="Diskusi Chapter Ini"
         />
       </div>

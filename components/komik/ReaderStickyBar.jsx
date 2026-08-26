@@ -10,6 +10,8 @@ export default function ReaderStickyBar({
   pageTitle,
   createdAt,
   firstImage,
+  prevChapterSlug,
+  nextChapterSlug,
 }) {
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
@@ -47,15 +49,16 @@ export default function ReaderStickyBar({
           : "top-0 -translate-y-full opacity-0 pointer-events-none"
       }`}
     >
-      <div className="container mx-auto max-w-4xl px-4 py-3 flex items-center justify-between gap-4">
+      <div className="container mx-auto max-w-4xl px-4 py-3 flex items-center justify-between gap-2 md:gap-4">
+        {/* Tombol Kembali ke Detail Komik */}
         <Link
           href={`/komik/${slug}`}
           prefetch={false}
-          className="flex items-center justify-center w-10 h-10 shrink-0 rounded-full bg-white/5 hover:bg-celestia-pink hover:text-white transition-all text-gray-400 group"
+          className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 shrink-0 rounded-full bg-white/5 hover:bg-celestia-pink hover:text-white transition-all text-gray-400 group"
           title="Kembali ke Detail"
         >
           <svg
-            className="w-5 h-5 transform group-hover:-translate-x-0.5 transition-transform"
+            className="w-4 h-4 md:w-5 md:h-5 transform group-hover:-translate-x-1 transition-transform"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -64,22 +67,115 @@ export default function ReaderStickyBar({
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2.5"
-              d="M15 19l-7-7 7-7"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
         </Link>
 
-        <div className="flex flex-col items-center flex-1 min-w-0">
-          <h1 className="text-sm md:text-lg font-black text-white truncate text-center w-full drop-shadow-md">
-            {pageTitle}
-          </h1>
-          {createdAt && (
-            <span className="text-[11px] text-gray-500 mt-0.5">
-              {formatDate(createdAt)}
-            </span>
+        {/* Bagian Tengah (Prev + Judul + Next) */}
+        <div className="flex items-center justify-center gap-2 md:gap-4 flex-1 min-w-0">
+          {/* Tombol Prev Chapter */}
+          {prevChapterSlug ? (
+            <Link
+              href={`/komik/${slug}/${prevChapterSlug}`}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-celestia-pink hover:border-celestia-pink/30 hover:bg-celestia-pink/10 transition-all text-xs font-bold shadow-sm"
+              title="Chapter Sebelumnya"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              <span className="hidden sm:inline">Prev</span>
+            </Link>
+          ) : (
+            <button
+              disabled
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed text-xs font-bold"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              <span className="hidden sm:inline">Prev</span>
+            </button>
+          )}
+
+          {/* Info Judul Tengah */}
+          <div className="flex flex-col items-center flex-1 min-w-0 px-1">
+            <h1 className="text-[13px] md:text-base font-black text-white truncate text-center w-full drop-shadow-md">
+              {pageTitle}
+            </h1>
+            {createdAt && (
+              <span className="text-[10px] md:text-[11px] text-gray-500 mt-0.5 hidden md:block">
+                {formatDate(createdAt)}
+              </span>
+            )}
+          </div>
+
+          {/* Tombol Next Chapter */}
+          {nextChapterSlug ? (
+            <Link
+              href={`/komik/${slug}/${nextChapterSlug}`}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-celestia-sky hover:border-celestia-sky/30 hover:bg-celestia-sky/10 transition-all text-xs font-bold shadow-sm"
+              title="Chapter Selanjutnya"
+            >
+              <span className="hidden sm:inline">Next</span>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Link>
+          ) : (
+            <button
+              disabled
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed text-xs font-bold"
+            >
+              <span className="hidden sm:inline">Next</span>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
           )}
         </div>
 
+        {/* Tombol Bookmark */}
         <div className="shrink-0 scale-75 origin-right md:scale-90">
           <BookmarkButton
             item={{

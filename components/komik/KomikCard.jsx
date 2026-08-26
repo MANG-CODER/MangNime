@@ -3,23 +3,17 @@ import Image from "next/image";
 
 export default function KomikCard({ komik }) {
   const itemData = komik.data ? komik.data : komik;
-
-  const slug = itemData.slug || itemData.endpoint || "";
+  const slug = itemData.slug || "";
   const title = itemData.title || "Judul Tidak Diketahui";
-
   const image =
     itemData.image ||
-    itemData.coverImage ||
-    itemData.cover ||
-    itemData.thumbnail ||
     "https://placehold.co/200x300/151226/8b6cff?text=No+Image";
 
-  const latestChapter =
-    itemData.chapter ||
-    (itemData.chapters?.length > 0 ? itemData.chapters[0].chapterIndex : "");
+  // Chapter sekarang berupa string utuh (misal: "Chapter 96"), bukan array/object lagi
+  const latestChapter = itemData.chapter || "";
 
-  const score = itemData.score || itemData.rating || "";
-  const type = itemData.type || itemData.format || "";
+  const score = itemData.score || null;
+  const type = itemData.type || null;
 
   return (
     <Link
