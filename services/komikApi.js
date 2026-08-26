@@ -1,6 +1,5 @@
 const KOMIK_API_URL =
-  process.env.NEXT_PUBLIC_KOMIK_API_URL ||
-  "https://www.sankavollerei.web.id/comic";
+  process.env.NEXT_PUBLIC_API_URL;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
