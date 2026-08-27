@@ -95,31 +95,44 @@ export default function BookmarkMenu() {
           {/* List Konten */}
           <div className="overflow-y-auto custom-scrollbar p-2 flex-1 min-h-[200px]">
             {filteredBookmarks.length > 0 ? (
-              filteredBookmarks.map((item, idx) => (
-                <Link
-                  href={item.url || `/${item.type || "anime"}/${item.slug}`}
-                  key={idx}
-                  onClick={() => setIsOpen(false)}
-                  className="flex gap-3 p-2 hover:bg-white/5 rounded-xl transition-colors items-center group border-b border-white/5 last:border-0"
-                >
-                  <div className="w-12 h-16 relative rounded-lg overflow-hidden bg-black/50 flex-shrink-0 border border-white/5 group-hover:border-celestia-pink transition-colors">
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-xs font-bold text-gray-200 line-clamp-2 group-hover:text-celestia-sky mb-1 leading-tight">
-                      {item.title}
-                    </h4>
-                    <span className="text-[9px] text-white bg-white/10 px-2 py-0.5 rounded font-bold uppercase tracking-widest">
-                      {item.status || "Unknown"}
-                    </span>
-                  </div>
-                </Link>
-              ))
+              filteredBookmarks.map((item, idx) => {
+                const itemUrl =
+                  item.url ||
+                  (item.type === "komik"
+                    ? `/komik/${item.slug}`
+                    : `/${item.type || "anime"}/${item.slug}`);
+
+                const itemImage =
+                  item.image ||
+                  item.cover ||
+                  "https://placehold.co/200x300/151226/8b6cff?text=No+Image";
+
+                return (
+                  <Link
+                    href={itemUrl}
+                    key={idx}
+                    onClick={() => setIsOpen(false)}
+                    className="flex gap-3 p-2 hover:bg-white/5 rounded-xl transition-colors items-center group border-b border-white/5 last:border-0"
+                  >
+                    <div className="w-12 h-16 relative rounded-lg overflow-hidden bg-black/50 flex-shrink-0 border border-white/5 group-hover:border-celestia-pink transition-colors">
+                      <Image
+                        src={itemImage}
+                        alt={item.title || "Bookmark Item"}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs font-bold text-gray-200 line-clamp-2 group-hover:text-celestia-sky mb-1 leading-tight">
+                        {item.title}
+                      </h4>
+                      <span className="text-[9px] text-white bg-white/10 px-2 py-0.5 rounded font-bold uppercase tracking-widest inline-block">
+                        {item.status || "Unknown"}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })
             ) : (
               <div className="py-16 text-center text-sm text-gray-500 flex flex-col items-center gap-2">
                 <span className="text-3xl">📭</span>

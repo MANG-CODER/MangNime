@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getChapterDetail, getKomikDetail } from "@/services/komikApi";
+import { KomikProvider } from "@/services/komikApi";
 import CommentSection from "@/components/ui/CommentSection";
 import ChapterHistoryTracker from "@/components/komik/ChapterHistoryTracker";
 import ReaderStickyBar from "@/components/komik/ReaderStickyBar";
@@ -11,27 +11,20 @@ export async function generateMetadata({ params }) {
   const chapterSlug = resolvedParams?.chapterslug || "";
 
   try {
-    const chapterData = await getChapterDetail(chapterSlug);
+    const [chapterData, komikData] = await Promise.all([
+      KomikProvider.getChapter(slug, chapterSlug),
+      KomikProvider.getDetail(slug),
+    ]);
 
     if (!chapterData) throw new Error("Data tidak ada");
 
-    const komikTitle =
-      chapterData.komikTitle ||
-      slug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    const komikTitle = komikData?.title || slug.replace(/-/g, " ");
     const chapterTitle = chapterData.chapterTitle || "";
 
     const ogTitle = `${komikTitle} ${chapterTitle} Bahasa Indonesia | MangNime`;
     const ogDescription = `Baca ${komikTitle} ${chapterTitle} bahasa Indonesia gratis di MangNime. Update chapter terbaru setiap hari.`;
 
-    const coverImage = chapterData.images?.[0] || null;
-
-    let komikCover = coverImage;
-    if (!komikCover) {
-      try {
-        const komik = await getKomikDetail(slug);
-        komikCover = komik?.cover || null;
-      } catch {}
-    }
+    const komikCover = komikData?.image || chapterData.images?.[0] || null;
 
     const canonicalUrl = `https://mangnime.my.id/komik/${slug}/${chapterSlug}`;
 
@@ -67,11 +60,8 @@ export async function generateMetadata({ params }) {
       },
     };
   } catch (error) {
-    const komikTitle = slug
-      .replace(/-/g, " ")
-      .replace(/\b\w/g, (l) => l.toUpperCase());
     return {
-      title: `${komikTitle} | MangNime`,
+      title: `MangNime Reader`,
       description: "Baca komik bahasa Indonesia gratis di MangNime.",
     };
   }
@@ -83,8 +73,10 @@ export default async function ReadChapterPage({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams?.slug;
   const chapterSlug = resolvedParams?.chapterslug || "";
-
-  const chapterData = await getChapterDetail(chapterSlug);
+  const [chapterData, komikData] = await Promise.all([
+    KomikProvider.getChapter(slug, chapterSlug),
+    KomikProvider.getDetail(slug),
+  ]);
 
   if (!chapterData) {
     return (
@@ -96,7 +88,7 @@ export default async function ReadChapterPage({ params }) {
           Lembaran komik ini mungkin belum rilis atau terjadi kesalahan.
           <br />
           <span className="text-xs text-gray-600 mt-2 block">
-            (Chapter slug: {chapterSlug})
+            (Chapter ID: {chapterSlug})
           </span>
         </p>
         <Link
@@ -111,9 +103,10 @@ export default async function ReadChapterPage({ params }) {
   }
 
   const images = chapterData.images || [];
-  const komikTitle = chapterData.komikTitle ?? slug.replace(/-/g, " ");
+  const komikTitle = komikData?.title || "Judul Tidak Diketahui";
   const chapterTitle = chapterData.chapterTitle || "";
   const pageTitle = `${komikTitle} - ${chapterTitle}`;
+  const komikCover = komikData?.image || images[0] || "";
 
   const prevChapterUrl = chapterData.prevChapterSlug
     ? `/komik/${slug}/${chapterData.prevChapterSlug}`
@@ -127,7 +120,7 @@ export default async function ReadChapterPage({ params }) {
       <ChapterHistoryTracker
         slug={slug}
         title={komikTitle}
-        image={images[0] ?? ""}
+        image={komikCover}
         chapterSlug={chapterSlug}
         chapterLabel={chapterTitle}
       />
@@ -145,7 +138,6 @@ export default async function ReadChapterPage({ params }) {
         {images.length > 0 ? (
           <div className="w-full flex flex-col items-center sm:rounded-xl overflow-hidden sm:shadow-[0_0_40px_rgba(0,0,0,0.5)] sm:border border-white/5 bg-black">
             {images.map((imgUrl, idx) => {
-
               return (
                 <Image
                   key={idx}

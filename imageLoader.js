@@ -8,17 +8,21 @@ export default function animeImageLoader({ src, width, quality }) {
     "v2.komikcast.fit",
     "cdn.komikcast.com",
     "placehold.co",
-    // --- DOMAIN API KOMIK BARU ---
+    "komiku.id",
+    "cdn.komiku.id",
+    "storage.googleapis.com",
     "thumbnail.komiku.org",
     "thumbnail.komiku.to",
     "img.komiku.org",
     "komiku.to",
     "komiku.org",
     "sankavollerei.web.id",
-    // --- DOMAIN EKSTERNAL (DARI LOG ERROR) ---
-    "omcqdhcnlykcjpxbkwpl.supabase.co", // Avatar Supabase
-    "lh3.googleusercontent.com", // Avatar Google
-    "giphy.com", // GIF
+    "assets.shngm.id",
+    "shinigami.id",
+    "shinigami.moe",
+    "omcqdhcnlykcjpxbkwpl.supabase.co",
+    "lh3.googleusercontent.com",
+    "giphy.com",
   ];
 
   const wsrvDomains = ["sv1.imgkc1.my.id", "minio.imgkc1.my.id"];

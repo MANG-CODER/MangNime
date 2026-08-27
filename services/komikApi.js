@@ -1,259 +1,486 @@
-const KOMIK_API_URL =
-  process.env.NEXT_PUBLIC_API_URL;
+import { proxyImage } from "@/utils/shinigamiProxy";
+import { cache } from "react";
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const ENV_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://www.sankavollerei.web.id/comic";
+let FIXED_URL = ENV_URL;
+if (FIXED_URL.includes("https://sankavollerei")) {
+  FIXED_URL = FIXED_URL.replace(
+    "https://sankavollerei",
+    "https://www.sankavollerei",
+  );
+}
 
-/**
- * Fetcher dasar. Tidak ada lagi prefix /api dan tidak ada lagi Authorization
- * header — endpoint sankavollerei bersifat publik.
- */
-export const fetchKomikAPI = async (endpoint, delayMs = 0, options = {}) => {
-  try {
-    if (delayMs > 0) await delay(delayMs);
+const SHINIGAMI_BASE_URL = FIXED_URL.includes("shinigami")
+  ? FIXED_URL
+  : `${FIXED_URL}/shinigami`;
+const KOMIKU_BASE_URL = FIXED_URL.includes("shinigami")
+  ? FIXED_URL.replace("/shinigami", "")
+  : FIXED_URL;
 
-    const res = await fetch(`${KOMIK_API_URL}${endpoint}`, {
-      headers: {
-        Accept: "application/json",
-      },
-      next: { revalidate: 3600 },
-      ...options,
+export const SHINIGAMI_ENDPOINTS = {
+  HOME: "/home",
+  LATEST: "/latest",
+  POPULAR: "/popular",
+  SEARCH: "/search/",
+  DETAIL: "/detail/",
+  CHAPTERS: "/chapters/",
+  READ: "/read/",
+  GENRES: "/genres",
+  ADVANCED_SEARCH: "/advanced-search",
+};
+
+export const KOMIKU_ENDPOINTS = {
+  SEARCH: "/search?q=",
+  DETAIL: "/comic/",
+  CHAPTER: "/chapter/",
+};
+
+// SISTEM RATE LIMITER GLOBAL KOMIKU (25 REQUEST / MENIT)
+const RATE_LIMIT = 25;
+const TIME_WINDOW_MS = 60 * 1000;
+
+let requestCount = 0;
+let windowStartTime = Date.now();
+let globalWaitPromise = null;
+
+async function enforceRateLimit() {
+  // Jika sedang ada yang dikunci (nunggu timer habis), suruh antre
+  if (globalWaitPromise) {
+    await globalWaitPromise;
+  }
+
+  const now = Date.now();
+
+  // Jika sudah lebih dari 1 menit, reset timer dan hitungan
+  if (now - windowStartTime >= TIME_WINDOW_MS) {
+    windowStartTime = now;
+    requestCount = 0;
+  }
+
+  // Jika limit 25 tercapai, bikin timer antrean
+  if (requestCount >= RATE_LIMIT) {
+    const timeToWait = TIME_WINDOW_MS - (now - windowStartTime);
+    console.warn(
+      `⏳ [RATE LIMITER] Limit 25 tercapai! Menahan request selama ${Math.ceil(timeToWait / 1000)} detik...`,
+    );
+
+    // Bikin gembok (Promise) supaya request lain nunggu
+    globalWaitPromise = new Promise((resolve) => {
+      setTimeout(() => {
+        windowStartTime = Date.now(); // Reset waktu
+        requestCount = 0; // Reset hitungan
+        globalWaitPromise = null; // Buka gembok
+        resolve();
+      }, timeToWait);
     });
 
-    if (!res.ok) {
-      console.warn(
-        `⚠️ Komik API gagal. Status: ${res.status} | Endpoint: ${endpoint}`,
-      );
-      return null;
-    }
+    // Tunggu gemboknya kebuka
+    await globalWaitPromise;
+  }
 
+  // Tambah hitungan request setiap kali lolos
+  requestCount++;
+}
+// =====================================================================
+
+// 1. SHINIGAMI CACHED FETCHER
+const fetchAPI = cache(async (endpoint) => {
+  const fullUrl = `${SHINIGAMI_BASE_URL}${endpoint}`;
+  try {
+    const res = await fetch(fullUrl, { next: { revalidate: 3600 } });
+    if (!res.ok) throw new Error(`API Error: ${res.status}`);
     return await res.json();
   } catch (error) {
-    console.error(`🚨 Komik API Error pada ${endpoint}:`, error.message);
+    console.error(`Fetch API Error (${endpoint}):`, error.message);
     return null;
   }
-};
+});
 
-// ─── Slug helpers ───────────────────────────────────────────────────────────
-// List endpoints (terbaru/populer/genre) tidak memberi field `slug` langsung,
-// hanya `link` yang berbentuk salah satu dari:
-//   "/manga/some-title/"                          (terbaru, populer)
-//   "https://komiku.org/manga/some-title/"         (genre)
-//   "/detail-komik/some-title/"                    (search)
-// Fungsi ini menyeragamkan semuanya jadi slug polos: "some-title"
-function extractSlugFromLink(link) {
-  if (!link) return "";
+// 2. KOMIKU CACHED FETCHER DENGAN RATE LIMITER
+const fetchKomikuAPI = cache(async (endpoint) => {
+  const fullUrl = `${KOMIKU_BASE_URL}${endpoint}`;
+
+  // Tahan di sini kalau request terlalu brutal!
+  await enforceRateLimit();
+
+  console.log(`\n🚀 [DEBUG KOMIKU] FETCH (${requestCount}/25): ${fullUrl}\n`);
   try {
-    const path = link.replace(/^https?:\/\/[^/]+/, "");
-    const match = path.match(/\/(?:manga|detail-komik)\/([^/]+)\/?$/);
-    if (match) return match[1];
-    const segments = path.split("/").filter(Boolean);
-    return segments[segments.length - 1] || "";
-  } catch {
-    return "";
+    const res = await fetch(fullUrl, { next: { revalidate: 300 } });
+    if (res.status === 429 || !res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error(`Fetch Komiku Error (${endpoint}):`, error.message);
+    return null;
   }
-}
+});
 
-// ─── Normalizers ────────────────────────────────────────────────────────────
-
-function normalizeListCard(item) {
-  const slug = extractSlugFromLink(item.link);
-  const originalHorizontal = item.image ? item.image.split("?")[0] : "";
-  const guessedVertical = originalHorizontal.replace(
-    "manga_img_horizontal",
-    "manga_thumbnail",
-  );
-
+function normalizeKomikuSearch(item) {
   return {
-    title: item.title || "",
-    slug,
-    image: guessedVertical, // Coba pakai yang Vertikal dulu
-    imageFallback: originalHorizontal, // Simpan Horizontal
-    chapter: item.chapter || "",
-    time_ago: item.time_ago || null,
-    score: null,
-    type: null,
-    status: null,
+    title: item.title,
+    slug: `komikudetail-${item.slug}`,
+    image: proxyImage(item.thumbnail),
+    chapter: item.description || "",
+    score: "",
+    type: item.type || "Manga",
+    source: "komiku",
   };
 }
 
-function normalizeGenreCard(item) {
-  const slug = extractSlugFromLink(item.link);
-  const originalHorizontal = item.image ? item.image.split("?")[0] : "";
-  const guessedVertical = originalHorizontal.replace(
-    "manga_img_horizontal",
-    "manga_thumbnail",
-  );
-
+function normalizeKomikuDetail(raw) {
   return {
-    title: item.title || "",
-    slug,
-    image: guessedVertical,
-    imageFallback: originalHorizontal,
-    chapter: item.chapter || "",
-    score: item.rating || null,
-    type: item.status || null,
-    status: item.status || null,
-  };
-}
-
-function normalizeSearchCard(item) {
-  return {
-    title: item.title || "",
-    slug: item.slug || extractSlugFromLink(item.href),
-    image: item.thumbnail || "",
-    chapter: "",
-    type: item.type || null,
-    genreLabel: item.genre || null,
-    description: item.description || null,
-  };
-}
-
-function normalizeDetail(raw) {
-  if (!raw) return null;
-  const chapters = (raw.chapters || []).map((ch) => ({
-    chapter: ch.chapter || "",
-    slug: ch.slug || "",
-    date: ch.date || null,
-  }));
-
-  return {
-    title: raw.title || "",
-    nativeTitle: raw.title_indonesian || "",
-    slug: raw.slug || "",
-    cover: raw.image || "",
-    backgroundImage: raw.image || "",
-    rating: raw.metadata?.rating || "?",
+    title: raw.title,
+    slug: `komikudetail-${raw.slug}`,
+    image: proxyImage(raw.image),
+    synopsis: raw.synopsis || raw.synopsis_full || "Tidak ada sinopsis.",
+    genres: raw.genres?.map((g) => g.name) || [],
+    author: raw.metadata?.author || "-",
+    artist: "-",
     status: raw.metadata?.status || "Unknown",
-    author: raw.metadata?.author || "Unknown",
-    format: raw.metadata?.type || "Manga",
-    totalChapters: chapters.length,
-    synopsis: raw.synopsis || raw.synopsis_full || "Sinopsis belum tersedia.",
-    genres: (raw.genres || []).map((g) => ({
-      id: g.slug,
-      name: g.name,
-      slug: g.slug,
-    })),
-    readChapter: chapters,
-    recommended: (raw.similar_manga || []).map(normalizeListCard),
+    score: "",
+    type: raw.metadata?.type || "Manga",
+    source: "komiku",
+    chapters: (raw.chapters || []).map((ch) => {
+      const chNumMatch = ch.chapter.match(/([0-9.]+)/);
+      const chNum = chNumMatch ? chNumMatch[1] : ch.chapter;
+      return {
+        chapterId: ch.slug,
+        title: ch.chapter,
+        slug: ch.slug,
+        chapterNumber: chNum,
+        createdAt: ch.date || "",
+      };
+    }),
   };
 }
 
-function normalizeChapterDetail(raw, slug) {
-  if (!raw) return null;
+function normalizeKomikuChapter(raw) {
+  const imagesList =
+    raw.imagesproxy && raw.imagesproxy.length > 0
+      ? raw.imagesproxy
+      : raw.images || [];
   return {
-    komikTitle:
-      raw.manga_title ||
-      slug.replace(/-chapter-\d+.*$/i, "").replace(/-/g, " "),
-    chapterTitle: raw.chapter_title || "",
-    
-    // ⚠️ SANGAT PENTING: Gunakan imagesproxy sebagai prioritas utama
-    images: raw.imagesproxy || raw.images || [],
-    
+    chapterTitle: raw.chapter_title || raw.manga_title || "Chapter",
+    createdAt: "",
+    images: imagesList,
     prevChapterSlug: raw.navigation?.previousChapter || null,
     nextChapterSlug: raw.navigation?.nextChapter || null,
-    chapterListSlug: raw.navigation?.chapterList || null,
-    createdAt: null,
   };
 }
 
-function normalizePagination(raw, page) {
-  if (!raw) return null;
-  const currentPage = Number(raw.current_page || page || 1);
-  const hasMore = !!raw.has_more;
-  return {
-    currentPage,
-    hasNextPage: hasMore,
-    hasPrevPage: currentPage > 1,
-    nextPage: hasMore ? currentPage + 1 : null,
-    prevPage: currentPage > 1 ? currentPage - 1 : null,
-    totalPages: hasMore ? currentPage + 1 : currentPage,
-  };
+async function resolveMangaId(slugOrId) {
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(slugOrId)) return slugOrId;
+  const keyword = slugOrId.replace(/-/g, " ");
+  try {
+    const searchRes = await fetchAPI(
+      `${SHINIGAMI_ENDPOINTS.SEARCH}${encodeURIComponent(keyword)}`,
+    );
+    const items = searchRes?.data || searchRes || [];
+    if (Array.isArray(items) && items.length > 0) {
+      const matched =
+        items.find(
+          (item) =>
+            item.slug === slugOrId ||
+            item.title?.toLowerCase().includes(keyword.toLowerCase()),
+        ) || items[0];
+      return matched.manga_id || matched.slug;
+    }
+  } catch (e) {
+    console.error("Gagal resolve manga ID:", e.message);
+  }
+  return slugOrId;
 }
 
-// ─── Public fetchers ────────────────────────────────────────────────────────
+function toSlug(title) {
+  if (!title) return "";
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
 
-export const getLatestKomik = async (page = 1, limit = 30, options = {}) => {
-  const res = await fetchKomikAPI(
-    `/terbaru?page=${page}&limit=${limit}`,
-    0,
-    options,
-  );
-  const list = res?.comics || [];
-  return {
-    data: list.map(normalizeListCard),
-    pagination: normalizePagination(res?.pagination, page),
-  };
-};
+// 3. GET DETAIL CACHED
+const getDetailCached = cache(async (slugOrId) => {
+  if (slugOrId.startsWith("komikudetail-")) {
+    const realSlug = slugOrId.replace("komikudetail-", "");
+    const komikuJson = await fetchKomikuAPI(
+      `${KOMIKU_ENDPOINTS.DETAIL}${realSlug}`,
+    );
+    if (komikuJson && !komikuJson.error) {
+      return normalizeKomikuDetail(komikuJson);
+    }
+    return null;
+  }
 
-export const getPopularKomik = async (page = 1, limit = 30, options = {}) => {
-  const res = await fetchKomikAPI(
-    `/populer?page=${page}&limit=${limit}`,
-    0,
-    options,
-  );
-  const list = res?.comics || [];
-  return {
-    data: list.map(normalizeListCard),
-    pagination: normalizePagination(res?.pagination, page),
-  };
-};
-
-export const getHomeKomik = async (options = {}) => {
-  const [terbaruRes, populerRes] = await Promise.all([
-    fetchKomikAPI("/terbaru?page=1&limit=10", 0, options),
-    fetchKomikAPI("/populer?page=1&limit=10", 0, options),
+  const mangaId = await resolveMangaId(slugOrId);
+  const [detailRes, chaptersFirstPageRes] = await Promise.all([
+    fetchAPI(`${SHINIGAMI_ENDPOINTS.DETAIL}${mangaId}`),
+    fetchAPI(`${SHINIGAMI_ENDPOINTS.CHAPTERS}${mangaId}?page=1`),
   ]);
 
+  const raw = detailRes?.data;
+  if (!raw) return null;
+
+  const chaptersList = chaptersFirstPageRes?.data || [];
+  let typeFormat =
+    Array.isArray(raw.format) && raw.format.length > 0
+      ? raw.format[0].name
+      : raw.format || "Manhwa";
+
   return {
-    newest: (terbaruRes?.comics || []).map(normalizeListCard),
-    popular: (populerRes?.comics || []).map(normalizeListCard),
+    title: raw.title,
+    slug: raw.manga_id,
+    image: proxyImage(raw.cover_portrait || raw.cover),
+    synopsis: raw.description || "Tidak ada sinopsis.",
+    genres: raw.genres?.map((g) => g.name) || [],
+    author: raw.authors?.map((a) => a.name).join(", ") || "-",
+    artist: raw.artists?.map((a) => a.name).join(", ") || "-",
+    status: raw.status || "Unknown",
+    score: raw.rating || "",
+    type: typeFormat,
+    chapters: chaptersList.map((ch) => {
+      const uuid = ch.chapter_id || ch.id;
+      const chNum = ch.chapter_number;
+      return {
+        chapterId: uuid,
+        title: ch.chapter_title
+          ? `Chapter ${chNum}: ${ch.chapter_title}`
+          : `Chapter ${chNum}`,
+        slug: `chapter-${chNum}-${uuid}`,
+        chapterNumber: chNum,
+        createdAt: ch.updated_at || ch.release_date || "",
+      };
+    }),
   };
-};
+});
 
-export const getKomikDetail = async (slug, options = {}) => {
-  const res = await fetchKomikAPI(`/comic/${slug}`, 0, options);
-  return normalizeDetail(res);
-};
+// 4. GET CHAPTER CACHED
+const getChapterCached = cache(async (mangaSlugOrId, chapterSlugOrNum) => {
+  if (!chapterSlugOrNum) return null;
 
-export const getChapterDetail = async (chapterSlug, options = {}) => {
-  const res = await fetchKomikAPI(`/chapter/${chapterSlug}`, 0, options);
-  return normalizeChapterDetail(res, chapterSlug);
-};
+  if (
+    typeof mangaSlugOrId === "string" &&
+    mangaSlugOrId.startsWith("komikudetail-")
+  ) {
+    let targetSlug = chapterSlugOrNum.replace("komikuchapter-", "");
+    const komikuRes = await fetchKomikuAPI(
+      `${KOMIKU_ENDPOINTS.CHAPTER}${targetSlug}`,
+    );
+    if (komikuRes && !komikuRes.error) {
+      return normalizeKomikuChapter(komikuRes);
+    }
+    return null;
+  }
 
-export const searchKomik = async (keyword, limit = 30, options = {}) => {
-  const res = await fetchKomikAPI(
-    `/search?q=${encodeURIComponent(keyword)}&limit=${limit}`,
-    0,
-    options,
-  );
+  const cleanChapterInput = chapterSlugOrNum;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  let targetChapterId = cleanChapterInput;
+
+  if (!uuidRegex.test(targetChapterId)) {
+    try {
+      const uuidMatch = targetChapterId.match(
+        /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i,
+      );
+      if (uuidMatch) {
+        targetChapterId = uuidMatch[1];
+      } else {
+        const mangaId = await resolveMangaId(mangaSlugOrId);
+        const cleanNum = String(cleanChapterInput).replace(/[^0-9.]/g, "");
+        const detailRes = await fetchAPI(
+          `${SHINIGAMI_ENDPOINTS.CHAPTERS}${mangaId}?page=1`,
+        );
+        const found = (detailRes?.data || []).find(
+          (ch) => String(ch.chapter_number) === cleanNum,
+        );
+        if (found) targetChapterId = found.chapter_id;
+      }
+    } catch (e) {
+      console.error("Gagal mengekstrak UUID chapter:", e.message);
+      return null;
+    }
+  }
+
+  if (!uuidRegex.test(targetChapterId)) return null;
+
+  const res = await fetchAPI(`${SHINIGAMI_ENDPOINTS.READ}${targetChapterId}`);
+  if (!res || !res.data) return null;
+
+  const raw = res.data;
+  const rawImages = raw.images || raw.pages || [];
+  const formatChSlug = (chNum, chId) =>
+    chNum && chId ? `chapter-${chNum}-${chId}` : null;
+
   return {
-    data: (res?.data || []).map(normalizeSearchCard),
-    total: res?.total || 0,
+    chapterTitle: raw.chapter_number
+      ? `Chapter ${raw.chapter_number}`
+      : raw.title || "",
+    createdAt: raw.updated_at || raw.release_date || "",
+    images: rawImages.map((img) =>
+      proxyImage(typeof img === "string" ? img : img.url || img.image),
+    ),
+    prevChapterSlug:
+      raw.prev_chapter_number && raw.prev_chapter_id
+        ? formatChSlug(raw.prev_chapter_number, raw.prev_chapter_id)
+        : null,
+    nextChapterSlug:
+      raw.next_chapter_number && raw.next_chapter_id
+        ? formatChSlug(raw.next_chapter_number, raw.next_chapter_id)
+        : null,
   };
-};
+});
 
-export const getGenres = async (options = {}) => {
-  const res = await fetchKomikAPI("/genres", 0, options);
-  return (res?.data || []).map((g) => ({
-    id: g.value,
-    data: { name: g.name },
-  }));
-};
+export const KomikProvider = {
+  getHome: async () => {
+    const res = await fetchAPI(SHINIGAMI_ENDPOINTS.HOME);
+    if (!res) return { latest: [], popular: [], recommendations: [] };
 
-export const getKomikByGenre = async (
-  genreSlug,
-  page = 1,
-  limit = 30,
-  options = {},
-) => {
-  const res = await fetchKomikAPI(
-    `/genre/${genreSlug}?page=${page}&limit=${limit}`,
-    0,
-    options,
-  );
-  const list = res?.comics || [];
-  return {
-    data: list.map(normalizeGenreCard),
-    pagination: normalizePagination(res?.pagination, page),
-  };
+    const formatItems = (list) => {
+      if (!Array.isArray(list)) return [];
+      return list.map((item) => ({
+        title: item.title,
+        slug: toSlug(item.title),
+        image: proxyImage(item.thumbnail || item.cover),
+        chapter: item.chapter || item.latest_chapter || "",
+        score: item.rating || item.score || "",
+        type: item.type || "Manhwa",
+      }));
+    };
+
+    return {
+      latest: formatItems(res.data?.latest || res.latest),
+      popular: formatItems(res.data?.popular || res.popular),
+      recommendations: formatItems(
+        res.data?.recommendations || res.recommendations,
+      ),
+    };
+  },
+
+  getLatest: async (page = 1) => {
+    const res = await fetchAPI(`${SHINIGAMI_ENDPOINTS.LATEST}?page=${page}`);
+    if (!res) return { data: [], pagination: null };
+    return {
+      data: (res.data || []).map((item) => ({
+        title: item.title,
+        slug: toSlug(item.title),
+        image: proxyImage(item.thumbnail || item.cover),
+        chapter: item.chapter || item.latest_chapter || "",
+        score: item.rating || "",
+      })),
+      pagination: res.pagination || null,
+    };
+  },
+
+  getPopular: async (page = 1) => {
+    const res = await fetchAPI(`${SHINIGAMI_ENDPOINTS.POPULAR}?page=${page}`);
+    if (!res) return { data: [], pagination: null };
+    return {
+      data: (res.data || []).map((item) => ({
+        title: item.title,
+        slug: toSlug(item.title),
+        image: proxyImage(item.thumbnail || item.cover),
+        chapter: item.chapter || item.latest_chapter || "",
+        score: item.rating || "",
+      })),
+      pagination: res.pagination || null,
+    };
+  },
+
+  search: async (keyword, page = 1) => {
+    let shinigamiList = [];
+    let komikuList = [];
+    let pagination = null;
+
+    try {
+      const res = await fetchAPI(
+        `${SHINIGAMI_ENDPOINTS.SEARCH}${encodeURIComponent(keyword)}?page=${page}`,
+      );
+      shinigamiList = res?.data || res || [];
+      pagination = res?.pagination || null;
+    } catch (e) {}
+
+    try {
+      const komikuJson = await fetchKomikuAPI(
+        `${KOMIKU_ENDPOINTS.SEARCH}${encodeURIComponent(keyword)}`,
+      );
+      if (komikuJson?.status && Array.isArray(komikuJson.data)) {
+        komikuList = komikuJson.data.map(normalizeKomikuSearch);
+      }
+    } catch (err) {}
+
+    const formattedShinigami = Array.isArray(shinigamiList)
+      ? shinigamiList.map((item) => ({
+          title: item.title,
+          slug: item.slug || toSlug(item.title),
+          image: proxyImage(
+            item.cover_portrait || item.cover || item.thumbnail,
+          ),
+          chapter: item.chapter || item.latest_chapter || "",
+          score: item.rating || item.score || "",
+          type: item.format || item.type || "Manhwa",
+          source: "shinigami",
+        }))
+      : [];
+
+    const combinedMap = new Map();
+    [...formattedShinigami, ...komikuList].forEach((item) => {
+      const cleanTitle = item.title.toLowerCase().trim();
+      if (!combinedMap.has(cleanTitle)) {
+        combinedMap.set(cleanTitle, item);
+      }
+    });
+
+    return {
+      data: Array.from(combinedMap.values()),
+      pagination: pagination,
+    };
+  },
+
+  getKomikByGenre: async (genreSlug, page = 1) => {
+    const endpoint = `${SHINIGAMI_ENDPOINTS.ADVANCED_SEARCH}?genre_include=${genreSlug}&page=${page}`;
+    const res = await fetchAPI(endpoint);
+    if (!res) return { data: [], pagination: null };
+    return {
+      data: (res.data || []).map((item) => ({
+        title: item.title,
+        slug: toSlug(item.title) || item.manga_id || item.slug,
+        mangaId: item.manga_id,
+        image: proxyImage(item.cover_portrait || item.cover || item.thumbnail),
+        chapter: item.latest_chapter
+          ? `Chapter ${item.latest_chapter}`
+          : item.chapter || "",
+        score: item.rating || item.score || "",
+        type: item.format || item.type || "Manhwa",
+      })),
+      pagination: res.pagination || null,
+    };
+  },
+
+  getAdvancedSearch: async (format = "", page = 1, status = "", genre = "") => {
+    let endpoint = `${SHINIGAMI_ENDPOINTS.ADVANCED_SEARCH}?page=${page}`;
+    if (format) endpoint += `&format=${encodeURIComponent(format)}`;
+    if (status) endpoint += `&status=${encodeURIComponent(status)}`;
+    if (genre) endpoint += `&genre_include=${encodeURIComponent(genre)}`;
+
+    const res = await fetchAPI(endpoint);
+    if (!res) return { data: [], pagination: null };
+    return {
+      data: (res.data || []).map((item) => ({
+        title: item.title,
+        slug: toSlug(item.title) || item.manga_id || item.slug,
+        image: proxyImage(item.cover_portrait || item.cover || item.thumbnail),
+        chapter: item.latest_chapter
+          ? `Chapter ${item.latest_chapter}`
+          : item.chapter || "",
+        score: item.rating || item.score || "",
+        type: item.format || item.type || "Manhwa",
+      })),
+      pagination: res.pagination || null,
+    };
+  },
+
+  getDetail: getDetailCached,
+  getChapter: getChapterCached,
 };

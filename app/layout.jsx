@@ -60,7 +60,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id" className="scroll-smooth scroll-pt-20 md:scroll-pt-24">
+    <html
+      lang="id"
+      data-scroll-behavior="smooth"
+      className="scroll-smooth scroll-pt-20 md:scroll-pt-24"
+    >
       <body
         className={`${outfit.variable} ${poppins.variable} font-body bg-celestia-night text-white antialiased flex flex-col min-h-screen`}
       >

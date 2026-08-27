@@ -233,7 +233,6 @@ export default function Navbar() {
                     prefetch={false}
                     className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
                   >
-                    {/* SVG Icon Omitted for brevity, keep your original SVG here */}
                     <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-sky text-gray-400 transition-colors">
                       <svg
                         className="w-5 h-5"
@@ -346,37 +345,6 @@ export default function Navbar() {
                       </p>
                     </div>
                   </Link>
-
-                  <Link
-                    href="/movies"
-                    prefetch={false}
-                    className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
-                  >
-                    <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-gold text-gray-400 transition-colors">
-                      <svg
-                        className="w-5 h-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M4 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
-                        <path d="M8 3l-2 4" />
-                        <path d="M14 3l-2 4" />
-                        <path d="M20 3l-2 4" />
-                        <path d="M2 7h20" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="text-white font-bold mb-1">Movies</h4>
-                      <p className="text-xs text-gray-400 font-body leading-relaxed">
-                        Kumpulan anime movie dan film animasi terbaru yang siap
-                        ditonton.
-                      </p>
-                    </div>
-                  </Link>
                 </div>
               </div>
             </div>
@@ -412,92 +380,209 @@ export default function Navbar() {
               </button>
 
               <div className="absolute top-full left-0 pt-6 w-[700px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                <div className="bg-[#151226] border border-white/10 rounded-2xl p-6 shadow-2xl grid grid-cols-2 gap-4 relative overflow-hidden">
+                <div className="bg-[#151226] border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden flex flex-col gap-4">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-celestia-pink/10 blur-[80px] rounded-full pointer-events-none"></div>
 
-                  <Link
-                    href="/komik/latest"
-                    prefetch={false}
-                    className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
-                  >
-                    <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
-                      <svg
-                        className="w-5 h-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="text-white font-bold mb-1">
-                        Update Terbaru
-                      </h4>
-                      <p className="text-xs text-gray-400 font-body leading-relaxed">
-                        Baca rilisan chapter terbaru dari komik favoritmu.
-                      </p>
-                    </div>
-                  </Link>
+                  <div className="grid grid-cols-2 gap-4 relative z-10">
+                    <Link
+                      href="/komik/latest"
+                      prefetch={false}
+                      className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 transition-all group/item"
+                    >
+                      <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
+                        <svg
+                          className="w-5 h-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold mb-1">
+                          Update Terbaru
+                        </h4>
+                        <p className="text-xs text-gray-400 font-body leading-relaxed">
+                          Baca rilisan chapter terbaru dari komik favoritmu.
+                        </p>
+                      </div>
+                    </Link>
 
-                  <Link
-                    href="/komik/popular"
-                    prefetch={false}
-                    className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
-                  >
-                    <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
-                      <svg
-                        className="w-5 h-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="text-white font-bold mb-1">
-                        Komik Populer
-                      </h4>
-                      <p className="text-xs text-gray-400 font-body leading-relaxed">
-                        Daftar komik yang sedang ramai dibaca minggu ini.
-                      </p>
-                    </div>
-                  </Link>
+                    <Link
+                      href="/komik/popular"
+                      prefetch={false}
+                      className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 transition-all group/item"
+                    >
+                      <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
+                        <svg
+                          className="w-5 h-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold mb-1">
+                          Komik Populer
+                        </h4>
+                        <p className="text-xs text-gray-400 font-body leading-relaxed">
+                          Daftar komik yang sedang ramai dibaca minggu ini.
+                        </p>
+                      </div>
+                    </Link>
 
-                  <Link
-                    href="/komik/genres"
-                    prefetch={false}
-                    className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group/item"
-                  >
-                    <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
-                      <svg
-                        className="w-5 h-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="text-white font-bold mb-1">
-                        Daftar Genre
-                      </h4>
-                      <p className="text-xs text-gray-400 font-body leading-relaxed">
-                        Temukan komik (Manga, Manhwa, Manhua) berdasarkan genre.
-                      </p>
-                    </div>
-                  </Link>
+                    <Link
+                      href="/komik/genres"
+                      prefetch={false}
+                      className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 transition-all group/item"
+                    >
+                      <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
+                        <svg
+                          className="w-5 h-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold mb-1">
+                          Daftar Genre
+                        </h4>
+                        <p className="text-xs text-gray-400 font-body leading-relaxed">
+                          Temukan komik berdasarkan kategori genre.
+                        </p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/komik/advanced-search?format=manhwa"
+                      prefetch={false}
+                      className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 transition-all group/item"
+                    >
+                      <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-sky text-gray-400 transition-colors">
+                        <svg
+                          className="w-5 h-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                          <polyline points="2 17 12 22 22 17"></polyline>
+                          <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold mb-1">Manhwa</h4>
+                        <p className="text-xs text-gray-400 font-body leading-relaxed">
+                          Jelajahi komik populer asal Korea Selatan.
+                        </p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/komik/advanced-search?format=manhua"
+                      prefetch={false}
+                      className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 transition-all group/item"
+                    >
+                      <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-gold text-gray-400 transition-colors">
+                        <svg
+                          className="w-5 h-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold mb-1">Manhua</h4>
+                        <p className="text-xs text-gray-400 font-body leading-relaxed">
+                          Jelajahi komik seru asal Tiongkok.
+                        </p>
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/komik/advanced-search?format=manga"
+                      prefetch={false}
+                      className="flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 transition-all group/item"
+                    >
+                      <div className="w-10 h-10 shrink-0 rounded-lg bg-black/40 border border-white/5 flex items-center justify-center group-hover/item:text-celestia-pink text-gray-400 transition-colors">
+                        <svg
+                          className="w-5 h-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold mb-1">Manga</h4>
+                        <p className="text-xs text-gray-400 font-body leading-relaxed">
+                          Jelajahi komik klasik & modern asal Jepang.
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+
+                  {/* TOMBOL ADVANCED SEARCH DI BAWAH (Elegan & Proporsional) */}
+                  <div className="relative z-10 pt-3 border-t border-white/5">
+                    <Link
+                      href="/komik/advanced-search"
+                      prefetch={false}
+                      className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.03] hover:bg-celestia-pink/10 border border-white/5 hover:border-celestia-pink/30 text-gray-300 hover:text-white transition-all group/adv"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-celestia-pink/20 text-celestia-pink flex items-center justify-center">
+                          <svg
+                            className="w-4 h-4"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="11" y1="8" x2="11" y2="14"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                          </svg>
+                        </div>
+                        <span className="text-xs font-bold uppercase tracking-wider">
+                          Buka Menu Pencarian Lanjutan (Advanced Search)
+                        </span>
+                      </div>
+                      <span className="text-gray-500 group-hover/adv:text-celestia-pink transform group-hover/adv:translate-x-1 transition-all">
+                        &rarr;
+                      </span>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -649,6 +734,22 @@ export default function Navbar() {
               { label: "Update Terbaru", path: "/komik/latest" },
               { label: "Komik Populer", path: "/komik/popular" },
               { label: "Daftar Genre", path: "/komik/genres" },
+              {
+                label: "Manhwa (Korea)",
+                path: "/komik/advanced-search?format=manhwa",
+              },
+              {
+                label: "Manhua (China)",
+                path: "/komik/advanced-search?format=manhua",
+              },
+              {
+                label: "Manga (Jepang)",
+                path: "/komik/advanced-search?format=manga",
+              },
+              {
+                label: "🔍 Pencarian Lanjutan",
+                path: "/komik/advanced-search",
+              },
             ].map((item) => (
               <Link
                 key={item.label}

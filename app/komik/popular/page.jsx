@@ -1,20 +1,14 @@
-import { getPopularKomik } from "@/services/komikApi";
+import { KomikProvider } from "@/services/komikApi";
 import KomikCard from "@/components/komik/KomikCard";
 import Link from "next/link";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export const metadata = { title: "Komik Populer - MangNime" };
 
-const POPULAR_FILTERS = [{ id: "all", label: "🔥 Trending" }];
-
 export default async function PopularKomikPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams?.page || 1);
-
-  const res = await getPopularKomik(page, 30, {
-    next: { revalidate: 3600 },
-  });
-
+  const res = await KomikProvider.getPopular(page);
   const komikList = res?.data || [];
   const pagination = res?.pagination || null;
 
@@ -66,12 +60,14 @@ export default async function PopularKomikPage({ searchParams }) {
               ))}
             </div>
 
-            {pagination &&
-              (pagination.hasNextPage || pagination.hasPrevPage) && (
-                <div className="mt-12 flex justify-center">
-                  <OpenEndedPagination pagination={pagination} />
-                </div>
-              )}
+            {pagination && (
+              <div className="mt-12 flex justify-center">
+                <OpenEndedPagination
+                  pagination={pagination}
+                  basePath="/komik/popular"
+                />
+              </div>
+            )}
           </>
         ) : (
           <div className="text-center py-32 text-gray-500 bg-white/5 rounded-2xl border border-white/10 border-dashed">
@@ -83,19 +79,28 @@ export default async function PopularKomikPage({ searchParams }) {
   );
 }
 
-function OpenEndedPagination({ pagination }) {
+function OpenEndedPagination({ pagination, basePath }) {
   if (!pagination) return null;
 
-  const { currentPage, hasPrevPage, prevPage, hasNextPage, nextPage } =
-    pagination;
-  const createUrl = (targetPage) => `/komik/popular?page=${targetPage}`;
+  const currentPage = Number(
+    pagination.current_page || pagination.currentPage || 1,
+  );
+  const totalPages = Number(
+    pagination.total_pages || pagination.totalPages || 1,
+  );
+
+  const hasPrevPage = currentPage > 1;
+  const hasNextPage = currentPage < totalPages;
+  const prevPage = currentPage - 1;
+  const nextPage = currentPage + 1;
+  const cleanBasePath = basePath || "/komik/popular";
 
   return (
     <div className="flex items-center justify-center gap-2 w-full">
       {hasPrevPage ? (
         <Link
-          href={createUrl(prevPage)}
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all"
+          href={`${cleanBasePath}?page=${prevPage}`}
+          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all inline-block"
         >
           &laquo; Prev
         </Link>
@@ -109,13 +114,13 @@ function OpenEndedPagination({ pagination }) {
       )}
 
       <div className="px-6 py-2 rounded-xl bg-purple-600/10 border border-purple-500/20 text-purple-300 font-bold flex items-center shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-        Halaman {currentPage}
+        Halaman {currentPage} {totalPages > 1 ? `/ ${totalPages}` : ""}
       </div>
 
       {hasNextPage ? (
         <Link
-          href={createUrl(nextPage)}
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all"
+          href={`${cleanBasePath}?page=${nextPage}`}
+          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all inline-block"
         >
           Next &raquo;
         </Link>

@@ -1,4 +1,4 @@
-import { getKomikByGenre } from "@/services/komikApi";
+import { KomikProvider } from "@/services/komikApi";
 import KomikCard from "@/components/komik/KomikCard";
 import Link from "next/link";
 import ScrollReveal from "@/components/ui/ScrollReveal";
@@ -22,7 +22,7 @@ export default async function KomikGenreDetailPage({ params, searchParams }) {
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
 
-  const res = await getKomikByGenre(genreSlug, page, 30,);
+  const res = await KomikProvider.getKomikByGenre(genreSlug, page);
   const komikList = res?.data || [];
   const pagination = res?.pagination || null;
 
@@ -75,46 +75,14 @@ export default async function KomikGenreDetailPage({ params, searchParams }) {
               ))}
             </div>
 
-            {pagination &&
-              (pagination.hasNextPage || pagination.hasPrevPage) && (
-                <div className="mt-12 flex items-center justify-center gap-2">
-                  {pagination.hasPrevPage ? (
-                    <Link
-                      href={`/komik/genre/${genreSlug}?page=${pagination.prevPage}`}
-                      className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all"
-                    >
-                      &laquo; Prev
-                    </Link>
-                  ) : (
-                    <button
-                      disabled
-                      className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
-                    >
-                      &laquo; Prev
-                    </button>
-                  )}
-
-                  <div className="px-6 py-2 rounded-xl bg-purple-600/10 border border-purple-500/20 text-purple-300 font-bold flex items-center">
-                    Halaman {pagination.currentPage}
-                  </div>
-
-                  {pagination.hasNextPage ? (
-                    <Link
-                      href={`/komik/genre/${genreSlug}?page=${pagination.nextPage}`}
-                      className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all"
-                    >
-                      Next &raquo;
-                    </Link>
-                  ) : (
-                    <button
-                      disabled
-                      className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
-                    >
-                      Next &raquo;
-                    </button>
-                  )}
-                </div>
-              )}
+            {pagination && (
+              <div className="mt-12 flex justify-center">
+                <OpenEndedPagination
+                  pagination={pagination}
+                  basePath={`/komik/genre/${genreSlug}`}
+                />
+              </div>
+            )}
           </>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-white/50 border border-white/5 rounded-2xl bg-white/5">
@@ -122,6 +90,62 @@ export default async function KomikGenreDetailPage({ params, searchParams }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function OpenEndedPagination({ pagination, basePath }) {
+  if (!pagination) return null;
+
+  const currentPage = Number(
+    pagination.current_page || pagination.currentPage || 1,
+  );
+  const totalPages = Number(
+    pagination.total_pages || pagination.totalPages || 1,
+  );
+
+  const hasPrevPage = currentPage > 1;
+  const hasNextPage = currentPage < totalPages;
+  const prevPage = currentPage - 1;
+  const nextPage = currentPage + 1;
+
+  return (
+    <div className="flex items-center justify-center gap-2 w-full">
+      {hasPrevPage ? (
+        <Link
+          href={`${basePath}?page=${prevPage}`}
+          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all inline-block"
+        >
+          &laquo; Prev
+        </Link>
+      ) : (
+        <button
+          disabled
+          className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
+        >
+          &laquo; Prev
+        </button>
+      )}
+
+      <div className="px-6 py-2 rounded-xl bg-purple-600/10 border border-purple-500/20 text-purple-300 font-bold flex items-center shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+        Halaman {currentPage} {totalPages > 1 ? `/ ${totalPages}` : ""}
+      </div>
+
+      {hasNextPage ? (
+        <Link
+          href={`${basePath}?page=${nextPage}`}
+          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all inline-block"
+        >
+          Next &raquo;
+        </Link>
+      ) : (
+        <button
+          disabled
+          className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
+        >
+          Next &raquo;
+        </button>
+      )}
     </div>
   );
 }

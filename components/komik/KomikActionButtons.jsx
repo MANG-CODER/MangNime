@@ -22,19 +22,18 @@ export default function KomikActionButtons({ komik, slug, firstChapter }) {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // 1. Perbaikan URL untuk Mulai Baca
+  // 1. URL untuk Mulai Baca
   const readUrl = history
     ? history.url
     : firstChapter?.slug
-      ? `/komik/${slug}/${firstChapter.slug}` // <--- Format URL Baru
+      ? `/komik/${slug}/${firstChapter.slug}`
       : "#";
 
-  // 2. Perbaikan Teks Tombol (menggunakan label string, bukan angka)
-  // History sekarang menyimpan "chapter", dan API menyajikan "chapter" (misal: "Chapter 1")
+  // 2. Perbaikan Teks Tombol
   const readText = history
-    ? `Lanjut ${history.chapter || ""}` 
-    : firstChapter?.chapter
-      ? `Mulai ${firstChapter.chapter}` 
+    ? `Lanjut ${history.chapter || ""}`
+    : firstChapter?.title
+      ? `Mulai ${firstChapter.title}`
       : "Belum Ada Chapter";
 
   return (
@@ -59,7 +58,7 @@ export default function KomikActionButtons({ komik, slug, firstChapter }) {
         item={{
           slug: slug,
           title: komik.title,
-          image: komik.cover || komik.backgroundImage,
+          image: komik.image,
           status: komik.status,
           type: "komik",
           url: `/komik/${slug}`,

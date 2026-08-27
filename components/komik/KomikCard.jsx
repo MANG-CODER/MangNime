@@ -1,30 +1,27 @@
-"use client"; // Wajib ditambahkan agar bisa pakai useState
+"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function KomikCard({ komik }) {
   const itemData = komik.data ? komik.data : komik;
 
-  const slug = itemData.slug || itemData.endpoint || "";
+  const slug = itemData.slug || "";
   const title = itemData.title || "Judul Tidak Diketahui";
-
   const primaryImage =
     itemData.image ||
-    itemData.cover ||
     "https://placehold.co/200x300/151226/8b6cff?text=No+Image";
-
-  const fallbackImage = itemData.imageFallback || primaryImage;
 
   const [imgSrc, setImgSrc] = useState(primaryImage);
 
-  const latestChapter =
-    itemData.chapter ||
-    (itemData.chapters?.length > 0 ? itemData.chapters[0].chapterIndex : "");
+  useEffect(() => {
+    setImgSrc(primaryImage);
+  }, [primaryImage]);
 
-  const score = itemData.score || itemData.rating || "";
-  const type = itemData.type || itemData.format || "";
+  const latestChapter = itemData.chapter || "";
+  const score = itemData.score || "";
+  const type = itemData.type || "";
 
   return (
     <Link
@@ -39,11 +36,12 @@ export default function KomikCard({ komik }) {
           fill
           sizes="(max-width: 768px) 50vw, 20vw"
           quality={75}
-          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          unoptimized={true}
+          className="object-cover object-center transition-transform duration-500 group-hover:scale-110"
           onError={() => {
-            if (imgSrc !== fallbackImage) {
-              setImgSrc(fallbackImage);
-            }
+            setImgSrc(
+              "https://placehold.co/200x300/151226/8b6cff?text=Image+Error",
+            );
           }}
         />
 

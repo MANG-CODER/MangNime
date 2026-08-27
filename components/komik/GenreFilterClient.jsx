@@ -20,13 +20,13 @@ export default function GenreFilterClient({ genreList }) {
             {genreList.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {genreList.map((genreItem, idx) => {
-                  const genreId = genreItem.id;
-                  const name = genreItem.data?.name || "Unknown";
+                  const genreSlug = genreItem.slug;
+                  const name = genreItem.name || "Unknown";
 
                   return (
                     <Link
                       key={idx}
-                      href={`/komik/genre/${genreId}`}
+                      href={`/komik/genre/${genreSlug}`}
                       className="bg-[#151226] border border-white/5 hover:border-celestia-sky hover:bg-celestia-sky/5 rounded-xl p-4 flex justify-between items-center group hover:-translate-y-1 shadow-lg transition-all"
                     >
                       <span className="font-bold text-gray-400 group-hover:text-white text-sm transition-colors">

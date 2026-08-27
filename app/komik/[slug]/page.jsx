@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getKomikDetail, getLatestKomik } from "@/services/komikApi";
-import KomikCard from "@/components/komik/KomikCard";
+import { KomikProvider } from "@/services/komikApi";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import Button from "@/components/ui/Button";
 import KomikActionButtons from "@/components/komik/KomikActionButtons";
@@ -11,10 +10,7 @@ import LastReadButton from "@/components/komik/LastReadButton";
 
 function formatDate(dateStr) {
   if (!dateStr) return null;
-  const parts = dateStr.split("/");
-  if (parts.length !== 3) return dateStr;
-  const [day, month, year] = parts;
-  const d = new Date(`${year}-${month}-${day}`);
+  const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
   return d.toLocaleDateString("id-ID", {
     day: "numeric",
@@ -28,7 +24,7 @@ export async function generateMetadata({ params }) {
   const slug = resolvedParams.slug;
 
   try {
-    const komik = await getKomikDetail(slug);
+    const komik = await KomikProvider.getDetail(slug);
 
     if (!komik) throw new Error("Data tidak ada");
 
@@ -36,7 +32,7 @@ export async function generateMetadata({ params }) {
       ? komik.synopsis.substring(0, 150) + "..."
       : `Baca ${komik.title} bahasa Indonesia gratis di MangNime.`;
 
-    const cover = komik.cover || komik.backgroundImage;
+    const cover = komik.image;
     const canonicalUrl = `https://mangnime.my.id/komik/${slug}`;
 
     return {
@@ -89,8 +85,8 @@ export default async function DetailKomikPage({ params }) {
   const slug = resolvedParams.slug;
 
   const [komik, latestRes] = await Promise.all([
-    getKomikDetail(slug),
-    getLatestKomik(1, { next: { revalidate: 1800 } }),
+    KomikProvider.getDetail(slug),
+    KomikProvider.getLatest(1),
   ]);
 
   const recommendations = (latestRes?.data || [])
@@ -129,8 +125,8 @@ export default async function DetailKomikPage({ params }) {
     );
   }
 
-  const bgImage = komik.backgroundImage || komik.cover;
-  const chapters = komik.readChapter || [];
+  const bgImage = komik.image;
+  const chapters = komik.chapters || [];
   const firstChapter =
     chapters.length > 0 ? chapters[chapters.length - 1] : null;
 
@@ -156,35 +152,30 @@ export default async function DetailKomikPage({ params }) {
           <div className="w-56 sm:w-64 md:w-72 lg:w-80 flex-shrink-0 mx-auto md:mx-0 group">
             <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] border border-white/10">
               <Image
-                src={komik.cover}
+                src={komik.image}
                 alt={komik.title}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 300px"
                 priority
               />
-              {komik.format && (
+              {komik.type && (
                 <div className="absolute top-3 left-3 bg-celestia-royal/90 backdrop-blur-md text-white text-xs font-black tracking-widest px-3 py-1.5 rounded-lg uppercase shadow-lg">
-                  {komik.format}
+                  {komik.type}
                 </div>
               )}
             </div>
           </div>
 
           <div className="flex-1 w-full text-center md:text-left flex flex-col items-center md:items-start">
-            {komik.nativeTitle && (
-              <h3 className="text-celestia-gold/80 font-medium text-sm md:text-base mb-2 mt-4 md:mt-0">
-                {komik.nativeTitle}
-              </h3>
-            )}
             <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-black text-white leading-tight drop-shadow-2xl mb-4">
               {komik.title}
             </h1>
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2">
-              {komik.rating && komik.rating !== "?" && (
+              {komik.score && komik.score !== "?" && (
                 <span className="flex items-center gap-1.5 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-3 py-1.5 rounded-full text-sm font-bold shadow-[0_0_10px_rgba(234,179,8,0.2)]">
-                  ★ {komik.rating} / 10
+                  ★ {komik.score} / 10
                 </span>
               )}
               <span
@@ -197,9 +188,9 @@ export default async function DetailKomikPage({ params }) {
                 {komik.status}
               </span>
               <span className="bg-white/5 text-gray-300 border border-white/10 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-                {komik.totalChapters} Chapter
+                {chapters.length} Chapter
               </span>
-              {komik.author && komik.author !== "Unknown" && (
+              {komik.author && komik.author !== "-" && (
                 <span className="text-celestia-pink text-sm font-medium px-3 py-1.5">
                   By {komik.author}
                 </span>
@@ -207,15 +198,13 @@ export default async function DetailKomikPage({ params }) {
             </div>
 
             <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-6">
-              {komik.genres?.map((genre, idx) => (
-                <Link
+              {komik.genres?.map((genreName, idx) => (
+                <span
                   key={idx}
-                  href={`/komik/genre/${genre.slug}`}
-                  prefetch={false}
-                  className="text-[11px] font-black uppercase tracking-widest px-4 py-1.5 bg-white/5 text-gray-300 hover:text-white border border-white/10 hover:border-celestia-pink rounded-full transition-all"
+                  className="text-[11px] font-black uppercase tracking-widest px-4 py-1.5 bg-white/5 text-gray-300 border border-white/10 rounded-full"
                 >
-                  {genre.name}
-                </Link>
+                  {genreName}
+                </span>
               ))}
             </div>
 
@@ -277,12 +266,12 @@ export default async function DetailKomikPage({ params }) {
                           className="bg-black/20 border border-white/5 hover:border-celestia-sky/50 hover:bg-celestia-sky/5 hover:shadow-glow-blue px-5 py-4 rounded-2xl flex items-center justify-between group transition-all"
                         >
                           <div className="flex flex-col gap-1 min-w-0">
-                            <span className="font-bold text-sm text-gray-300 group-hover:text-white transition-colors">
-                              {ch.chapter}
+                            <span className="font-bold text-sm text-gray-300 group-hover:text-white transition-colors truncate">
+                              {ch.title}
                             </span>
-                            {ch.date && (
+                            {ch.createdAt && (
                               <span className="text-[11px] text-gray-600 group-hover:text-gray-400 transition-colors">
-                                {formatDate(ch.date)}
+                                {formatDate(ch.createdAt)}
                               </span>
                             )}
                           </div>
@@ -328,7 +317,7 @@ export default async function DetailKomikPage({ params }) {
                           className="object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       </div>
-                      <div className="flex flex-col justify-center">
+                      <div className="flex flex-col justify-center min-w-0">
                         <h4 className="text-white font-bold text-sm line-clamp-2 leading-tight group-hover:text-celestia-gold transition-colors mb-2">
                           {rec.title}
                         </h4>

@@ -2,7 +2,7 @@ import HeroCarousel from "@/components/home/HeroCarousel";
 import AnimeCard from "@/components/anime/AnimeCard";
 import KomikCard from "@/components/komik/KomikCard";
 import Link from "next/link";
-import { getHomeKomik } from "@/services/komikApi";
+import { KomikProvider } from "@/services/komikApi";
 import { AnimeProvider } from "@/services/providers";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import CommentSection from "@/components/ui/CommentSection";
@@ -17,12 +17,12 @@ export default async function Home() {
   let ongoingList = [];
   let completedList = [];
   let popularKomik = [];
-  let newestKomik = [];
+  let latestKomik = [];
 
   try {
     const [animeRes, komikRes] = await Promise.all([
       AnimeProvider.Otakudesu.getHome(),
-      getHomeKomik(), // Menggunakan fungsi gabungan dari API baru
+      KomikProvider.getHome(),
     ]);
 
     // Parsing Anime
@@ -31,7 +31,7 @@ export default async function Home() {
 
     // Parsing Komik
     popularKomik = komikRes?.popular || [];
-    newestKomik = komikRes?.newest || [];
+    latestKomik = komikRes?.latest || [];
   } catch (error) {
     console.error("Gagal memuat Homepage:", error);
   }
@@ -212,9 +212,9 @@ export default async function Home() {
             </Link>
           </div>
 
-          {newestKomik.length > 0 ? (
+          {latestKomik.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8">
-              {newestKomik.slice(0, 10).map((komik, idx) => (
+              {latestKomik.slice(0, 10).map((komik, idx) => (
                 <ScrollReveal key={idx}>
                   <KomikCard komik={komik} />
                 </ScrollReveal>
