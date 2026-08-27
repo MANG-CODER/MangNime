@@ -36,7 +36,9 @@ export const KOMIKU_ENDPOINTS = {
   CHAPTER: "/chapter/",
 };
 
+// =====================================================================
 // SISTEM RATE LIMITER GLOBAL KOMIKU (25 REQUEST / MENIT)
+// =====================================================================
 const RATE_LIMIT = 25;
 const TIME_WINDOW_MS = 60 * 1000;
 
@@ -97,23 +99,42 @@ const fetchAPI = cache(async (endpoint) => {
   }
 });
 
-// 2. KOMIKU CACHED FETCHER DENGAN RATE LIMITER
+// =====================================================================
+// 2. KOMIKU CACHED FETCHER SUPER OPTIMIZED (MEMORY CACHE + RATE LIMITER)
+// =====================================================================
+const komikuMemoryCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // Cache hidup selama 5 menit
+
 const fetchKomikuAPI = cache(async (endpoint) => {
   const fullUrl = `${KOMIKU_BASE_URL}${endpoint}`;
 
-  // Tahan di sini kalau request terlalu brutal!
+  // 1. CEK CACHE MEMORI DULU (BEBAS RATE LIMIT!)
+  const cached = komikuMemoryCache.get(fullUrl);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    console.log(`⚡ [CACHE HIT] Lolos tanpa potong kuota limit: ${endpoint}`);
+    return cached.data;
+  }
+
+  // 2. KALAU GAK ADA DI CACHE, BARU LAPOR SATPAM (RATE LIMIT)
   await enforceRateLimit();
 
   console.log(`\n🚀 [DEBUG KOMIKU] FETCH (${requestCount}/25): ${fullUrl}\n`);
   try {
     const res = await fetch(fullUrl, { next: { revalidate: 300 } });
     if (res.status === 429 || !res.ok) return null;
-    return await res.json();
+
+    const data = await res.json();
+
+    // 3. SIMPAN HASILNYA KE MEMORI
+    komikuMemoryCache.set(fullUrl, { data, timestamp: Date.now() });
+
+    return data;
   } catch (error) {
     console.error(`Fetch Komiku Error (${endpoint}):`, error.message);
     return null;
   }
 });
+// =====================================================================
 
 function normalizeKomikuSearch(item) {
   return {
@@ -154,17 +175,36 @@ function normalizeKomikuDetail(raw) {
   };
 }
 
+function cleanChapterSlug(val) {
+  if (!val || typeof val !== "string") return null;
+  if (val === "false" || val === "null") return null;
+  const parts = val.split("/").filter(Boolean);
+  return parts[parts.length - 1] || null;
+}
+
 function normalizeKomikuChapter(raw) {
   const imagesList =
     raw.imagesproxy && raw.imagesproxy.length > 0
       ? raw.imagesproxy
       : raw.images || [];
+
+  let prevRaw =
+    raw.navigation?.previousChapter ||
+    raw.navigation?.prev_chapter ||
+    raw.prev_chapter ||
+    null;
+  let nextRaw =
+    raw.navigation?.nextChapter ||
+    raw.navigation?.next_chapter ||
+    raw.next_chapter ||
+    null;
+
   return {
     chapterTitle: raw.chapter_title || raw.manga_title || "Chapter",
     createdAt: "",
     images: imagesList,
-    prevChapterSlug: raw.navigation?.previousChapter || null,
-    nextChapterSlug: raw.navigation?.nextChapter || null,
+    prevChapterSlug: cleanChapterSlug(prevRaw),
+    nextChapterSlug: cleanChapterSlug(nextRaw),
   };
 }
 
@@ -311,7 +351,7 @@ const getChapterCached = cache(async (mangaSlugOrId, chapterSlugOrNum) => {
   const raw = res.data;
   const rawImages = raw.images || raw.pages || [];
   const formatChSlug = (chNum, chId) =>
-    chNum && chId ? `chapter-${chNum}-${chId}` : null;
+    chId ? `chapter-${chNum ?? "0"}-${chId}` : null;
 
   return {
     chapterTitle: raw.chapter_number
@@ -321,14 +361,12 @@ const getChapterCached = cache(async (mangaSlugOrId, chapterSlugOrNum) => {
     images: rawImages.map((img) =>
       proxyImage(typeof img === "string" ? img : img.url || img.image),
     ),
-    prevChapterSlug:
-      raw.prev_chapter_number && raw.prev_chapter_id
-        ? formatChSlug(raw.prev_chapter_number, raw.prev_chapter_id)
-        : null,
-    nextChapterSlug:
-      raw.next_chapter_number && raw.next_chapter_id
-        ? formatChSlug(raw.next_chapter_number, raw.next_chapter_id)
-        : null,
+    prevChapterSlug: raw.prev_chapter_id
+      ? formatChSlug(raw.prev_chapter_number, raw.prev_chapter_id)
+      : null,
+    nextChapterSlug: raw.next_chapter_id
+      ? formatChSlug(raw.next_chapter_number, raw.next_chapter_id)
+      : null,
   };
 });
 
