@@ -388,6 +388,16 @@ export const KomikProvider = {
     };
   },
 
+  getGenres: async () => {
+    const res = await fetchAPI(SHINIGAMI_ENDPOINTS.GENRES);
+    if (!res || !res.data) return [];
+
+    return res.data.map((genre) => ({
+      name: genre.name || genre.title || "Unknown",
+      slug: genre.slug || genre.id || "",
+    }));
+  },
+
   search: async (keyword, page = 1) => {
     let shinigamiList = [];
     let komikuList = [];
