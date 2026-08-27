@@ -68,15 +68,15 @@ export default async function Home() {
               </div>
               <div>
                 <h3 className="text-white font-bold text-lg">
-                  Mencari Anime Lama atau Movie?
+                  Mencari Judul Lainnya?
                 </h3>
                 <p className="text-gray-400 text-sm mt-1">
-                  Jika anime yang kamu cari tidak ada di halaman ini, silakan
-                  gunakan fitur{" "}
+                  Jika judul yang kamu cari tidak ada di daftar Terbaru atau
+                  Populer, silakan coba gunakan fitur{" "}
                   <span className="text-celestia-sky font-bold">
                     Pencarian (Search)
                   </span>{" "}
-                  yang kini lebih lengkap!
+                  untuk hasil yang jauh lebih lengkap!
                 </p>
               </div>
             </div>
