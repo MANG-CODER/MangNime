@@ -1,5 +1,4 @@
 import { proxyImage } from "@/utils/shinigamiProxy";
-import { cache } from "react";
 
 const ENV_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://www.sankavollerei.web.id/comic";
@@ -37,57 +36,38 @@ export const KOMIKU_ENDPOINTS = {
 };
 
 // =====================================================================
-// SISTEM RATE LIMITER GLOBAL KOMIKU (25 REQUEST / MENIT)
+// SISTEM RATE LIMITER KOMIKU (PER-IP & FAIL-FAST)
 // =====================================================================
 const RATE_LIMIT = 25;
 const TIME_WINDOW_MS = 60 * 1000;
 
-let requestCount = 0;
-let windowStartTime = Date.now();
-let globalWaitPromise = null;
+// Pakai Map untuk simpan hitungan per-IP!
+const rateLimits = new Map(); 
 
-async function enforceRateLimit() {
-  // Jika sedang ada yang dikunci (nunggu timer habis), suruh antre
-  if (globalWaitPromise) {
-    await globalWaitPromise;
-  }
-
+function checkRateLimit(ip = "global") {
   const now = Date.now();
+  let userLimit = rateLimits.get(ip);
 
-  // Jika sudah lebih dari 1 menit, reset timer dan hitungan
-  if (now - windowStartTime >= TIME_WINDOW_MS) {
-    windowStartTime = now;
-    requestCount = 0;
+  // Jika belum ada data untuk IP ini, atau waktunya udah lewat 1 menit, reset
+  if (!userLimit || now - userLimit.startTime >= TIME_WINDOW_MS) {
+    userLimit = { count: 0, startTime: now };
   }
 
-  // Jika limit 25 tercapai, bikin timer antrean
-  if (requestCount >= RATE_LIMIT) {
-    const timeToWait = TIME_WINDOW_MS - (now - windowStartTime);
-    console.warn(
-      `⏳ [RATE LIMITER] Limit 25 tercapai! Menahan request selama ${Math.ceil(timeToWait / 1000)} detik...`,
-    );
-
-    // Bikin gembok (Promise) supaya request lain nunggu
-    globalWaitPromise = new Promise((resolve) => {
-      setTimeout(() => {
-        windowStartTime = Date.now(); // Reset waktu
-        requestCount = 0; // Reset hitungan
-        globalWaitPromise = null; // Buka gembok
-        resolve();
-      }, timeToWait);
-    });
-
-    // Tunggu gemboknya kebuka
-    await globalWaitPromise;
+  // Jika limit per-IP ini tercapai
+  if (userLimit.count >= RATE_LIMIT) {
+    console.warn(`⏳ [RATE LIMITER] Limit 25/menit tercapai untuk IP: ${ip}`);
+    return false;
   }
 
-  // Tambah hitungan request setiap kali lolos
-  requestCount++;
+  // Tambah hitungan IP ini
+  userLimit.count++;
+  rateLimits.set(ip, userLimit);
+  return true;
 }
 // =====================================================================
 
-// 1. SHINIGAMI CACHED FETCHER
-const fetchAPI = cache(async (endpoint) => {
+// 1. SHINIGAMI FETCHER (TANPA REACT CACHE)
+const fetchAPI = async (endpoint) => {
   const fullUrl = `${SHINIGAMI_BASE_URL}${endpoint}`;
   try {
     const res = await fetch(fullUrl, { next: { revalidate: 3600 } });
@@ -97,43 +77,53 @@ const fetchAPI = cache(async (endpoint) => {
     console.error(`Fetch API Error (${endpoint}):`, error.message);
     return null;
   }
-});
+};
 
 // =====================================================================
-// 2. KOMIKU CACHED FETCHER SUPER OPTIMIZED (MEMORY CACHE + RATE LIMITER)
+// 2. KOMIKU FETCHER (MANUAL CACHE + FAIL-FAST LIMITER + STALE CACHE)
 // =====================================================================
 const komikuMemoryCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // Cache hidup selama 5 menit
+const CACHE_TTL = 5 * 60 * 1000; // Cache fresh 5 menit
 
-const fetchKomikuAPI = cache(async (endpoint) => {
+// 👈 Tambahin parameter IP di sini
+const fetchKomikuAPI = async (endpoint, ip = "global") => {
   const fullUrl = `${KOMIKU_BASE_URL}${endpoint}`;
-
-  // 1. CEK CACHE MEMORI DULU (BEBAS RATE LIMIT!)
   const cached = komikuMemoryCache.get(fullUrl);
+
+  // 1. CEK CACHE FRESH
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log(`⚡ [CACHE HIT] Lolos tanpa potong kuota limit: ${endpoint}`);
     return cached.data;
   }
 
-  // 2. KALAU GAK ADA DI CACHE, BARU LAPOR SATPAM (RATE LIMIT)
-  await enforceRateLimit();
+  // 2. CEK LIMITER PER-IP
+  if (!checkRateLimit(ip)) {
+    // 👈 KALAU KENA LIMIT: Coba cek apa ada cache basi (stale)?
+    if (cached) {
+      console.log(`♻️ [STALE CACHE] Kena limit, return data lama untuk: ${endpoint}`);
+      return cached.data; 
+    }
+    // Kalau bener-bener kosong dan kena limit, kembalikan pesan "coba lagi"
+    return { error: true, message: "Terlalu banyak request, coba lagi sebentar." };
+  }
 
-  console.log(`\n🚀 [DEBUG KOMIKU] FETCH (${requestCount}/25): ${fullUrl}\n`);
   try {
     const res = await fetch(fullUrl, { next: { revalidate: 300 } });
     if (res.status === 429 || !res.ok) return null;
 
     const data = await res.json();
 
-    // 3. SIMPAN HASILNYA KE MEMORI
-    komikuMemoryCache.set(fullUrl, { data, timestamp: Date.now() });
+    if (data && !data.error) {
+      komikuMemoryCache.set(fullUrl, { data, timestamp: Date.now() });
+    }
 
     return data;
   } catch (error) {
     console.error(`Fetch Komiku Error (${endpoint}):`, error.message);
+    // Fallback terakhir: kalau fetch error (misal network down), balikin stale cache kalau ada
+    if (cached) return cached.data;
     return null;
   }
-});
+};
 // =====================================================================
 
 function normalizeKomikuSearch(item) {
@@ -241,8 +231,8 @@ function toSlug(title) {
     .replace(/(^-|-$)/g, "");
 }
 
-// 3. GET DETAIL CACHED
-const getDetailCached = cache(async (slugOrId) => {
+// 3. GET DETAIL (TANPA REACT CACHE)
+const getDetail = async (slugOrId) => {
   if (slugOrId.startsWith("komikudetail-")) {
     const realSlug = slugOrId.replace("komikudetail-", "");
     const komikuJson = await fetchKomikuAPI(
@@ -294,10 +284,10 @@ const getDetailCached = cache(async (slugOrId) => {
       };
     }),
   };
-});
+};
 
-// 4. GET CHAPTER CACHED
-const getChapterCached = cache(async (mangaSlugOrId, chapterSlugOrNum) => {
+// 4. GET CHAPTER (TANPA REACT CACHE)
+const getChapter = async (mangaSlugOrId, chapterSlugOrNum) => {
   if (!chapterSlugOrNum) return null;
 
   if (
@@ -368,7 +358,7 @@ const getChapterCached = cache(async (mangaSlugOrId, chapterSlugOrNum) => {
       ? formatChSlug(raw.next_chapter_number, raw.next_chapter_id)
       : null,
   };
-});
+};
 
 export const KomikProvider = {
   getHome: async () => {
@@ -436,10 +426,11 @@ export const KomikProvider = {
     }));
   },
 
-  search: async (keyword, page = 1) => {
+  search: async (keyword, page = 1, ip = "global") => {
     let shinigamiList = [];
     let komikuList = [];
     let pagination = null;
+    let message = null;
 
     try {
       const res = await fetchAPI(
@@ -451,9 +442,11 @@ export const KomikProvider = {
 
     try {
       const komikuJson = await fetchKomikuAPI(
-        `${KOMIKU_ENDPOINTS.SEARCH}${encodeURIComponent(keyword)}`,
+        `${KOMIKU_ENDPOINTS.SEARCH}${encodeURIComponent(keyword)}`, ip
       );
-      if (komikuJson?.status && Array.isArray(komikuJson.data)) {
+      if (komikuJson?.error) {
+        message = komikuJson.message;
+      } else if (komikuJson?.status && Array.isArray(komikuJson.data)) {
         komikuList = komikuJson.data.map(normalizeKomikuSearch);
       }
     } catch (err) {}
@@ -483,6 +476,7 @@ export const KomikProvider = {
     return {
       data: Array.from(combinedMap.values()),
       pagination: pagination,
+      message: message,
     };
   },
 
@@ -529,6 +523,6 @@ export const KomikProvider = {
     };
   },
 
-  getDetail: getDetailCached,
-  getChapter: getChapterCached,
+  getDetail: getDetail,
+  getChapter: getChapter,
 };

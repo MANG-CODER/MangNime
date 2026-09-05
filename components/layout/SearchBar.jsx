@@ -32,6 +32,10 @@ export default function SearchBar() {
   }, []);
 
   useEffect(() => {
+    // 1. Buat AbortController untuk membatalkan request lama
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const fetchSearchResults = async () => {
       const trimmed = query.trim();
       if (trimmed.length < 3) {
@@ -53,6 +57,9 @@ export default function SearchBar() {
           searchKomikServer(trimmed),
         ]);
 
+        // Kalau useEffect udah ke-cleanup (user ngetik huruf baru), stop update state!
+        if (signal.aborted) return;
+
         let combinedResults = [];
 
         // Anime
@@ -70,29 +77,39 @@ export default function SearchBar() {
 
         // Komik
         if (komikRes.status === "fulfilled" && komikRes.value) {
-          // searchKomikServer mereturn { data: [...], total: ... }
           const kData = komikRes.value?.data || [];
           const slicedKomik = Array.isArray(kData)
-            ? kData.slice(0, 5).map((item) => ({ ...item, _type: "komik" })) // Ambil 5 komik
+            ? kData.slice(0, 5).map((item) => ({ ...item, _type: "komik" }))
             : [];
           combinedResults = [...combinedResults, ...slicedKomik];
         }
 
-        searchCache.current.set(cacheKey, {
-          data: combinedResults,
-          timestamp: Date.now(),
-        });
+        // 2. CEGAH CACHING HASIL KOSONG JIKA KEMUNGKINAN KARENA ERROR
+        // Kita hanya cache jika ada hasil (backend hidup).
+        // Kalau 0 result murni, user bakal fetch ulang (lebih aman daripada cache error 5 menit)
+        if (combinedResults.length > 0) {
+          searchCache.current.set(cacheKey, {
+            data: combinedResults,
+            timestamp: Date.now(),
+          });
+        }
 
         setResults(combinedResults);
       } catch {
+        if (signal.aborted) return;
         setResults([]);
       } finally {
-        setIsLoading(false);
+        if (!signal.aborted) setIsLoading(false);
       }
     };
 
     const debounceTimer = setTimeout(fetchSearchResults, 500);
-    return () => clearTimeout(debounceTimer);
+
+    // 3. CLEANUP FUNCTION: Cancel timeout & Batalkan request fetch sebelumnya
+    return () => {
+      clearTimeout(debounceTimer);
+      controller.abort();
+    };
   }, [query]);
 
   const handleSearchSubmit = (e) => {
