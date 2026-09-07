@@ -189,6 +189,7 @@ function normalizeKomikuChapter(raw) {
     raw.next_chapter ||
     null;
 
+
   return {
     chapterTitle: raw.chapter_title || raw.manga_title || "Chapter",
     createdAt: "",
@@ -343,19 +344,22 @@ const getChapter = async (mangaSlugOrId, chapterSlugOrNum) => {
   const formatChSlug = (chNum, chId) =>
     chId ? `chapter-${chNum ?? "0"}-${chId}` : null;
 
+  const prevChapter = raw.prev_chapter || null;
+  const nextChapter = raw.next_chapter || null;
+
   return {
     chapterTitle: raw.chapter_number
       ? `Chapter ${raw.chapter_number}`
-      : raw.title || "",
+      : raw.chapter_title || raw.title || "",
     createdAt: raw.updated_at || raw.release_date || "",
     images: rawImages.map((img) =>
       proxyImage(typeof img === "string" ? img : img.url || img.image),
     ),
-    prevChapterSlug: raw.prev_chapter_id
-      ? formatChSlug(raw.prev_chapter_number, raw.prev_chapter_id)
+    prevChapterSlug: prevChapter?.chapter_id
+      ? formatChSlug(prevChapter.chapter_number, prevChapter.chapter_id)
       : null,
-    nextChapterSlug: raw.next_chapter_id
-      ? formatChSlug(raw.next_chapter_number, raw.next_chapter_id)
+    nextChapterSlug: nextChapter?.chapter_id
+      ? formatChSlug(nextChapter.chapter_number, nextChapter.chapter_id)
       : null,
   };
 };
