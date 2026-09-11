@@ -3,17 +3,14 @@ import { NextResponse } from "next/server";
 const rateLimitMap = new Map();
 
 // 🔧 true = seluruh website dalam maintenance
-const MAINTENANCE_MODE = false;
+const MAINTENANCE_MODE = true;
 
 export function proxy(request) {
   const pathname = request.nextUrl.pathname;
 
   // =========================================================
   // MAINTENANCE MODE
-  // Semua halaman dan API diarahkan ke /maintenance
-  // kecuali halaman maintenance dan asset Next.js.
   // =========================================================
-
   if (
     MAINTENANCE_MODE &&
     pathname !== "/maintenance" &&
@@ -25,10 +22,7 @@ export function proxy(request) {
 
   // =========================================================
   // BYPASS ASSET STATIS
-  // Supaya halaman maintenance tetap bisa mengambil CSS,
-  // JS, gambar, font, dll.
   // =========================================================
-
   if (
     pathname.startsWith("/_next/") ||
     pathname.match(
@@ -40,16 +34,12 @@ export function proxy(request) {
 
   // =========================================================
   // NORMAL SECURITY LOGIC
-  // Akan aktif kembali ketika MAINTENANCE_MODE = false
   // =========================================================
-
   const userAgent = request.headers.get("user-agent") || "";
-
   const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown";
 
   // 1. WHITELIST IP DEVELOPER
   const whitelistedIps = ["125.160.210.25", "127.0.0.1", "::1"];
-
   if (whitelistedIps.includes(ip)) {
     return NextResponse.next();
   }
@@ -65,14 +55,14 @@ export function proxy(request) {
 
   // 3. GOOD BOTS
   const goodBots = /googlebot|bingbot|yandexbot|slurp/i;
-
   if (goodBots.test(userAgent)) {
     return NextResponse.next();
   }
 
-  // 4. BAD BOTS
+  // 4. BAD BOTS & GENERIC SCRAPERS (UPDATED)
+  // Ditambah: ahrefsbot, meta-webindexer, dan scraper pattern (python, curl, wget, urllib)
   const badBots =
-    /claude-searchbot|claudebot|anthropic|gptbot|chatgpt-user|oai-searchbot|meta-externalagent|facebookexternalhit|facebot|ccbot|headlesschrome|google-extended|bytespider|amazonbot|petalbot/i;
+    /claude-searchbot|claudebot|anthropic|gptbot|chatgpt-user|oai-searchbot|meta-externalagent|facebookexternalhit|facebot|ccbot|headlesschrome|google-extended|bytespider|amazonbot|petalbot|ahrefsbot|meta-webindexer|scraper|python|curl|wget|urllib/i;
 
   if (badBots.test(userAgent)) {
     return new NextResponse(null, { status: 403 });
@@ -84,7 +74,6 @@ export function proxy(request) {
 
   if (ip !== "unknown") {
     const currentTime = Date.now();
-
     const requestData = rateLimitMap.get(ip) || {
       count: 0,
       startTime: currentTime,
@@ -123,13 +112,6 @@ export function proxy(request) {
 
 export const config = {
   matcher: [
-    /*
-     * Jalankan proxy untuk SEMUA request,
-     * termasuk /api.
-     *
-     * Asset internal Next.js tetap kita bypass
-     * di dalam function.
-     */
     "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|sitemap-index.xml|robots.txt).*)",
   ],
 };

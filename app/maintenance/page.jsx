@@ -32,8 +32,26 @@ export default function Maintenance() {
         nanti.
       </p>
 
+      {/* Status Jaringan ala Cloudflare */}
+      <div className="w-full max-w-xl bg-white/[0.02] border border-white/10 rounded-2xl p-4 my-2">
+        <div className="grid grid-cols-3 gap-2 text-center text-xs md:text-sm">
+          <div className="flex flex-col items-center">
+            <span className="text-gray-400">Browser</span>
+            <span className="text-green-400 font-semibold mt-1">Working</span>
+          </div>
+          <div className="flex flex-col items-center border-x border-white/10 px-2">
+            <span className="text-celestia-sky font-semibold">MangNime</span>
+            <span className="text-yellow-400 font-semibold mt-1">Updating</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-gray-400">Server</span>
+            <span className="text-green-400 font-semibold mt-1">Working</span>
+          </div>
+        </div>
+      </div>
+
       {/* Tombol Aksi */}
-      <div className="pt-4 relative z-10">
+      <div className="pt-2 relative z-10">
         <Button href="/" variant="primary" size="md">
           Coba Kembali
         </Button>

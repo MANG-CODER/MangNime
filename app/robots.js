@@ -14,11 +14,13 @@ export default function robots() {
           "CCBot",
           "meta-externalagent",
           "facebookexternalhit",
+          "meta-webindexer", // <--- Tambahan
           "Facebot",
           "HeadlessChrome",
           "Bytespider",
           "Amazonbot",
           "PetalBot",
+          "AhrefsBot", // <--- Tambahan
         ],
         disallow: "/",
       },

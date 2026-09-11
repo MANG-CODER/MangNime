@@ -3,14 +3,14 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const cache = new Map();
 
 const CACHE_TTL_MAP = {
-  "/home": 5 * 60 * 1000,
-  "/ongoing": 10 * 60 * 1000,
-  "/completed": 30 * 60 * 1000,
-  "/popular": 15 * 60 * 1000,
-  "/schedule": 60 * 60 * 1000,
-  "/genres": 24 * 60 * 60 * 1000,
-  "/genre": 24 * 60 * 60 * 1000,
-  default: 60 * 1000,
+  "/home": 60 * 60 * 1000, // 1 Jam
+  "/ongoing": 60 * 60 * 1000, // 1 Jam
+  "/completed": 2 * 60 * 60 * 1000, // 2 Jam
+  "/popular": 2 * 60 * 60 * 1000, // 2 Jam
+  "/schedule": 6 * 60 * 60 * 1000, // 6 Jam
+  "/genres": 24 * 60 * 60 * 1000, // 24 Jam
+  "/genre": 24 * 60 * 60 * 1000, // 24 Jam
+  default: 30 * 60 * 1000, // 30 Menit
 };
 
 const ENDPOINT_FALLBACK = {
@@ -87,7 +87,6 @@ export async function coreFetcher(url, options = {}) {
   const timeoutMs = options.timeout || 5000;
   const useCache = options.cache !== false;
 
-  // Cek cache fresh
   if (useCache) {
     const cached = getCached(url);
     if (cached) {
@@ -96,7 +95,6 @@ export async function coreFetcher(url, options = {}) {
     }
   }
 
-  // Tentukan fallback URL
   let fallbackUrl = null;
   try {
     const fullPath = new URL(url).pathname;
@@ -109,13 +107,28 @@ export async function coreFetcher(url, options = {}) {
     }
   } catch {}
 
-  // Retry loop — primary source
   for (let i = 1; i <= retries; i++) {
     try {
-      const res = await fetchWithTimeout(url, options, timeoutMs);
+      // Tambahkan cache: 'no-store' agar Next.js tidak ikut-ikutan nge-cache hasil error diam-diam
+      const fetchOptions = { ...options, cache: "no-store" };
+      const res = await fetchWithTimeout(url, fetchOptions, timeoutMs);
+
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+      // CEK JEBAKAN CLOUDFLARE: Pastikan responsnya benar-benar JSON
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("text/html")) {
+        throw new Error(`Terjebak WAF/Cloudflare HTML di HTTP ${res.status}`);
+      }
+
       const data = await res.json();
+
+      // JANGAN CACHE JIKA DATA KOSONG SAAT SEHARUSNYA ADA ISI
+      // (Asumsi: jika data array kosong, mungkin upstream error diam-diam)
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        throw new Error("Upstream mengembalikan data kosong");
+      }
+
       if (useCache) cache.set(url, { data, timestamp: Date.now() });
       return data;
     } catch (err) {
@@ -125,41 +138,50 @@ export async function coreFetcher(url, options = {}) {
       );
 
       if (i === retries) {
-        // Coba fallback otakudesu
         if (fallbackUrl) {
           console.warn(`[Fetcher] Fallback ke: ${fallbackUrl}`);
           try {
             const fallbackRes = await fetchWithTimeout(
               fallbackUrl,
-              options,
+              { ...options, cache: "no-store" },
               timeoutMs,
             );
             if (!fallbackRes.ok)
               throw new Error(`Fallback HTTP ${fallbackRes.status}`);
 
+            const fallbackContentType = fallbackRes.headers.get("content-type");
+            if (
+              fallbackContentType &&
+              fallbackContentType.includes("text/html")
+            ) {
+              throw new Error("Fallback terjebak HTML");
+            }
+
             const fallbackData = await fallbackRes.json();
-            if (useCache)
+            if (useCache && fallbackData) {
               cache.set(url, { data: fallbackData, timestamp: Date.now() });
+            }
             return fallbackData;
           } catch (fallbackErr) {
             console.warn(`[Fetcher] Fallback gagal: ${fallbackErr.message}`);
           }
         }
 
-        // Semua gagal — return stale cache kalau ada
+        // PENYELAMAT UTAMA: Gunakan Stale Cache jika semua gagal
         if (useCache) {
           const stale = getStaleCache(url);
           if (stale) {
-            console.warn(`[Fetcher] Return stale cache untuk: ${url}`);
-            return stale;
+            console.warn(
+              `[Fetcher] Return stale cache untuk: ${url} (Bypass Error)`,
+            );
+            return stale; // Mengembalikan data lama agar web tidak kosong
           }
         }
 
         console.error(`[Fetcher] Semua opsi gagal untuk: ${url}`);
-        throw err;
+        throw err; // WAJIB THROW ERROR agar Next.js tidak men-cache halaman kosong
       }
 
-      // Exponential backoff + jitter
       const backoff = Math.min(1000 * 2 ** (i - 1), 8000);
       const jitter = Math.random() * 300;
       await delay(backoff + jitter);
