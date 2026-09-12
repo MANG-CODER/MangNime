@@ -42,7 +42,7 @@ const RATE_LIMIT = 25;
 const TIME_WINDOW_MS = 60 * 1000;
 
 // Pakai Map untuk simpan hitungan per-IP!
-const rateLimits = new Map(); 
+const rateLimits = new Map();
 
 function checkRateLimit(ip = "global") {
   const now = Date.now();
@@ -66,12 +66,31 @@ function checkRateLimit(ip = "global") {
 }
 // =====================================================================
 
-// 1. SHINIGAMI FETCHER (TANPA REACT CACHE)
+// 🔥 URL CLOUDFLARE WORKER PROXY KITA
+const WORKER_URL = "https://mangnime-proxy.mangnime.workers.dev";
+
+// 1. SHINIGAMI FETCHER (DIBUNGKUS PROXY WORKER)
 const fetchAPI = async (endpoint) => {
   const fullUrl = `${SHINIGAMI_BASE_URL}${endpoint}`;
+  // Bungkus URL upstream dengan Cloudflare Worker agar tembus 403
+  const proxyUrl = `${WORKER_URL}/?url=${encodeURIComponent(fullUrl)}`;
+
   try {
-    const res = await fetch(fullUrl, { next: { revalidate: 3600 } });
+    const res = await fetch(proxyUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+      next: { revalidate: 3600 },
+    });
+
     if (!res.ok) throw new Error(`API Error: ${res.status}`);
+
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("text/html")) {
+      throw new Error("Terjebak WAF/Cloudflare HTML");
+    }
+
     return await res.json();
   } catch (error) {
     console.error(`Fetch API Error (${endpoint}):`, error.message);
@@ -85,7 +104,6 @@ const fetchAPI = async (endpoint) => {
 const komikuMemoryCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // Cache fresh 5 menit
 
-// 👈 Tambahin parameter IP di sini
 const fetchKomikuAPI = async (endpoint, ip = "global") => {
   const fullUrl = `${KOMIKU_BASE_URL}${endpoint}`;
   const cached = komikuMemoryCache.get(fullUrl);
@@ -97,16 +115,20 @@ const fetchKomikuAPI = async (endpoint, ip = "global") => {
 
   // 2. CEK LIMITER PER-IP
   if (!checkRateLimit(ip)) {
-    // 👈 KALAU KENA LIMIT: Coba cek apa ada cache basi (stale)?
     if (cached) {
-      console.log(`♻️ [STALE CACHE] Kena limit, return data lama untuk: ${endpoint}`);
-      return cached.data; 
+      console.log(
+        `♻️ [STALE CACHE] Kena limit, return data lama untuk: ${endpoint}`,
+      );
+      return cached.data;
     }
-    // Kalau bener-bener kosong dan kena limit, kembalikan pesan "coba lagi"
-    return { error: true, message: "Terlalu banyak request, coba lagi sebentar." };
+    return {
+      error: true,
+      message: "Terlalu banyak request, coba lagi sebentar.",
+    };
   }
 
   try {
+    // Opsional: Jika komiku juga butuh worker, bisa dibungkus juga. Tapi biarkan dulu jika tidak diblokir.
     const res = await fetch(fullUrl, { next: { revalidate: 300 } });
     if (res.status === 429 || !res.ok) return null;
 
@@ -119,7 +141,6 @@ const fetchKomikuAPI = async (endpoint, ip = "global") => {
     return data;
   } catch (error) {
     console.error(`Fetch Komiku Error (${endpoint}):`, error.message);
-    // Fallback terakhir: kalau fetch error (misal network down), balikin stale cache kalau ada
     if (cached) return cached.data;
     return null;
   }
@@ -189,7 +210,6 @@ function normalizeKomikuChapter(raw) {
     raw.next_chapter ||
     null;
 
-
   return {
     chapterTitle: raw.chapter_title || raw.manga_title || "Chapter",
     createdAt: "",
@@ -232,7 +252,7 @@ function toSlug(title) {
     .replace(/(^-|-$)/g, "");
 }
 
-// 3. GET DETAIL (TANPA REACT CACHE)
+// 3. GET DETAIL
 const getDetail = async (slugOrId) => {
   if (slugOrId.startsWith("komikudetail-")) {
     const realSlug = slugOrId.replace("komikudetail-", "");
@@ -287,7 +307,7 @@ const getDetail = async (slugOrId) => {
   };
 };
 
-// 4. GET CHAPTER (TANPA REACT CACHE)
+// 4. GET CHAPTER
 const getChapter = async (mangaSlugOrId, chapterSlugOrNum) => {
   if (!chapterSlugOrNum) return null;
 
@@ -446,7 +466,8 @@ export const KomikProvider = {
 
     try {
       const komikuJson = await fetchKomikuAPI(
-        `${KOMIKU_ENDPOINTS.SEARCH}${encodeURIComponent(keyword)}`, ip
+        `${KOMIKU_ENDPOINTS.SEARCH}${encodeURIComponent(keyword)}`,
+        ip,
       );
       if (komikuJson?.error) {
         message = komikuJson.message;
