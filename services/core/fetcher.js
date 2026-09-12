@@ -69,11 +69,66 @@ function buildFallbackUrl(originalUrl, baseUrl) {
   }
 }
 
+const USER_AGENTS = [
+  // Chrome Windows
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+  // Chrome Mac
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  // Firefox Windows
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+  // Firefox Mac
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0",
+  // Edge Windows
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+  // Safari Mac
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+];
+
+// Fungsi untuk meracik identitas palsu
+function getRandomHeaders() {
+  const userAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+
+  // Tentukan OS palsu berdasarkan User-Agent
+  let platform = '"Windows"';
+  if (userAgent.includes("Mac OS")) platform = '"macOS"';
+
+  return {
+    "User-Agent": userAgent,
+    Accept: "application/json, text/plain, text/html, */*",
+    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Cache-Control": "max-age=0",
+    "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120"',
+    "Sec-Ch-Ua-Mobile": "?0",
+    "Sec-Ch-Ua-Platform": platform,
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-origin",
+    // Ganti referer secara acak untuk membingungkan log Cloudflare
+    Referer:
+      Math.random() > 0.5
+        ? "https://www.google.com/"
+        : "https://duckduckgo.com/",
+  };
+}
+
 async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  // Suntikkan header palsu yang di-random setiap kali fetch dipanggil
+  const fakeHeaders = {
+    ...getRandomHeaders(),
+    ...options.headers,
+  };
+
   try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
+    const res = await fetch(url, {
+      ...options,
+      headers: fakeHeaders,
+      signal: controller.signal,
+    });
     clearTimeout(timer);
     return res;
   } catch (err) {
