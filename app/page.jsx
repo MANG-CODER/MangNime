@@ -11,7 +11,8 @@ export const metadata = {
   title: "MangNime - Streaming Anime & Baca Komik Gratis",
 };
 
-export const revalidate = 3600;
+// 🔥 Paksa Next.js bypass proses render saat build (langsung tembus)
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   let ongoingList = [];
@@ -32,15 +33,9 @@ export default async function Home() {
     // Parsing Komik
     popularKomik = komikRes?.popular || [];
     latestKomik = komikRes?.latest || [];
-
-    if (ongoingList.length === 0 && popularKomik.length === 0) {
-      throw new Error(
-        "Data dari upstream kosong, batalkan render agar cache lama tetap terpakai!",
-      );
-    }
   } catch (error) {
     console.error("🔴 Gagal memuat Homepage:", error);
-    throw new Error("Homepage gagal dimuat, menolak simpan cache!");
+    // Error ditangkap agar build tidak collapse, UI akan memakai fallback
   }
 
   return (

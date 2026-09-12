@@ -3,6 +3,7 @@ import KomikCard from "@/components/komik/KomikCard";
 import Link from "next/link";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Komik Populer - MangNime" };
 
 export default async function PopularKomikPage({ searchParams }) {

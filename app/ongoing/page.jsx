@@ -4,6 +4,7 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 import { AnimeProvider } from "@/services/providers";
 import { getMergeKey } from "@/utils/mergeAnime";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Anime Ongoing - MangNime" };
 export const revalidate = 1800;
 

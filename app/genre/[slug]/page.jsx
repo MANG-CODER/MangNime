@@ -16,6 +16,9 @@ export async function generateMetadata({ params }) {
   };
 }
 
+// 🔥 Paksa bypass build
+export const dynamic = "force-dynamic";
+
 export default async function GenreDetailPage({ params, searchParams }) {
   const resolvedParams = await params;
   const slug = resolvedParams?.slug;
@@ -56,6 +59,7 @@ export default async function GenreDetailPage({ params, searchParams }) {
   } catch (error) {
     console.error("Gagal fetch genre:", error);
   }
+
   const animeList = mergeAnimeLists(otakuList, alqaList);
 
   return (

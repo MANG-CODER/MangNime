@@ -5,6 +5,9 @@ export const metadata = {
   title: "Daftar Genre Anime - MangNime",
 };
 
+// 🔥 Paksa Next.js bypass proses render genre saat build
+export const dynamic = "force-dynamic";
+
 export default async function GenreListPage() {
   let genreList = [];
 

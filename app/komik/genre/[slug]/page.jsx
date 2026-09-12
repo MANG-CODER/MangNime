@@ -11,6 +11,9 @@ export async function generateMetadata({ params }) {
   return { title: `Komik Genre ${genreName} - MangNime` };
 }
 
+// 🔥 Paksa bypass build
+export const dynamic = "force-dynamic";
+
 export default async function KomikGenreDetailPage({ params, searchParams }) {
   const resolvedParams = await params;
   const genreSlug = resolvedParams?.slug;
