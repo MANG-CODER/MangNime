@@ -87,6 +87,9 @@ export async function coreFetcher(url, options = {}) {
   const timeoutMs = options.timeout || 5000;
   const useCache = options.cache !== false;
 
+  // 🔥 DETEKSI LINGKUNGAN: Cek apakah Vercel sedang melakukan build
+  const isBuilding = process.env.NEXT_PHASE === "phase-production-build";
+
   if (useCache) {
     const cached = getCached(url);
     if (cached) {
@@ -109,8 +112,12 @@ export async function coreFetcher(url, options = {}) {
 
   for (let i = 1; i <= retries; i++) {
     try {
-      // Tambahkan cache: 'no-store' agar Next.js tidak ikut-ikutan nge-cache hasil error diam-diam
-      const fetchOptions = { ...options, cache: "no-store" };
+      // Amankan proses build dari jebakan Dynamic Server Usage
+      const fetchOptions = {
+        ...options,
+        ...(isBuilding ? {} : { cache: "no-store" }),
+      };
+
       const res = await fetchWithTimeout(url, fetchOptions, timeoutMs);
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -124,7 +131,6 @@ export async function coreFetcher(url, options = {}) {
       const data = await res.json();
 
       // JANGAN CACHE JIKA DATA KOSONG SAAT SEHARUSNYA ADA ISI
-      // (Asumsi: jika data array kosong, mungkin upstream error diam-diam)
       if (!data || (Array.isArray(data) && data.length === 0)) {
         throw new Error("Upstream mengembalikan data kosong");
       }
@@ -141,11 +147,16 @@ export async function coreFetcher(url, options = {}) {
         if (fallbackUrl) {
           console.warn(`[Fetcher] Fallback ke: ${fallbackUrl}`);
           try {
+            // Terapkan juga pengecekan isBuilding pada fallback
             const fallbackRes = await fetchWithTimeout(
               fallbackUrl,
-              { ...options, cache: "no-store" },
+              {
+                ...options,
+                ...(isBuilding ? {} : { cache: "no-store" }),
+              },
               timeoutMs,
             );
+
             if (!fallbackRes.ok)
               throw new Error(`Fallback HTTP ${fallbackRes.status}`);
 
@@ -174,12 +185,12 @@ export async function coreFetcher(url, options = {}) {
             console.warn(
               `[Fetcher] Return stale cache untuk: ${url} (Bypass Error)`,
             );
-            return stale; // Mengembalikan data lama agar web tidak kosong
+            return stale;
           }
         }
 
         console.error(`[Fetcher] Semua opsi gagal untuk: ${url}`);
-        throw err; // WAJIB THROW ERROR agar Next.js tidak men-cache halaman kosong
+        throw err;
       }
 
       const backoff = Math.min(1000 * 2 ** (i - 1), 8000);
