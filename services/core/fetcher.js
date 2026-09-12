@@ -69,19 +69,14 @@ function buildFallbackUrl(originalUrl, baseUrl) {
   }
 }
 
+// 🔥 DAFTAR TOPENG (ROTATING USER AGENTS)
 const USER_AGENTS = [
-  // Chrome Windows
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-  // Chrome Mac
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  // Firefox Windows
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
-  // Firefox Mac
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0",
-  // Edge Windows
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
-  // Safari Mac
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
 ];
 
@@ -89,7 +84,6 @@ const USER_AGENTS = [
 function getRandomHeaders() {
   const userAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 
-  // Tentukan OS palsu berdasarkan User-Agent
   let platform = '"Windows"';
   if (userAgent.includes("Mac OS")) platform = '"macOS"';
 
@@ -105,7 +99,6 @@ function getRandomHeaders() {
     "Sec-Fetch-Dest": "empty",
     "Sec-Fetch-Mode": "cors",
     "Sec-Fetch-Site": "same-origin",
-    // Ganti referer secara acak untuk membingungkan log Cloudflare
     Referer:
       Math.random() > 0.5
         ? "https://www.google.com/"
@@ -117,7 +110,7 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  // Suntikkan header palsu yang di-random setiap kali fetch dipanggil
+  // Suntikkan header palsu yang di-random
   const fakeHeaders = {
     ...getRandomHeaders(),
     ...options.headers,
@@ -142,8 +135,10 @@ export async function coreFetcher(url, options = {}) {
   const timeoutMs = options.timeout || 5000;
   const useCache = options.cache !== false;
 
-  // 🔥 DETEKSI LINGKUNGAN: Cek apakah Vercel sedang melakukan build
   const isBuilding = process.env.NEXT_PHASE === "phase-production-build";
+
+  // 🔥 URL CLOUDFLARE WORKER PROXY
+  const WORKER_URL = "https://mangnime-proxy.mangnime.workers.dev";
 
   if (useCache) {
     const cached = getCached(url);
@@ -173,11 +168,14 @@ export async function coreFetcher(url, options = {}) {
         ...(isBuilding ? {} : { cache: "no-store" }),
       };
 
-      const res = await fetchWithTimeout(url, fetchOptions, timeoutMs);
+      // 🔥 BUNGKUS URL ASLI MENGGUNAKAN PROXY CLOUDFLARE WORKER
+      const proxyUrl = `${WORKER_URL}/?url=${encodeURIComponent(url)}`;
+
+      const res = await fetchWithTimeout(proxyUrl, fetchOptions, timeoutMs);
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      // CEK JEBAKAN CLOUDFLARE: Pastikan responsnya benar-benar JSON
+      // CEK JEBAKAN CLOUDFLARE
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.includes("text/html")) {
         throw new Error(`Terjebak WAF/Cloudflare HTML di HTTP ${res.status}`);
@@ -202,9 +200,11 @@ export async function coreFetcher(url, options = {}) {
         if (fallbackUrl) {
           console.warn(`[Fetcher] Fallback ke: ${fallbackUrl}`);
           try {
-            // Terapkan juga pengecekan isBuilding pada fallback
+            // 🔥 PASTIKAN FALLBACK JUGA MENGGUNAKAN PROXY
+            const proxyFallbackUrl = `${WORKER_URL}/?url=${encodeURIComponent(fallbackUrl)}`;
+
             const fallbackRes = await fetchWithTimeout(
-              fallbackUrl,
+              proxyFallbackUrl,
               {
                 ...options,
                 ...(isBuilding ? {} : { cache: "no-store" }),
