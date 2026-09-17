@@ -6,6 +6,7 @@ import BookmarkButton from "@/components/ui/BookmarkButton";
 import CommentSection from "@/components/ui/CommentSection";
 import EpisodeHistoryTracker from "@/components/anime/EpisodeHistoryTracker";
 import { AnimeProvider } from "@/services/providers";
+import { coreFetcher } from "@/services/core/fetcher";
 
 const InteractivePlayer = dynamic(
   () => import("@/components/episode/InteractivePlayer"),
@@ -144,12 +145,19 @@ export default async function EpisodePage({ params }) {
   async function fetchServerUrl(serverId) {
     "use server";
     try {
-      const res = await fetch(`${BASE_URL}${API_ENDPOINTS.SERVER}${serverId}`, {
+      if (serverId && serverId.startsWith("http")) {
+        return serverId;
+      }
+
+      const baseUrl =
+        process.env.SANKANIME_BASE_URL ||
+        "https://www.sankavollerei.web.id/anime";
+
+      const res = await coreFetcher(`${baseUrl}/server/${serverId}`, {
         cache: "no-store",
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      return json?.data?.url || json?.url || json;
+
+      return res?.data?.url || res?.url || res;
     } catch (error) {
       console.error("Gagal mengambil URL Server:", error);
       return null;
