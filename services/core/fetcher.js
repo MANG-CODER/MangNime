@@ -173,27 +173,50 @@ export async function coreFetcher(url, options = {}) {
 
       const res = await fetchWithTimeout(proxyUrl, fetchOptions, timeoutMs);
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // ========================================================
+      // 🚨 LOGIKA DETEKTIF: CEK STATUS DARI UPSTREAM
+      // ========================================================
+      if (!res.ok) {
+        if (res.status === 403)
+          throw new Error(
+            "[BLOKIR WAF] HTTP 403 - IP Worker ditendang upstream!",
+          );
+        if (res.status === 429)
+          throw new Error(
+            "[RATE LIMIT] HTTP 429 - Terlalu banyak request ke upstream!",
+          );
+        if (res.status >= 500)
+          throw new Error(
+            `[UPSTREAM DOWN] HTTP ${res.status} - Server tujuan error!`,
+          );
+        throw new Error(`[HTTP ERROR] ${res.status}`);
+      }
 
-      // CEK JEBAKAN CLOUDFLARE
+      // CEK JEBAKAN CLOUDFLARE CHALLENGE (CAPTCHA)
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.includes("text/html")) {
-        throw new Error(`Terjebak WAF/Cloudflare HTML di HTTP ${res.status}`);
+        throw new Error(
+          "[JEBAKAN HTML] Terkena Cloudflare Captcha dari upstream!",
+        );
       }
 
       const data = await res.json();
 
-      // JANGAN CACHE JIKA DATA KOSONG SAAT SEHARUSNYA ADA ISI
       if (!data || (Array.isArray(data) && data.length === 0)) {
-        throw new Error("Upstream mengembalikan data kosong");
+        throw new Error("[KOSONG] Upstream mengembalikan data JSON kosong.");
       }
 
       if (useCache) cache.set(url, { data, timestamp: Date.now() });
       return data;
     } catch (err) {
       const isTimeout = err.name === "AbortError";
-      console.warn(
-        `[Fetcher] ${isTimeout ? "Timeout" : "Error"} attempt ${i}/${retries} — ${url}: ${err.message}`,
+
+      // ALARM LOG KE VERCEL
+      const errorReason = isTimeout
+        ? "[TIMEOUT] Request lewat dari 5 detik"
+        : err.message;
+      console.error(
+        `❌ [Fetch Gagal] Attempt ${i}/${retries} | Target: ${url} | Reason: ${errorReason}`,
       );
 
       if (i === retries) {
