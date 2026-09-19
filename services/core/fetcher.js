@@ -159,9 +159,10 @@ export async function coreFetcher(url, options = {}) {
       };
 
       // Integrasi corsproxy.io
-      const API_KEY = process.env.CORSPROXY_API_KEY || "";
-      const proxyUrl = `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(url)}`;
-      const res = await fetchWithTimeout(proxyUrl, fetchOptions, timeoutMs);
+      //const API_KEY = process.env.CORSPROXY_API_KEY || "";
+      //const proxyUrl = `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(url)}`;
+      //const res = await fetchWithTimeout(proxyUrl, fetchOptions, timeoutMs);
+      const res = await fetchWithTimeout(url, fetchOptions, timeoutMs);
 
       if (!res.ok) {
         if (res.status === 403)
