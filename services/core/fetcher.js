@@ -2,6 +2,8 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const cache = new Map();
 
+const WORKER_URL = "https://snkmgni.mangnime.workers.dev";
+
 const CACHE_TTL_MAP = {
   "/home": 60 * 60 * 1000, // 1 Jam
   "/ongoing": 60 * 60 * 1000, // 1 Jam
@@ -66,6 +68,10 @@ function buildFallbackUrl(originalUrl, baseUrl) {
   } catch {
     return null;
   }
+}
+
+function buildProxyUrl(targetUrl) {
+  return `${WORKER_URL}?url=${encodeURIComponent(targetUrl)}`;
 }
 
 const USER_AGENTS = [
@@ -139,6 +145,7 @@ export async function coreFetcher(url, options = {}) {
     }
   }
 
+  // Build fallback URL untuk alqanime (sementara masih dipertahankan)
   let fallbackUrl = null;
   try {
     const fullPath = new URL(url).pathname;
@@ -158,19 +165,9 @@ export async function coreFetcher(url, options = {}) {
         ...(isBuilding ? {} : { cache: "no-store" }),
       };
 
-      // Integrasi corsproxy.io
-      const API_KEY = process.env.CORSPROXY_API_KEY || "";
-      console.log(
-        "🔑 API_KEY:",
-        API_KEY ? `${API_KEY.slice(0, 6)}...` : "KOSONG!",
-      );
-      console.log(
-        "🌐 Proxy URL:",
-        `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(url)}`,
-      );
-      const proxyUrl = `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(url)}`;
+      const proxyUrl = buildProxyUrl(url);
+      console.log(`[Fetcher] Attempt ${i}/${retries} via worker: ${proxyUrl}`);
       const res = await fetchWithTimeout(proxyUrl, fetchOptions, timeoutMs);
-      //const res = await fetchWithTimeout(url, fetchOptions, timeoutMs);
 
       if (!res.ok) {
         if (res.status === 403)
@@ -212,12 +209,11 @@ export async function coreFetcher(url, options = {}) {
       );
 
       if (i === retries) {
+        // Fallback ke endpoint alternatif (alqanime → otakudesu)
         if (fallbackUrl) {
           console.warn(`[Fetcher] Fallback ke: ${fallbackUrl}`);
           try {
-            // Integrasi corsproxy.io untuk fallback
-            const proxyFallbackUrl = `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(fallbackUrl)}`;
-
+            const proxyFallbackUrl = buildProxyUrl(fallbackUrl);
             const fallbackRes = await fetchWithTimeout(
               proxyFallbackUrl,
               {
@@ -248,6 +244,7 @@ export async function coreFetcher(url, options = {}) {
           }
         }
 
+        // Last resort: stale cache
         if (useCache) {
           const stale = getStaleCache(url);
           if (stale) {

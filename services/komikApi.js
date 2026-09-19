@@ -1,5 +1,7 @@
 import { proxyImage } from "@/utils/shinigamiProxy";
 
+const WORKER_URL = "https://snkmgni.mangnime.workers.dev";
+
 const ENV_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://www.sankavollerei.web.id/comic";
 let FIXED_URL = ENV_URL;
@@ -59,11 +61,14 @@ function checkRateLimit(ip = "global") {
   return true;
 }
 
+function buildProxyUrl(targetUrl) {
+  return `${WORKER_URL}?url=${encodeURIComponent(targetUrl)}`;
+}
+
+// Shinigami: lewat worker
 const fetchAPI = async (endpoint) => {
   const fullUrl = `${SHINIGAMI_BASE_URL}${endpoint}`;
-
-  const API_KEY = process.env.CORSPROXY_API_KEY || "";
-  const proxyUrl = `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(fullUrl)}`;
+  const proxyUrl = buildProxyUrl(fullUrl);
 
   try {
     const res = await fetch(proxyUrl, {
@@ -88,8 +93,9 @@ const fetchAPI = async (endpoint) => {
   }
 };
 
+// Komiku: tetap direct (masih bisa tanpa proxy)
 const komikuMemoryCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_TTL = 60 * 60 * 1000; // Dinaikkin jadi 1 jam (sebelumnya 5 menit)
 
 const fetchKomikuAPI = async (endpoint, ip = "global") => {
   const fullUrl = `${KOMIKU_BASE_URL}${endpoint}`;
@@ -113,7 +119,7 @@ const fetchKomikuAPI = async (endpoint, ip = "global") => {
   }
 
   try {
-    const res = await fetch(fullUrl, { next: { revalidate: 300 } });
+    const res = await fetch(fullUrl, { next: { revalidate: 3600 } });
     if (res.status === 429 || !res.ok) return null;
 
     const data = await res.json();
