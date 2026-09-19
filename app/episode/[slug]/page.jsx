@@ -1,6 +1,5 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { API_ENDPOINTS, BASE_URL } from "@/services/api";
 import Button from "@/components/ui/Button";
 import BookmarkButton from "@/components/ui/BookmarkButton";
 import CommentSection from "@/components/ui/CommentSection";
