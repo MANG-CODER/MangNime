@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { fetchWithDelay } from "@/services/api";
+import { coreFetcher } from "@/services/core/fetcher";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -15,7 +15,10 @@ export default async function BatchPage({ params }) {
   let batchData = null;
 
   try {
-    const res = await fetchWithDelay(`/batch/${slug}`, 500);
+    const BASE_URL =
+      process.env.SANKANIME_BASE_URL ||
+      "https://www.sankavollerei.web.id/anime";
+    const res = await coreFetcher(`${BASE_URL}/batch/${slug}`);
     batchData = res?.data || null;
   } catch (error) {
     console.error("Error fetch batch:", error);

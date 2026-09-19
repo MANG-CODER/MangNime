@@ -2,7 +2,6 @@ import AnimeCard from "@/components/anime/AnimeCard";
 import Pagination from "@/components/ui/Pagination";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { AnimeProvider } from "@/services/providers";
-import { getMergeKey } from "@/utils/mergeAnime";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Anime Ongoing - MangNime" };
@@ -22,55 +21,21 @@ export default async function OngoingPage({ searchParams }) {
 
   let otakuList = [];
   let paginationData = null;
-  let alqaSlice = [];
   let fetchError = false;
 
   try {
-    const [otakuRes, alqaRes] = await Promise.allSettled([
-      withTimeout(AnimeProvider.Otakudesu.getOngoing(page)),
-      withTimeout(AnimeProvider.Alqanime.getOngoing(page)),
-    ]);
+    const otakuRes = await withTimeout(
+      AnimeProvider.Otakudesu.getOngoing(page),
+    );
 
-    if (otakuRes.status === "fulfilled" && otakuRes.value) {
-      otakuList = otakuRes.value.data || [];
-      paginationData = otakuRes.value.pagination || null;
-    }
+    otakuList = otakuRes?.data || [];
+    paginationData = otakuRes?.pagination || null;
 
-    if (alqaRes.status === "fulfilled" && alqaRes.value) {
-      const alqaItems = alqaRes.value.data || alqaRes.value.animeList || [];
-
-      // Kumpulkan key otakudesu buat dedup
-      const otakuKeys = new Set(
-        otakuList.map((a) => getMergeKey(a.title)).filter(Boolean),
-      );
-
-      const alqaSeen = new Set();
-      const alqaExclusives = [];
-
-      alqaItems.forEach((anime) => {
-        const status = (anime.status || "").toLowerCase();
-        if (status.includes("completed") || status.includes("tamat")) return;
-
-        const key = getMergeKey(anime.title);
-        if (!key || alqaSeen.has(key) || otakuKeys.has(key)) return;
-
-        alqaSeen.add(key);
-        alqaExclusives.push(anime);
-      });
-
-      alqaSlice = alqaExclusives.slice(0, 3);
-    }
-
-    // Kalau dua-duanya gagal, set error
-    if (otakuRes.status === "rejected" && alqaRes.status === "rejected") {
-      fetchError = true;
-    }
+    if (!otakuRes) fetchError = true;
   } catch (error) {
     console.error("Gagal memuat Ongoing:", error);
     fetchError = true;
   }
-
-  const animeList = [...otakuList, ...alqaSlice];
 
   return (
     <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-0">
@@ -92,13 +57,13 @@ export default async function OngoingPage({ searchParams }) {
         </div>
       </div>
 
-      {animeList.length > 0 ? (
+      {otakuList.length > 0 ? (
         <>
           <div
             key={`ongoing-${page}`}
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 animate-fade-in-up"
           >
-            {animeList.map((anime, idx) => {
+            {otakuList.map((anime, idx) => {
               const uniqueKey = anime.animeId || anime.slug || `ong-${idx}`;
               return (
                 <ScrollReveal key={uniqueKey}>

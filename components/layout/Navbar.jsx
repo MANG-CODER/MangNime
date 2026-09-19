@@ -71,7 +71,6 @@ export default function Navbar() {
     "/ongoing",
     "/completed",
     "/genre",
-    "/movies",
     "/anime",
     "/episode",
     "/batch",
@@ -700,7 +699,6 @@ export default function Navbar() {
               { label: "Ongoing", path: "/ongoing" },
               { label: "Completed", path: "/completed" },
               { label: "Genre", path: "/genre" },
-              { label: "Movies", path: "/movies" },
             ].map((item) => (
               <Link
                 key={item.label}

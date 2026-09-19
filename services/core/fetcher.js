@@ -2,7 +2,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const cache = new Map();
 
-const WORKER_URL = "https://snkmgni.mgcd.workers.dev";
+const DENO_PROXY_URL = "https://mgcdanm.vestiapani.deno.net";
 
 const CACHE_TTL_MAP = {
   "/home": 60 * 60 * 1000, // 1 Jam
@@ -13,22 +13,6 @@ const CACHE_TTL_MAP = {
   "/genres": 24 * 60 * 60 * 1000, // 24 Jam
   "/genre": 24 * 60 * 60 * 1000, // 24 Jam
   default: 30 * 60 * 1000, // 30 Menit
-};
-
-const ENDPOINT_FALLBACK = {
-  "/alqanime/home": "/home",
-  "/alqanime/ongoing": "/ongoing-anime",
-  "/alqanime/completed": "/complete-anime",
-  "/alqanime/search/": "/search/",
-  "/alqanime/detail/": "/anime/",
-  "/alqanime/episode/": "/episode/",
-  "/alqanime/schedule": "/schedule",
-  "/alqanime/genres": "/genre",
-  "/alqanime/genre/": "/genre/",
-  "/alqanime/popular": "/ongoing-anime",
-  "/alqanime/movie": "/complete-anime",
-  "/alqanime/list": "/complete-anime",
-  "/alqanime/season/": null,
 };
 
 function getTTL(url) {
@@ -48,30 +32,8 @@ function getStaleCache(key) {
   return null;
 }
 
-function buildFallbackUrl(originalUrl, baseUrl) {
-  try {
-    const parsed = new URL(originalUrl);
-    const fullPath = parsed.pathname;
-    const search = parsed.search;
-
-    const alqPrefix = Object.keys(ENDPOINT_FALLBACK).find((prefix) =>
-      fullPath.includes(prefix),
-    );
-
-    if (!alqPrefix) return null;
-
-    const fallbackSuffix = ENDPOINT_FALLBACK[alqPrefix];
-    if (fallbackSuffix === null) return null;
-
-    const afterPrefix = fullPath.split(alqPrefix)[1] || "";
-    return `${baseUrl}${fallbackSuffix}${afterPrefix}${search}`;
-  } catch {
-    return null;
-  }
-}
-
 function buildProxyUrl(targetUrl) {
-  return `${WORKER_URL}?url=${encodeURIComponent(targetUrl)}`;
+  return `${DENO_PROXY_URL}/?url=${encodeURIComponent(targetUrl)}`;
 }
 
 const USER_AGENTS = [
@@ -145,19 +107,6 @@ export async function coreFetcher(url, options = {}) {
     }
   }
 
-  // Build fallback URL untuk alqanime (sementara masih dipertahankan)
-  let fallbackUrl = null;
-  try {
-    const fullPath = new URL(url).pathname;
-    const alqPrefix = Object.keys(ENDPOINT_FALLBACK).find((prefix) =>
-      fullPath.includes(prefix),
-    );
-    if (alqPrefix) {
-      const baseUrl = url.split("/alqanime/")[0];
-      fallbackUrl = buildFallbackUrl(url, baseUrl);
-    }
-  } catch {}
-
   for (let i = 1; i <= retries; i++) {
     try {
       const fetchOptions = {
@@ -166,12 +115,14 @@ export async function coreFetcher(url, options = {}) {
       };
 
       const proxyUrl = buildProxyUrl(url);
-      console.log(`[Fetcher] Attempt ${i}/${retries} via worker: ${proxyUrl}`);
+      console.log(`[Fetcher] Attempt ${i}/${retries} via Deno: ${proxyUrl}`);
       const res = await fetchWithTimeout(proxyUrl, fetchOptions, timeoutMs);
 
       if (!res.ok) {
         if (res.status === 403)
-          throw new Error("[BLOKIR WAF] HTTP 403 - Proxy diblokir upstream!");
+          throw new Error(
+            "[BLOKIR WAF] HTTP 403 - Deno Proxy diblokir upstream!",
+          );
         if (res.status === 429)
           throw new Error(
             "[RATE LIMIT] HTTP 429 - Terlalu banyak request ke upstream!",
@@ -209,42 +160,7 @@ export async function coreFetcher(url, options = {}) {
       );
 
       if (i === retries) {
-        // Fallback ke endpoint alternatif (alqanime → otakudesu)
-        if (fallbackUrl) {
-          console.warn(`[Fetcher] Fallback ke: ${fallbackUrl}`);
-          try {
-            const proxyFallbackUrl = buildProxyUrl(fallbackUrl);
-            const fallbackRes = await fetchWithTimeout(
-              proxyFallbackUrl,
-              {
-                ...options,
-                ...(isBuilding ? {} : { cache: "no-store" }),
-              },
-              timeoutMs,
-            );
-
-            if (!fallbackRes.ok)
-              throw new Error(`Fallback HTTP ${fallbackRes.status}`);
-
-            const fallbackContentType = fallbackRes.headers.get("content-type");
-            if (
-              fallbackContentType &&
-              fallbackContentType.includes("text/html")
-            ) {
-              throw new Error("Fallback terjebak HTML");
-            }
-
-            const fallbackData = await fallbackRes.json();
-            if (useCache && fallbackData) {
-              cache.set(url, { data: fallbackData, timestamp: Date.now() });
-            }
-            return fallbackData;
-          } catch (fallbackErr) {
-            console.warn(`[Fetcher] Fallback gagal: ${fallbackErr.message}`);
-          }
-        }
-
-        // Last resort: stale cache
+        // PENYELAMAT UTAMA: Kembalikan stale cache kalau semua retry gagal
         if (useCache) {
           const stale = getStaleCache(url);
           if (stale) {
@@ -259,6 +175,7 @@ export async function coreFetcher(url, options = {}) {
         throw err;
       }
 
+      // Jeda sebelum retry selanjutnya (Exponential Backoff)
       const backoff = Math.min(1000 * 2 ** (i - 1), 8000);
       const jitter = Math.random() * 300;
       await delay(backoff + jitter);

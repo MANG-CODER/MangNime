@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchWithDelay, API_ENDPOINTS } from "@/services/api";
+import { coreFetcher } from "@/services/core/fetcher";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -8,7 +8,9 @@ export async function GET(request) {
   if (!query)
     return NextResponse.json({ error: "Query kosong" }, { status: 400 });
 
-  const data = await fetchWithDelay(`${API_ENDPOINTS.SEARCH}${query}`, 500);
+  const BASE_URL =
+    process.env.SANKANIME_BASE_URL || "https://www.sankavollerei.web.id/anime";
+  const data = await coreFetcher(`${BASE_URL}/search/${query}`);
 
   if (!data) {
     return NextResponse.json(

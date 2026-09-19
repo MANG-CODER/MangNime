@@ -3,7 +3,6 @@ import Pagination from "@/components/ui/Pagination";
 import Link from "next/link";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { AnimeProvider } from "@/services/providers";
-import { mergeAnimeLists } from "@/utils/mergeAnime";
 
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
@@ -16,7 +15,6 @@ export async function generateMetadata({ params }) {
   };
 }
 
-// 🔥 Paksa bypass build
 export const dynamic = "force-dynamic";
 
 export default async function GenreDetailPage({ params, searchParams }) {
@@ -38,29 +36,16 @@ export default async function GenreDetailPage({ params, searchParams }) {
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
 
-  let otakuList = [];
-  let alqaList = [];
+  let animeList = [];
   let paginationData = null;
 
   try {
-    const [otakuRes, alqaRes] = await Promise.allSettled([
-      AnimeProvider.Otakudesu.getAnimeByGenre(slug, page),
-      AnimeProvider.Alqanime.getAnimeByGenre(slug, page),
-    ]);
-
-    if (otakuRes.status === "fulfilled" && otakuRes.value) {
-      otakuList = otakuRes.value.data || [];
-      paginationData = otakuRes.value.pagination || null;
-    }
-
-    if (alqaRes.status === "fulfilled" && alqaRes.value) {
-      alqaList = alqaRes.value.data || [];
-    }
+    const res = await AnimeProvider.Otakudesu.getAnimeByGenre(slug, page);
+    animeList = res?.data || [];
+    paginationData = res?.pagination || null;
   } catch (error) {
     console.error("Gagal fetch genre:", error);
   }
-
-  const animeList = mergeAnimeLists(otakuList, alqaList);
 
   return (
     <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-0 mt-6">
@@ -113,7 +98,6 @@ export default async function GenreDetailPage({ params, searchParams }) {
               );
             })}
           </div>
-
           {paginationData && (
             <Pagination
               pagination={paginationData}

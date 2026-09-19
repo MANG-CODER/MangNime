@@ -3,7 +3,6 @@
 import { AnimeProvider } from "./providers";
 import { getCache, setCache, checkRateLimit } from "./core/cache";
 import { headers } from "next/headers";
-import { mergeAnimeLists, mergeSearchAnimeLists } from "@/utils/mergeAnime";
 
 export async function searchAllAnime(query) {
   if (!query) return [];
@@ -17,58 +16,35 @@ export async function searchAllAnime(query) {
     }
   } catch (e) {}
 
-  const cacheKey = `search_v3_${query.toLowerCase()}`;
+  const cacheKey = `search_v4_${query.toLowerCase()}`;
   const cachedData = getCache(cacheKey);
 
   if (cachedData && cachedData.length > 0) {
     return cachedData;
   }
 
-  const [otakudesuRes, alqanimeRes] = await Promise.allSettled([
-    AnimeProvider.Otakudesu.search(query),
-    AnimeProvider.Alqanime.search(query),
-  ]);
+  const otakudesuRes = await AnimeProvider.Otakudesu.search(query);
 
-  const otakuData =
-    otakudesuRes.status === "fulfilled"
-      ? Array.isArray(otakudesuRes.value)
-        ? otakudesuRes.value
-        : []
-      : [];
+  const results = Array.isArray(otakudesuRes) ? otakudesuRes : [];
 
-  const alqaData =
-    alqanimeRes.status === "fulfilled"
-      ? Array.isArray(alqanimeRes.value)
-        ? alqanimeRes.value
-        : []
-      : [];
-
-let finalResults = mergeSearchAnimeLists(otakuData, alqaData);
-
-  finalResults.sort((a, b) => {
+  const finalResults = [...results].sort((a, b) => {
     const titleA = (a.title || "").toLowerCase();
     const titleB = (b.title || "").toLowerCase();
     const q = query.toLowerCase();
 
     const aStarts = titleA.startsWith(q) ? 1 : 0;
     const bStarts = titleB.startsWith(q) ? 1 : 0;
-
-    if (aStarts !== bStarts) {
-      return bStarts - aStarts;
-    }
+    if (aStarts !== bStarts) return bStarts - aStarts;
 
     const aContains = titleA.includes(q) ? 1 : 0;
     const bContains = titleB.includes(q) ? 1 : 0;
-
-    if (aContains !== bContains) {
-      return bContains - aContains;
-    }
+    if (aContains !== bContains) return bContains - aContains;
 
     return titleA.length - titleB.length;
   });
 
   console.log(
-    `[Search: ${query}] Otakudesu: ${otakuData.length} hasil | Alqanime: ${alqaData.length} hasil | Final: ${finalResults.length} hasil`,
+    `[Search: ${query}] Otakudesu: ${results.length} hasil | Final: ${finalResults.length} hasil`,
   );
 
   if (finalResults.length > 0) {

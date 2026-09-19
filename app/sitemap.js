@@ -7,7 +7,6 @@ export default function sitemap() {
     "",
     "/ongoing",
     "/completed",
-    "/movies",
     "/search",
     "/komik/latest",
     "/komik/popular",
