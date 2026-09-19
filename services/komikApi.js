@@ -1,6 +1,6 @@
 import { proxyImage } from "@/utils/shinigamiProxy";
 
-const WORKER_URL = "https://snkmgni.mangnime.workers.dev";
+const WORKER_URL = "https://snkmgni.mgcd.workers.dev";
 
 const ENV_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://www.sankavollerei.web.id/comic";

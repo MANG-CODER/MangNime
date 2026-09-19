@@ -2,7 +2,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const cache = new Map();
 
-const WORKER_URL = "https://snkmgni.mangnime.workers.dev";
+const WORKER_URL = "https://snkmgni.mgcd.workers.dev";
 
 const CACHE_TTL_MAP = {
   "/home": 60 * 60 * 1000, // 1 Jam
