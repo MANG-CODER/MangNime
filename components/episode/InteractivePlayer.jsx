@@ -38,6 +38,7 @@ export default function InteractivePlayer({
           src={iframeSrc}
           allowFullScreen
           className="absolute inset-0 w-full h-full border-0"
+          referrerPolicy="no-referrer"
         ></iframe>
       </div>
 

@@ -35,45 +35,35 @@ export const KOMIKU_ENDPOINTS = {
   CHAPTER: "/chapter/",
 };
 
-// =====================================================================
-// SISTEM RATE LIMITER KOMIKU (PER-IP & FAIL-FAST)
-// =====================================================================
 const RATE_LIMIT = 25;
 const TIME_WINDOW_MS = 60 * 1000;
-
-// Pakai Map untuk simpan hitungan per-IP!
 const rateLimits = new Map();
 
 function checkRateLimit(ip = "global") {
   const now = Date.now();
   let userLimit = rateLimits.get(ip);
 
-  // Jika belum ada data untuk IP ini, atau waktunya udah lewat 1 menit, reset
   if (!userLimit || now - userLimit.startTime >= TIME_WINDOW_MS) {
     userLimit = { count: 0, startTime: now };
   }
 
-  // Jika limit per-IP ini tercapai
   if (userLimit.count >= RATE_LIMIT) {
-    console.warn(`⏳ [RATE LIMITER] Limit 25/menit tercapai untuk IP: ${ip}`);
+    console.warn(
+      `🛑 [INTERNAL RATE LIMIT] Limit 25/menit tercapai untuk IP: ${ip}. Request ditahan di Vercel.`,
+    );
     return false;
   }
 
-  // Tambah hitungan IP ini
   userLimit.count++;
   rateLimits.set(ip, userLimit);
   return true;
 }
-// =====================================================================
 
-// 🔥 URL CLOUDFLARE WORKER PROXY KITA
-const WORKER_URL = "https://mangnime-proxy.mangnime.workers.dev";
-
-// 1. SHINIGAMI FETCHER (DIBUNGKUS PROXY WORKER)
 const fetchAPI = async (endpoint) => {
   const fullUrl = `${SHINIGAMI_BASE_URL}${endpoint}`;
-  // Bungkus URL upstream dengan Cloudflare Worker agar tembus 403
-  const proxyUrl = `${WORKER_URL}/?url=${encodeURIComponent(fullUrl)}`;
+
+  const API_KEY = process.env.CORSPROXY_API_KEY || "";
+  const proxyUrl = `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(fullUrl)}`;
 
   try {
     const res = await fetch(proxyUrl, {
@@ -98,22 +88,17 @@ const fetchAPI = async (endpoint) => {
   }
 };
 
-// =====================================================================
-// 2. KOMIKU FETCHER (MANUAL CACHE + FAIL-FAST LIMITER + STALE CACHE)
-// =====================================================================
 const komikuMemoryCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // Cache fresh 5 menit
+const CACHE_TTL = 5 * 60 * 1000;
 
 const fetchKomikuAPI = async (endpoint, ip = "global") => {
   const fullUrl = `${KOMIKU_BASE_URL}${endpoint}`;
   const cached = komikuMemoryCache.get(fullUrl);
 
-  // 1. CEK CACHE FRESH
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.data;
   }
 
-  // 2. CEK LIMITER PER-IP
   if (!checkRateLimit(ip)) {
     if (cached) {
       console.log(
@@ -128,16 +113,13 @@ const fetchKomikuAPI = async (endpoint, ip = "global") => {
   }
 
   try {
-    // Opsional: Jika komiku juga butuh worker, bisa dibungkus juga. Tapi biarkan dulu jika tidak diblokir.
     const res = await fetch(fullUrl, { next: { revalidate: 300 } });
     if (res.status === 429 || !res.ok) return null;
 
     const data = await res.json();
-
     if (data && !data.error) {
       komikuMemoryCache.set(fullUrl, { data, timestamp: Date.now() });
     }
-
     return data;
   } catch (error) {
     console.error(`Fetch Komiku Error (${endpoint}):`, error.message);
@@ -145,7 +127,6 @@ const fetchKomikuAPI = async (endpoint, ip = "global") => {
     return null;
   }
 };
-// =====================================================================
 
 function normalizeKomikuSearch(item) {
   return {
@@ -198,7 +179,6 @@ function normalizeKomikuChapter(raw) {
     raw.imagesproxy && raw.imagesproxy.length > 0
       ? raw.imagesproxy
       : raw.images || [];
-
   let prevRaw =
     raw.navigation?.previousChapter ||
     raw.navigation?.prev_chapter ||
@@ -252,7 +232,6 @@ function toSlug(title) {
     .replace(/(^-|-$)/g, "");
 }
 
-// 3. GET DETAIL
 const getDetail = async (slugOrId) => {
   if (slugOrId.startsWith("komikudetail-")) {
     const realSlug = slugOrId.replace("komikudetail-", "");
@@ -307,7 +286,6 @@ const getDetail = async (slugOrId) => {
   };
 };
 
-// 4. GET CHAPTER
 const getChapter = async (mangaSlugOrId, chapterSlugOrNum) => {
   if (!chapterSlugOrNum) return null;
 
@@ -363,7 +341,6 @@ const getChapter = async (mangaSlugOrId, chapterSlugOrNum) => {
   const rawImages = raw.images || raw.pages || [];
   const formatChSlug = (chNum, chId) =>
     chId ? `chapter-${chNum ?? "0"}-${chId}` : null;
-
   const prevChapter = raw.prev_chapter || null;
   const nextChapter = raw.next_chapter || null;
 
@@ -443,7 +420,6 @@ export const KomikProvider = {
   getGenres: async () => {
     const res = await fetchAPI(SHINIGAMI_ENDPOINTS.GENRES);
     if (!res || !res.data) return [];
-
     return res.data.map((genre) => ({
       name: genre.name || genre.title || "Unknown",
       slug: genre.slug || genre.id || "",

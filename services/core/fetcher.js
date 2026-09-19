@@ -40,7 +40,6 @@ function getCached(key) {
   return null;
 }
 
-// Return cache lama meski expired — daripada kosong
 function getStaleCache(key) {
   const hit = cache.get(key);
   if (hit) return hit.data;
@@ -69,7 +68,6 @@ function buildFallbackUrl(originalUrl, baseUrl) {
   }
 }
 
-// 🔥 DAFTAR TOPENG (ROTATING USER AGENTS)
 const USER_AGENTS = [
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
@@ -80,10 +78,8 @@ const USER_AGENTS = [
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
 ];
 
-// Fungsi untuk meracik identitas palsu
 function getRandomHeaders() {
   const userAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-
   let platform = '"Windows"';
   if (userAgent.includes("Mac OS")) platform = '"macOS"';
 
@@ -98,7 +94,7 @@ function getRandomHeaders() {
     "Sec-Ch-Ua-Platform": platform,
     "Sec-Fetch-Dest": "empty",
     "Sec-Fetch-Mode": "cors",
-    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-Site": "cross-site",
     Referer:
       Math.random() > 0.5
         ? "https://www.google.com/"
@@ -110,7 +106,6 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  // Suntikkan header palsu yang di-random
   const fakeHeaders = {
     ...getRandomHeaders(),
     ...options.headers,
@@ -134,11 +129,7 @@ export async function coreFetcher(url, options = {}) {
   const retries = options.retries || 3;
   const timeoutMs = options.timeout || 5000;
   const useCache = options.cache !== false;
-
   const isBuilding = process.env.NEXT_PHASE === "phase-production-build";
-
-  // 🔥 URL CLOUDFLARE WORKER PROXY
-  const WORKER_URL = "https://mangnime-proxy.mangnime.workers.dev";
 
   if (useCache) {
     const cached = getCached(url);
@@ -162,25 +153,19 @@ export async function coreFetcher(url, options = {}) {
 
   for (let i = 1; i <= retries; i++) {
     try {
-      // Amankan proses build dari jebakan Dynamic Server Usage
       const fetchOptions = {
         ...options,
         ...(isBuilding ? {} : { cache: "no-store" }),
       };
 
-      // 🔥 BUNGKUS URL ASLI MENGGUNAKAN PROXY CLOUDFLARE WORKER
-      const proxyUrl = `${WORKER_URL}/?url=${encodeURIComponent(url)}`;
-
+      // Integrasi corsproxy.io
+      const API_KEY = process.env.CORSPROXY_API_KEY || "";
+      const proxyUrl = `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(url)}`;
       const res = await fetchWithTimeout(proxyUrl, fetchOptions, timeoutMs);
 
-      // ========================================================
-      // 🚨 LOGIKA DETEKTIF: CEK STATUS DARI UPSTREAM
-      // ========================================================
       if (!res.ok) {
         if (res.status === 403)
-          throw new Error(
-            "[BLOKIR WAF] HTTP 403 - IP Worker ditendang upstream!",
-          );
+          throw new Error("[BLOKIR WAF] HTTP 403 - Proxy diblokir upstream!");
         if (res.status === 429)
           throw new Error(
             "[RATE LIMIT] HTTP 429 - Terlalu banyak request ke upstream!",
@@ -192,7 +177,6 @@ export async function coreFetcher(url, options = {}) {
         throw new Error(`[HTTP ERROR] ${res.status}`);
       }
 
-      // CEK JEBAKAN CLOUDFLARE CHALLENGE (CAPTCHA)
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.includes("text/html")) {
         throw new Error(
@@ -210,11 +194,10 @@ export async function coreFetcher(url, options = {}) {
       return data;
     } catch (err) {
       const isTimeout = err.name === "AbortError";
-
-      // ALARM LOG KE VERCEL
       const errorReason = isTimeout
         ? "[TIMEOUT] Request lewat dari 5 detik"
         : err.message;
+
       console.error(
         `❌ [Fetch Gagal] Attempt ${i}/${retries} | Target: ${url} | Reason: ${errorReason}`,
       );
@@ -223,8 +206,8 @@ export async function coreFetcher(url, options = {}) {
         if (fallbackUrl) {
           console.warn(`[Fetcher] Fallback ke: ${fallbackUrl}`);
           try {
-            // 🔥 PASTIKAN FALLBACK JUGA MENGGUNAKAN PROXY
-            const proxyFallbackUrl = `${WORKER_URL}/?url=${encodeURIComponent(fallbackUrl)}`;
+            // Integrasi corsproxy.io untuk fallback
+            const proxyFallbackUrl = `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(fallbackUrl)}`;
 
             const fallbackRes = await fetchWithTimeout(
               proxyFallbackUrl,
@@ -256,7 +239,6 @@ export async function coreFetcher(url, options = {}) {
           }
         }
 
-        // PENYELAMAT UTAMA: Gunakan Stale Cache jika semua gagal
         if (useCache) {
           const stale = getStaleCache(url);
           if (stale) {
