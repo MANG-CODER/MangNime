@@ -159,10 +159,18 @@ export async function coreFetcher(url, options = {}) {
       };
 
       // Integrasi corsproxy.io
-      //const API_KEY = process.env.CORSPROXY_API_KEY || "";
-      //const proxyUrl = `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(url)}`;
-      //const res = await fetchWithTimeout(proxyUrl, fetchOptions, timeoutMs);
-      const res = await fetchWithTimeout(url, fetchOptions, timeoutMs);
+      const API_KEY = process.env.CORSPROXY_API_KEY || "";
+      console.log(
+        "🔑 API_KEY:",
+        API_KEY ? `${API_KEY.slice(0, 6)}...` : "KOSONG!",
+      );
+      console.log(
+        "🌐 Proxy URL:",
+        `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(url)}`,
+      );
+      const proxyUrl = `https://corsproxy.io/?key=${API_KEY}&url=${encodeURIComponent(url)}`;
+      const res = await fetchWithTimeout(proxyUrl, fetchOptions, timeoutMs);
+      //const res = await fetchWithTimeout(url, fetchOptions, timeoutMs);
 
       if (!res.ok) {
         if (res.status === 403)
