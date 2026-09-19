@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 const rateLimitMap = new Map();
 
 // 🔧 true = seluruh website dalam maintenance
-const MAINTENANCE_MODE = false;
+const MAINTENANCE_MODE = true;
 
 export function proxy(request) {
   const pathname = request.nextUrl.pathname;
