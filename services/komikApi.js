@@ -1,6 +1,6 @@
 import { proxyImage } from "@/utils/shinigamiProxy";
 
-const WORKER_URL = "https://dapper-warbler-9245.pani.deno.net";
+const WORKER_URL = "https://mangnimeprxykmk.netlify.app";
 
 const ENV_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://www.sankavollerei.web.id/comic";
@@ -84,8 +84,12 @@ const fetchAPI = async (endpoint) => {
     if (contentType && contentType.includes("text/html")) {
       throw new Error("Terjebak WAF/Cloudflare HTML");
     }
-
-    return await res.json();
+    const data = await res.json();
+    console.log(
+      `📦 [DEBUG API ${endpoint}]`,
+      JSON.stringify(data).substring(0, 200),
+    );
+    return data;
   } catch (error) {
     console.error(`Fetch API Error (${endpoint}):`, error.message);
     return null;
