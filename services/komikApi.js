@@ -1,6 +1,6 @@
 import { proxyImage } from "@/utils/shinigamiProxy";
 
-const WORKER_URL = "https://snkmgni.mgcd.workers.dev";
+const WORKER_URL = "https://dapper-warbler-9245.pani.deno.net";
 
 const ENV_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://www.sankavollerei.web.id/comic";
@@ -62,7 +62,7 @@ function checkRateLimit(ip = "global") {
 }
 
 function buildProxyUrl(targetUrl) {
-  return `${WORKER_URL}?url=${encodeURIComponent(targetUrl)}`;
+  return`${WORKER_URL}?url=${encodeURIComponent(targetUrl)}`;
 }
 
 // Shinigami: lewat worker
@@ -75,8 +75,7 @@ const fetchAPI = async (endpoint) => {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      },
-      next: { revalidate: 3600 },
+      }
     });
 
     if (!res.ok) throw new Error(`API Error: ${res.status}`);
