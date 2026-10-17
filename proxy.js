@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 const rateLimitMap = new Map();
 
 // 🔧 true = seluruh website dalam maintenance
-const MAINTENANCE_MODE = false;
+const MAINTENANCE_MODE = true;
 
 export function proxy(request) {
   const pathname = request.nextUrl.pathname;
@@ -24,7 +24,7 @@ export function proxy(request) {
   // BYPASS ASSET STATIS
   // =========================================================
   if (
-    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/_next/") || pathname.startsWith("/img/") ||
     pathname.match(
       /\.(ico|png|jpg|jpeg|svg|webp|gif|avif|css|js|woff|woff2|ttf)$/i,
     )

@@ -6,80 +6,76 @@ export const metadata = {
 
 export default function PolicyPage() {
   return (
-    <div className="min-h-screen bg-[#0D0B1A] pb-20 pt-10 animate-fade-in">
-      <div className="container mx-auto px-4 max-w-[900px]">
-        <div className="mb-10 text-center">
-          <h1 className="font-heading text-4xl md:text-5xl font-black text-white mb-4">
-            Kebijakan <span className="text-celestia-pink">Privasi</span>
+    <div className="min-h-screen bg-[#161218] pb-20 pt-8 animate-fade-in">
+      <div className="container mx-auto px-4 md:px-8 max-w-[900px] space-y-8">
+        <div className="text-center space-y-2">
+          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#E88D9E]">
+            Legal &amp; Privacy
+          </span>
+          <h1 className="text-3xl md:text-5xl font-extrabold text-[#FDF6F7]">
+            Kebijakan{" "}
+            <span className="font-serif italic font-normal text-[#F4B8C6]">
+              Privasi
+            </span>
           </h1>
-          <p className="text-gray-400">Privacy Policy MangNime.</p>
+          <p className="text-[#AD9CA6] text-xs md:text-sm">
+            Privacy Policy MangNime.
+          </p>
         </div>
 
-        <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 md:p-10 shadow-2xl space-y-6 text-gray-300 backdrop-blur-xl leading-relaxed">
+        <div className="bg-[#211B24]/90 border border-[#F4B8C6]/20 rounded-[32px] p-6 md:p-10 shadow-vogue-card space-y-6 text-[#AD9CA6] text-sm md:text-base leading-relaxed">
           <p>
             Di MangNime, privasi pengunjung kami adalah prioritas utama. Dokumen
-            Kebijakan Privasi ini menguraikan jenis informasi pribadi yang tidak
-            kami kumpulkan dan bagaimana kami menggunakan data peramban
-            (browser) dasar.
+            Kebijakan Privasi ini menguraikan bagaimana kami mengelola data
+            peramban (browser) serta informasi akun komunitas Anda.
           </p>
 
-          <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2 pt-4">
+          <h2 className="text-lg md:text-xl font-extrabold text-[#FDF6F7] border-b border-[#F4B8C6]/15 pb-2 pt-2">
             1. Informasi yang Kami Kumpulkan
           </h2>
           <p>
-            Kami{" "}
-            <strong>
-              tidak meminta pengguna untuk mendaftar (membuat akun)
-            </strong>{" "}
-            atau memberikan informasi identifikasi pribadi (seperti nama asli,
-            alamat email, atau nomor telepon) untuk menonton atau mengunduh
-            konten di MangNime.
-          </p>
-          <p>
-            Untuk fitur seperti <strong>Bookmark (Simpan Episode)</strong>, kami
-            menggunakan teknologi{" "}
-            <code className="bg-black/30 px-2 py-1 rounded text-celestia-pink text-sm">
+            Pengguna dapat menonton anime maupun membaca komik tanpa wajib
+            membuat akun. Untuk fitur{" "}
+            <strong className="text-[#FDF6F7]">Bookmark</strong> dan{" "}
+            <strong className="text-[#FDF6F7]">Riwayat Tonton/Baca</strong>,
+            kami menggunakan teknologi{" "}
+            <code className="bg-[#161218] px-2 py-0.5 rounded-md text-[#F4B8C6] text-xs border border-[#F4B8C6]/20">
               localStorage
             </code>{" "}
-            yang menyimpan data riwayat secara lokal di dalam peramban (browser)
-            Anda. Data ini tidak pernah dikirim atau disimpan di server kami.
+            yang menyimpan data secara lokal di perangkat Anda.
           </p>
 
-          <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2 pt-4">
-            2. Cookies dan Pelacak
+          <h2 className="text-lg md:text-xl font-extrabold text-[#FDF6F7] border-b border-[#F4B8C6]/15 pb-2 pt-2">
+            2. Cookies dan Sesi Login
           </h2>
           <p>
-            Seperti situs web lainnya, MangNime menggunakan "cookies". Cookie
-            ini digunakan untuk menyimpan informasi dasar seperti preferensi
-            pengunjung guna mengoptimalkan pengalaman pengguna dengan
-            menyesuaikan konten halaman web kami.
+            MangNime menggunakan cookies esensial untuk menjaga sesi autentikasi
+            apabila Anda memilih masuk menggunakan akun untuk berdiskusi di
+            kolom komentar komunitas.
           </p>
 
-          <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2 pt-4">
-            3. Iklan Pihak Ketiga
+          <h2 className="text-lg md:text-xl font-extrabold text-[#FDF6F7] border-b border-[#F4B8C6]/15 pb-2 pt-2">
+            3. Layanan Pihak Ketiga
           </h2>
           <p>
-            Server iklan pihak ketiga atau jaringan iklan dapat menggunakan
-            teknologi seperti *cookies*, JavaScript, atau Web Beacons yang
-            digunakan dalam iklan dan tautan masing-masing yang muncul di
-            MangNime. Mereka secara otomatis menerima alamat IP Anda ketika hal
-            ini terjadi. MangNime tidak memiliki akses ke atau kontrol atas
-            *cookies* yang digunakan oleh pengiklan pihak ketiga ini.
+            Pemutar video pihak ketiga yang disematkan pada halaman episode
+            mungkin menggunakan cookies mereka sendiri. MangNime tidak memiliki
+            kendali atas cookies dari penyedia server pihak ketiga tersebut.
           </p>
 
-          <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2 pt-4">
+          <h2 className="text-lg md:text-xl font-extrabold text-[#FDF6F7] border-b border-[#F4B8C6]/15 pb-2 pt-2">
             4. Persetujuan
           </h2>
           <p>
-            Dengan menggunakan situs web kami, Anda dengan ini menyetujui
-            Kebijakan Privasi kami dan menyetujui syarat-syaratnya.
+            Dengan menggunakan situs web kami, Anda menyetujui Kebijakan Privasi
+            ini beserta ketentuannya.
           </p>
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="text-center">
           <Link
             href="/"
-            className="inline-flex px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white font-bold transition-all"
+            className="inline-flex px-8 py-3 bg-[#F4B8C6] text-[#161218] rounded-full text-xs font-extrabold shadow-vogue-blush transition-all"
           >
             Kembali ke Beranda
           </Link>

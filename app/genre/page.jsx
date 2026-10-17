@@ -5,7 +5,7 @@ export const metadata = {
   title: "Daftar Genre Anime - MangNime",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800;
 
 export default async function GenreListPage() {
   let genreList = [];
@@ -24,44 +24,63 @@ export default async function GenreListPage() {
   }
 
   return (
-    <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-0 mt-6">
-      <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-2xl backdrop-blur-xl">
-        <div className="absolute -top-1/2 -right-1/4 w-[600px] h-[600px] bg-celestia-royal/20 blur-[150px] rounded-full pointer-events-none"></div>
+    <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-8 mt-6">
+      {/* HEADER BANNER */}
+      <div className="bg-[#211B24]/90 border border-[#F4B8C6]/20 rounded-[32px] p-7 md:p-11 relative overflow-hidden shadow-vogue-card">
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-64 bg-[#F4B8C6]/10 blur-[100px] rounded-full pointer-events-none" />
 
-        <div className="relative z-10 text-center">
-          <h1 className="font-heading text-4xl md:text-5xl font-black text-white tracking-tight mb-4 drop-shadow-xl">
+        <div className="relative z-10 text-center space-y-2">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#161218] border border-[#F4B8C6]/30 text-[11px] font-bold uppercase tracking-[0.18em] text-[#F4B8C6]">
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+              />
+            </svg>
+            <span>Anime Category</span>
+          </div>
+          <h1 className="text-3xl md:text-5xl font-extrabold text-[#FDF6F7] tracking-tight">
             Eksplorasi{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-celestia-sky to-celestia-lavender">
-              Genre
+            <span className="font-serif italic font-normal text-[#F4B8C6]">
+              Genre Anime
             </span>
           </h1>
-          <p className="text-celestia-lavender/70 font-light text-sm md:text-base tracking-wide max-w-2xl mx-auto">
-            Temukan dunia dan petualangan baru berdasarkan genre favoritmu. Dari
-            aksi yang mendebarkan hingga romansa yang menghangatkan hati.
+          <p className="text-[#AD9CA6] text-xs md:text-sm max-w-xl mx-auto">
+            Temukan dunia dan petualangan baru berdasarkan genre favoritmu, dari
+            aksi mendebarkan hingga kisah slice of life yang hangat.
           </p>
         </div>
       </div>
 
+      {/* GRID GENRE */}
       {genreList.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
           {genreList.map((genre, idx) => (
             <Link
               href={`/genre/${genre.genreId}`}
               key={idx}
-              className="group relative overflow-hidden rounded-2xl p-6 bg-white/[0.02] border border-white/5 hover:border-celestia-lavender/40 hover:shadow-glow-purple transition-all duration-300 flex items-center justify-center text-center"
+              className="group bg-[#211B24]/90 border border-[#F4B8C6]/15 hover:border-[#F4B8C6]/50 hover:bg-[#28202C] rounded-2xl px-4 py-4 flex items-center justify-between shadow-vogue-card hover:-translate-y-0.5 transition-all"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-celestia-royal/0 to-celestia-lavender/0 group-hover:from-celestia-royal/20 group-hover:to-celestia-lavender/10 transition-colors duration-500"></div>
-              <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-celestia-sky/30 blur-[30px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <h3 className="relative z-10 font-heading text-lg md:text-xl font-bold text-gray-300 group-hover:text-white transition-colors">
+              <span className="font-bold text-xs md:text-sm text-[#FDF6F7] group-hover:text-[#F4B8C6] transition-colors truncate pr-2">
                 {genre.title}
-              </h3>
+              </span>
+              <span className="w-6 h-6 rounded-full bg-[#161218] group-hover:bg-[#F4B8C6] text-[#AD9CA6] group-hover:text-[#161218] flex items-center justify-center text-xs transition-all shrink-0">
+                &rarr;
+              </span>
             </Link>
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-celestia-lavender">
-          <span className="w-10 h-10 border-4 border-celestia-royal border-t-transparent rounded-full animate-spin mb-4"></span>
-          <p className="font-light mt-4">Memuat data genre...</p>
+        <div className="flex flex-col items-center justify-center py-20 text-[#F4B8C6]">
+          <span className="w-9 h-9 border-[3px] border-[#F4B8C6] border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-xs text-[#AD9CA6]">Memuat data genre...</p>
         </div>
       )}
     </div>

@@ -1,28 +1,23 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import Button from "../ui/Button";
+import Link from "next/link";
 
 export default function HeroCarousel({ items }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const touchStartX = useRef(null);
 
-  // Fungsi ke slide selanjutnya
   const nextSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
   }, [items.length]);
 
-  // Fungsi ke slide sebelumnya
   const prevSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
   }, [items.length]);
 
-  // Auto-slide setiap 7 detik
   useEffect(() => {
     if (!items || items.length === 0) return;
-    const timer = setInterval(() => {
-      nextSlide();
-    }, 7000);
-    // Membersihkan timer jika komponen di-unmount atau di-render ulang
+    const timer = setInterval(nextSlide, 7000);
     return () => clearInterval(timer);
   }, [items, nextSlide]);
 
@@ -32,154 +27,218 @@ export default function HeroCarousel({ items }) {
   const targetUrl = `/anime/${currentAnime.animeId || currentAnime.slug || currentAnime.id}`;
   const imageUrl = currentAnime.poster || currentAnime.image;
 
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    if (deltaX > 50) prevSlide();
+    else if (deltaX < -50) nextSlide();
+    touchStartX.current = null;
+  };
+
+  const slideNum = String(currentIndex + 1).padStart(2, "0");
+  const totalNum = String(items.length).padStart(2, "0");
+
   return (
-    <div className="relative w-full h-[65vh] md:h-[80vh] min-h-[550px] overflow-hidden group bg-celestia-night border-b border-white/5 shadow-2xl">
-      {/* 1. Latar Belakang Blur */}
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="relative w-full min-h-[540px] md:h-[78vh] max-h-[740px] overflow-hidden bg-[#161218] border-b border-[#F4B8C6]/15 select-none flex items-center"
+    >
+      {/* 1. Ambient Backdrop Image */}
       <div className="absolute inset-0 z-0">
         <Image
           src={imageUrl}
-          alt="Background Blur"
+          alt={currentAnime.title || "Hero Background"}
           fill
-          quality={75}
-          className="object-cover object-top opacity-40 blur-xl scale-110"
+          unoptimized
           priority={currentIndex === 0}
+          className="object-cover object-center opacity-30 blur-2xl scale-110 transition-all duration-700"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-celestia-night via-celestia-night/80 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-celestia-night via-celestia-night/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#161218] via-[#161218]/75 to-[#161218]/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#161218] via-[#161218]/70 to-transparent" />
       </div>
 
-      {/* --- TOMBOL PANAH KIRI --- */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white/70 hover:text-white hover:bg-celestia-royal hover:border-celestia-lavender hover:shadow-glow-purple opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0"
-        aria-label="Previous slide"
-      >
-        <svg
-          className="w-6 h-6 md:w-8 md:h-8 pr-1"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2.5"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-      </button>
+      {/* 2. Outlined Masthead Watermark */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 font-serif text-[75px] sm:text-[130px] lg:text-[175px] font-bold tracking-[0.14em] text-stroke-vogue pointer-events-none select-none leading-none z-0 opacity-75">
+        MANGNIME
+      </div>
 
-      {/* --- TOMBOL PANAH KANAN --- */}
-      <button
-        onClick={nextSlide}
-        className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white/70 hover:text-white hover:bg-celestia-royal hover:border-celestia-lavender hover:shadow-glow-purple opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0"
-        aria-label="Next slide"
-      >
-        <svg
-          className="w-6 h-6 md:w-8 md:h-8 pl-1"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2.5"
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
-      </button>
-
-      {/* 2. Konten Utama */}
-      <div className="absolute inset-0 flex items-center z-10 container mx-auto px-12 md:px-24 pt-16 md:pt-20">
-        <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16 w-full animate-fade-in-up">
-          {/* KIRI: Poster Utuh */}
-          <div className="hidden md:block w-56 lg:w-72 flex-shrink-0 transform group-hover:-translate-y-2 transition-transform duration-500 ease-out">
-            <div className="hidden md:block w-48 lg:w-64 flex-shrink-0 relative aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl">
-              <Image
-                src={imageUrl}
-                alt={currentAnime.title}
-                fill
-                sizes="(max-width: 768px) 1px, (max-width: 1024px) 224px, 288px"
-                quality={75}
-                priority={currentIndex === 0}
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            </div>
-          </div>
-
-          {/* KANAN: Teks & Tombol */}
-          <div className="flex-1 max-w-4xl space-y-6 text-center md:text-left">
-            <div className="inline-flex items-center gap-2.5 bg-celestia-pink/10 text-celestia-pink px-4 py-2 rounded-full text-xs font-black tracking-widest border border-celestia-pink/30 backdrop-blur-md uppercase shadow-inner">
+      {/* 3. Konten Utama */}
+      <div className="relative z-10 container mx-auto px-4 md:px-8 max-w-[1400px] py-12 md:py-0">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-10 lg:gap-16">
+          {/* KIRI: Editorial Typography & Controls */}
+          <div className="flex-1 max-w-2xl space-y-4 md:space-y-5">
+            {/* Editorial Issue Badge */}
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#211B24]/90 border border-[#F4B8C6]/30 backdrop-blur-md">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-celestia-pink opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-celestia-pink"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F4B8C6] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F4B8C6]"></span>
               </span>
-              Sedang Populer
+              <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#F4B8C6]">
+                Spotlight #{slideNum} • Sedang Populer
+              </span>
             </div>
 
-            {/* ✅ PERBAIKAN: Menambahkan line-clamp-2 md:line-clamp-3 pada judul */}
-            <h2 className="font-heading text-4xl md:text-5xl lg:text-7xl font-black text-white leading-[1.1] drop-shadow-2xl line-clamp-2 md:line-clamp-3">
+            {/* Judul Utama */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#FDF6F7] leading-[1.08] tracking-tight line-clamp-2 md:line-clamp-3">
               {currentAnime.title}
-            </h2>
+            </h1>
 
-            <div className="flex items-center justify-center md:justify-start gap-5 text-sm font-medium text-gray-300">
+            {/* Metadata Pills dengan Ikon Fungsional */}
+            <div className="flex flex-wrap items-center gap-2.5 text-xs font-bold pt-1">
               {currentAnime.score && (
-                <span className="flex items-center gap-1.5 text-celestia-gold bg-black/30 backdrop-blur-md px-3 py-1 rounded-lg border border-white/5 shadow-glow-gold">
-                  ★ {currentAnime.score}
+                <span className="px-3 py-1 rounded-full bg-[#F4B8C6]/15 border border-[#F4B8C6]/35 text-[#F7D6C4] flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  {currentAnime.score}
                 </span>
               )}
               {currentAnime.status && (
-                <span className="opacity-70 text-celestia-lavender">
-                  • {currentAnime.status}
+                <span className="px-3 py-1 rounded-full bg-[#211B24] border border-[#E88D9E]/30 text-[#F4B8C6]">
+                  {currentAnime.status}
                 </span>
               )}
               {currentAnime.type && (
-                <span className="opacity-70 text-celestia-sky">
-                  • {currentAnime.type}
+                <span className="px-3 py-1 rounded-full bg-[#211B24] border border-[#B8C4D4]/30 text-[#B8C4D4]">
+                  {currentAnime.type}
+                </span>
+              )}
+              {(currentAnime.episodes || currentAnime.episode) && (
+                <span className="px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[#FDF6F7]">
+                  Ep {currentAnime.episodes || currentAnime.episode}
                 </span>
               )}
             </div>
 
-            <p className="text-gray-300 line-clamp-3 md:line-clamp-4 text-sm md:text-lg leading-relaxed font-light max-w-3xl mx-auto md:mx-0 drop-shadow-md">
+            {/* Sinopsis */}
+            <p className="text-xs sm:text-sm md:text-base text-[#AD9CA6] line-clamp-2 md:line-clamp-3 leading-relaxed max-w-xl">
               {currentAnime.synopsis ||
                 "Saksikan anime terbaik dengan resolusi tinggi dan subtitle Indonesia, hanya di MangNime."}
             </p>
 
-            <div className="pt-6">
-              <Button
+            {/* Tombol CTA + Navigasi Panah Kiri & Kanan */}
+            <div className="pt-3 flex flex-wrap items-center gap-3.5">
+              <Link
                 href={targetUrl}
-                variant="primary"
-                size="lg"
-                className="group"
+                className="inline-flex items-center justify-center gap-2.5 bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] font-extrabold text-xs md:text-sm px-7 py-3.5 rounded-full shadow-vogue-blush active:scale-95 transition-all"
               >
-                <span className="mr-2">Mulai Nonton</span>
-                <svg
-                  className="w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-300"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" />
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
                 </svg>
-              </Button>
+                Mulai Nonton
+              </Link>
+
+              <Link
+                href={targetUrl}
+                className="inline-flex items-center justify-center gap-2 bg-[#211B24]/90 hover:bg-[#2B232F] text-[#FDF6F7] border border-[#F4B8C6]/25 font-bold text-xs md:text-sm px-6 py-3.5 rounded-full active:scale-95 transition-all"
+              >
+                <span>Detail Anime</span>
+                <svg
+                  className="w-4 h-4 text-[#F4B8C6]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              </Link>
+
+              {/* PANAH KIRI & KANAN HORIZONTAL */}
+              <div className="flex items-center gap-2 ml-auto md:ml-4 bg-[#211B24]/90 border border-[#F4B8C6]/20 rounded-full p-1">
+                <button
+                  onClick={prevSlide}
+                  className="w-9 h-9 rounded-full hover:bg-[#F4B8C6] text-[#FDF6F7] hover:text-[#161218] flex items-center justify-center transition-all active:scale-90"
+                  aria-label="Slide Sebelumnya"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+
+                <span className="font-serif italic text-xs text-[#F4B8C6] px-2">
+                  {slideNum} / {totalNum}
+                </span>
+
+                <button
+                  onClick={nextSlide}
+                  className="w-9 h-9 rounded-full hover:bg-[#F4B8C6] text-[#FDF6F7] hover:text-[#161218] flex items-center justify-center transition-all active:scale-90"
+                  aria-label="Slide Selanjutnya"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2.2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* KANAN: Editorial Magazine Cover Poster */}
+          <div className="hidden md:block relative shrink-0 mr-4">
+            <div className="absolute inset-0 translate-x-3 translate-y-3 rounded-[26px] border border-[#F4B8C6]/25 bg-[#211B24]/40 pointer-events-none" />
+
+            <div className="relative w-60 lg:w-68 aspect-[2/3] rounded-[24px] overflow-hidden bg-[#211B24] ring-1 ring-[#F4B8C6]/35 shadow-vogue-card">
+              <Image
+                src={imageUrl}
+                alt={currentAnime.title}
+                fill
+                unoptimized
+                priority={currentIndex === 0}
+                className="object-cover"
+              />
+              <div className="absolute inset-2.5 rounded-[16px] border border-white/20 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#161218]/80 via-transparent to-transparent" />
+
+              <div className="absolute bottom-4 inset-x-4 flex items-center justify-between text-[11px] text-[#FDF6F7]/90 font-serif italic">
+                <span>MangNime Featured</span>
+                <span>#{slideNum}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3. Indikator Slide (Titik di bawah) */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 md:left-auto md:right-10 md:translate-x-0 flex gap-2.5 z-20 bg-black/30 p-2 rounded-full backdrop-blur-sm border border-white/5">
+      {/* 4. Indikator Bar Bawah */}
+      <div className="absolute bottom-4 left-4 md:left-8 flex items-center gap-2 z-20">
         {items.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentIndex(idx)}
-            className={`transition-all duration-300 rounded-full h-2 ${
+            className={`transition-all duration-300 rounded-full h-1.5 ${
               currentIndex === idx
-                ? "w-10 bg-celestia-lavender shadow-glow-purple"
-                : "w-2.5 bg-white/30 hover:bg-white/60"
+                ? "w-9 bg-[#F4B8C6]"
+                : "w-2 bg-white/20 hover:bg-white/40"
             }`}
-            aria-label={`Go to slide ${idx + 1}`}
+            aria-label={`Slide ${idx + 1}`}
           />
         ))}
       </div>

@@ -1,13 +1,13 @@
+"use client";
+
 import Image from "next/image";
-import Button from "@/components/ui/Button";
 
 export default function Maintenance() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-6 px-4 animate-fade-in">
-      {/* Gambar Maskot / Icon Maintenance */}
-      <div className="relative w-64 h-64 md:w-80 md:h-80 hover:scale-105 transition-transform duration-500">
+    <div className="flex flex-col items-center justify-center min-h-[75vh] text-center space-y-6 px-4 animate-fade-in">
+      <div className="relative w-56 h-56 md:w-72 md:h-72 hover:scale-105 transition-transform duration-500">
         <Image
-          src="/img/404icon.png"
+          src="/img/404icon.svg"
           alt="MangNime sedang dalam maintenance"
           fill
           className="object-contain drop-shadow-2xl"
@@ -15,46 +15,45 @@ export default function Maintenance() {
         />
       </div>
 
-      {/* Bagian Teks */}
       <div className="space-y-2">
-        <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-celestia-pink to-celestia-lavender drop-shadow-lg">
+        <h1 className="font-serif italic text-5xl md:text-6xl font-bold text-[#F4B8C6]">
           Maintenance
         </h1>
-
-        <h2 className="text-2xl md:text-3xl font-bold text-white">
-          MangNime Sedang Dalam Perbaikan
+        <h2 className="text-xl md:text-3xl font-extrabold text-[#FDF6F7]">
+          MangNime Sedang Dalam Pemeliharaan
         </h2>
       </div>
 
-      <p className="text-gray-400 max-w-md leading-relaxed text-sm md:text-base">
-        Mohon maaf atas ketidaknyamanannya. MangNime sedang melakukan
-        maintenance untuk meningkatkan sistem dan layanan. Silakan kembali lagi
-        nanti.
+      <p className="text-[#AD9CA6] max-w-md leading-relaxed text-xs md:text-sm">
+        Mohon maaf atas ketidaknyamanannya. Kami sedang melakukan peningkatan
+        sistem dan server layanan. Silakan kembali beberapa saat lagi.
       </p>
 
-      {/* Status Jaringan ala Cloudflare */}
-      <div className="w-full max-w-xl bg-white/[0.02] border border-white/10 rounded-2xl p-4 my-2">
-        <div className="grid grid-cols-3 gap-2 text-center text-xs md:text-sm">
+      {/* Status Jaringan */}
+      <div className="w-full max-w-lg bg-[#211B24] border border-[#F4B8C6]/20 rounded-3xl p-4 shadow-vogue-card">
+        <div className="grid grid-cols-3 gap-2 text-center text-xs">
           <div className="flex flex-col items-center">
-            <span className="text-gray-400">Browser</span>
-            <span className="text-green-400 font-semibold mt-1">Working</span>
+            <span className="text-[#AD9CA6]">Browser</span>
+            <span className="text-emerald-400 font-bold mt-1">Working</span>
           </div>
-          <div className="flex flex-col items-center border-x border-white/10 px-2">
-            <span className="text-celestia-sky font-semibold">MangNime</span>
-            <span className="text-yellow-400 font-semibold mt-1">Updating</span>
+          <div className="flex flex-col items-center border-x border-[#F4B8C6]/15 px-2">
+            <span className="text-[#F4B8C6] font-bold">MangNime</span>
+            <span className="text-[#F7D6C4] font-bold mt-1">Updating</span>
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-gray-400">Server</span>
-            <span className="text-green-400 font-semibold mt-1">Working</span>
+            <span className="text-[#AD9CA6]">Database</span>
+            <span className="text-emerald-400 font-bold mt-1">Working</span>
           </div>
         </div>
       </div>
 
-      {/* Tombol Aksi */}
-      <div className="pt-2 relative z-10">
-        <Button href="/" variant="primary" size="md">
-          Coba Kembali
-        </Button>
+      <div className="pt-2">
+        <button
+          onClick={() => window.location.reload()}
+          className="rounded-xl bg-[#F4B8C6] px-6 py-3 text-sm font-bold text-[#161218] transition hover:scale-105 hover:bg-[#F7D6C4] active:scale-95"
+        >
+          Coba Muat Ulang
+        </button>
       </div>
     </div>
   );

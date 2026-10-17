@@ -3,40 +3,39 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#08060F] border-t border-white/5 pt-16 pb-8 relative overflow-hidden mt-20">
-      {/* Top gradient line */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-celestia-lavender to-transparent opacity-50"></div>
+    <footer className="bg-[#120E14] border-t border-[#F4B8C6]/15 pt-16 pb-24 lg:pb-10 relative overflow-hidden mt-20">
+      {/* Top subtle blush line */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-[#F4B8C6]/50 to-transparent" />
 
-      <div className="container mx-auto px-4 md:px-6">
+      <div className="container mx-auto px-4 md:px-8 max-w-[1400px]">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-12">
           {/* Brand */}
           <div className="lg:col-span-2 space-y-5">
             <Link
               href="/"
               prefetch={false}
-              className="inline-block relative h-12 w-40"
+              className="inline-block relative h-11 w-40"
             >
               <Image
-                src="/img/logo.png"
+                src="/img/logo.svg"
                 alt="MangNime"
                 fill
                 sizes="160px"
                 className="object-contain object-left"
               />
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-xs font-light">
-              Temukan dunia penuh keajaiban. Nonton anime subtitle Indonesia
-              gratis dengan kualitas HD tanpa iklan yang mengganggu. Harmoni
-              tanpa batas menantimu di MangNime.
+            <p className="text-[#AD9CA6] text-sm leading-relaxed max-w-sm">
+              Temukan dunia penuh cerita. Nonton anime subtitle Indonesia dan
+              baca komik gratis dengan kualitas HD tanpa iklan yang mengganggu
+              di MangNime.
             </p>
 
             {/* Sosial Media + Email */}
-            {/* (Kode ikon SVG saya hilangkan untuk mempersingkat tampilan, kamu tidak perlu mengubah bagian ini) */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2.5 flex-wrap">
               <a
-                href="mailto:pani@mangnime.my.id"
+                href="mailto:pani131335@gmail.com"
                 title="Email"
-                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-celestia-pink hover:border-celestia-pink border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all"
+                className="w-9 h-9 rounded-full bg-[#211B24] hover:bg-[#F4B8C6] border border-[#F4B8C6]/20 flex items-center justify-center text-[#AD9CA6] hover:text-[#161218] transition-all"
               >
                 <svg
                   className="w-4 h-4"
@@ -57,7 +56,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Instagram"
-                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-gradient-to-br hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] border border-white/10 hover:border-transparent flex items-center justify-center text-gray-400 hover:text-white transition-all"
+                className="w-9 h-9 rounded-full bg-[#211B24] hover:bg-[#F4B8C6] border border-[#F4B8C6]/20 flex items-center justify-center text-[#AD9CA6] hover:text-[#161218] transition-all"
               >
                 <svg
                   className="w-4 h-4"
@@ -72,7 +71,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Facebook"
-                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-[#1877f2] border border-white/10 hover:border-[#1877f2] flex items-center justify-center text-gray-400 hover:text-white transition-all"
+                className="w-9 h-9 rounded-full bg-[#211B24] hover:bg-[#F4B8C6] border border-[#F4B8C6]/20 flex items-center justify-center text-[#AD9CA6] hover:text-[#161218] transition-all"
               >
                 <svg
                   className="w-4 h-4"
@@ -82,23 +81,32 @@ export default function Footer() {
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                 </svg>
               </a>
-              <span className="w-px h-5 bg-white/10 mx-1"></span>
+              <span className="w-px h-5 bg-[#F4B8C6]/15 mx-1" />
               <a
-                href="mailto:pani@mangnime.my.id"
-                className="text-xs text-gray-500 hover:text-celestia-pink transition-colors"
+                href="mailto:pani131335@gmail.com"
+                className="text-xs text-[#AD9CA6] hover:text-[#F4B8C6] transition-colors font-medium"
               >
-                pani@mangnime.my.id
+                pani131335@gmail.com
               </a>
             </div>
           </div>
 
           {/* Navigasi Anime */}
-          <div className="space-y-5">
-            <h4 className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-4 bg-celestia-sky rounded-full"></span>
+          <div className="space-y-4">
+            <h4 className="text-[#FDF6F7] font-extrabold text-xs uppercase tracking-[0.18em] flex items-center gap-2">
+              <svg
+                className="w-4 h-4 text-[#F4B8C6]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <rect x="2" y="7" width="20" height="15" rx="2" ry="2" />
+                <polyline points="17 2 12 7 7 2" />
+              </svg>
               Anime
             </h4>
-            <ul className="space-y-3 text-sm text-gray-400">
+            <ul className="space-y-2.5 text-sm text-[#AD9CA6]">
               {[
                 { label: "Ongoing", path: "/ongoing" },
                 { label: "Completed", path: "/completed" },
@@ -109,7 +117,7 @@ export default function Footer() {
                   <Link
                     href={item.path}
                     prefetch={false}
-                    className="hover:text-white hover:translate-x-1 transition-all inline-block"
+                    className="hover:text-[#F4B8C6] hover:translate-x-1 transition-all inline-block"
                   >
                     {item.label}
                   </Link>
@@ -119,12 +127,24 @@ export default function Footer() {
           </div>
 
           {/* Navigasi Komik */}
-          <div className="space-y-5">
-            <h4 className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-4 bg-celestia-pink rounded-full"></span>
+          <div className="space-y-4">
+            <h4 className="text-[#FDF6F7] font-extrabold text-xs uppercase tracking-[0.18em] flex items-center gap-2">
+              <svg
+                className="w-4 h-4 text-[#B8C4D4]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
               Komik
             </h4>
-            <ul className="space-y-3 text-sm text-gray-400">
+            <ul className="space-y-2.5 text-sm text-[#AD9CA6]">
               {[
                 { label: "Update Terbaru", path: "/komik/latest" },
                 { label: "Komik Populer", path: "/komik/popular" },
@@ -137,7 +157,7 @@ export default function Footer() {
                   <Link
                     href={item.path}
                     prefetch={false}
-                    className="hover:text-white hover:translate-x-1 transition-all inline-block"
+                    className="hover:text-[#F4B8C6] hover:translate-x-1 transition-all inline-block"
                   >
                     {item.label}
                   </Link>
@@ -147,12 +167,24 @@ export default function Footer() {
           </div>
 
           {/* Bantuan */}
-          <div className="space-y-5">
-            <h4 className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-4 bg-celestia-lavender rounded-full"></span>
+          <div className="space-y-4">
+            <h4 className="text-[#FDF6F7] font-extrabold text-xs uppercase tracking-[0.18em] flex items-center gap-2">
+              <svg
+                className="w-4 h-4 text-[#E88D9E]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
               Bantuan
             </h4>
-            <ul className="space-y-3 text-sm text-gray-400">
+            <ul className="space-y-2.5 text-sm text-[#AD9CA6]">
               {[
                 { label: "Tentang Kami", path: "/about" },
                 { label: "Cara Nonton & Download", path: "/guide" },
@@ -163,7 +195,7 @@ export default function Footer() {
                   <Link
                     href={item.path}
                     prefetch={false}
-                    className="hover:text-white hover:translate-x-1 transition-all inline-block"
+                    className="hover:text-[#F4B8C6] hover:translate-x-1 transition-all inline-block"
                   >
                     {item.label}
                   </Link>
@@ -171,12 +203,11 @@ export default function Footer() {
               ))}
             </ul>
 
-            {/* Tombol Lapor Link Rusak */}
             <div className="pt-2">
               <Link
                 href="/report"
                 prefetch={false}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-celestia-pink/10 hover:bg-celestia-pink/20 border border-celestia-pink/20 hover:border-celestia-pink/40 text-celestia-pink text-xs font-bold rounded-xl transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#F4B8C6]/15 hover:bg-[#F4B8C6] border border-[#F4B8C6]/30 text-[#F4B8C6] hover:text-[#161218] text-xs font-extrabold rounded-full transition-all"
               >
                 <svg
                   className="w-3.5 h-3.5"
@@ -198,10 +229,10 @@ export default function Footer() {
         </div>
 
         {/* Disclaimer */}
-        <div className="py-6 border-t border-white/5">
-          <div className="bg-white/[0.02] border border-white/5 rounded-2xl px-5 py-4 flex items-start gap-3">
+        <div className="py-6 border-t border-[#F4B8C6]/10">
+          <div className="bg-[#211B24]/60 border border-[#F4B8C6]/15 rounded-2xl px-5 py-4 flex items-start gap-3">
             <svg
-              className="w-4 h-4 text-gray-600 shrink-0 mt-0.5"
+              className="w-4 h-4 text-[#F4B8C6] shrink-0 mt-0.5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -213,8 +244,8 @@ export default function Footer() {
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p className="text-xs text-gray-500 font-light leading-relaxed">
-              <span className="text-gray-400 font-semibold">Disclaimer:</span>{" "}
+            <p className="text-xs text-[#AD9CA6] leading-relaxed">
+              <span className="text-[#FDF6F7] font-bold">Disclaimer:</span>{" "}
               Situs ini tidak menyimpan file apapun di servernya sendiri. Semua
               konten yang tersedia disediakan oleh pihak ketiga yang tidak
               berafiliasi dengan MangNime. Kami tidak bertanggung jawab atas
@@ -225,13 +256,14 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="pt-4 flex flex-col md:flex-row justify-between items-center gap-3">
-          <p className="text-xs text-gray-500 font-light">
+          <p className="text-xs text-[#AD9CA6]">
             &copy; {new Date().getFullYear()}{" "}
-            <span className="text-celestia-lavender font-bold">MangNime</span>.
-            All rights reserved.
+            <span className="text-[#F4B8C6] font-bold">MangNime</span>. All
+            rights reserved.
           </p>
-          <p className="text-xs text-gray-600">
-            Made with ♥ by MangCoder — Mamang Organization
+          <p className="text-xs text-[#AD9CA6]/80">
+            Made with <span className="text-[#E88D9E]">♥</span> by MangCoder —
+            Mamang Organization
           </p>
         </div>
       </div>

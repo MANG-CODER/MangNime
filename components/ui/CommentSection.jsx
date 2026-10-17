@@ -6,7 +6,10 @@ import EmojiPicker from "emoji-picker-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
-export default function CommentSection({ topicId, title = "Comments" }) {
+export default function CommentSection({
+  topicId,
+  title = "Diskusi Komunitas",
+}) {
   const pathname = usePathname();
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
@@ -195,13 +198,9 @@ export default function CommentSection({ topicId, title = "Comments" }) {
     }
   };
 
-  // =========================================================================
-  // ✅ LOGIKA BARU: DROPDOWN FLAT UNTUK BALASAN (TIDAK NESTED)
-  // =========================================================================
   const CommentItem = ({ comment, isReply = false, topLevelId = null }) => {
     const [showReplies, setShowReplies] = useState(false);
 
-    // Kumpulkan SEMUA turunan (balasan dari balasan) jika ini adalah komentar utama
     let descendants = [];
     if (!isReply) {
       const getDescendants = (parentId) => {
@@ -214,13 +213,11 @@ export default function CommentSection({ topicId, title = "Comments" }) {
         return result;
       };
 
-      // Mengurutkan balasan dari yang terlama ke terbaru agar bacanya nyambung
       descendants = getDescendants(comment.id).sort(
         (a, b) => new Date(a.created_at) - new Date(b.created_at),
       );
     }
 
-    // Deteksi jika komentar ini membalas komentar anak lain, tambahkan @username
     let replyToUsername = null;
     if (isReply && comment.parent_id !== topLevelId) {
       const repliedComment = comments.find((c) => c.id === comment.parent_id);
@@ -229,10 +226,10 @@ export default function CommentSection({ topicId, title = "Comments" }) {
 
     return (
       <div
-        className={`flex gap-3 md:gap-4 group overflow-hidden ${
+        className={`flex gap-3.5 md:gap-4 group ${
           isReply
-            ? "mt-4 ml-4 md:ml-12 border-l border-white/10 pl-3 md:pl-4"
-            : "mt-8"
+            ? "mt-3.5 ml-4 md:ml-11 border-l-2 border-[#F4B8C6]/20 pl-3.5 md:pl-4"
+            : "p-4 md:p-5 rounded-2xl bg-[#211B24]/70 border border-[#F4B8C6]/10 hover:border-[#F4B8C6]/25 transition-colors"
         }`}
       >
         <Image
@@ -240,33 +237,34 @@ export default function CommentSection({ topicId, title = "Comments" }) {
           alt={`Avatar ${comment.user_name}`}
           width={isReply ? 32 : 40}
           height={isReply ? 32 : 40}
-          className={`rounded-full object-cover shrink-0 border border-white/10 bg-[#151226] ${
-            isReply ? "w-8 h-8 md:w-10 md:h-10" : "w-10 h-10"
+          unoptimized
+          className={`rounded-full object-cover shrink-0 border border-[#F4B8C6]/30 bg-[#161218] ${
+            isReply ? "w-8 h-8" : "w-10 h-10"
           }`}
         />
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="font-bold text-celestia-sky text-sm">
+          <div className="flex flex-wrap items-center gap-2 mb-1.5">
+            <span className="font-bold text-[#FDF6F7] text-sm">
               {comment.user_name}
             </span>
             {comment.user_role === "admin" && (
-              <span className="bg-celestia-gold/20 text-celestia-gold text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-glow-gold">
+              <span className="bg-[#F4B8C6]/20 border border-[#F4B8C6]/40 text-[#F4B8C6] text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full">
                 👑 Admin MangNime
               </span>
             )}
-            <span className="text-[10px] text-gray-500 font-medium">
+            <span className="text-[11px] text-[#AD9CA6]">
+              •{" "}
               {new Date(comment.created_at).toLocaleDateString("id-ID", {
                 day: "numeric",
-                month: "long",
+                month: "short",
                 year: "numeric",
               })}
             </span>
           </div>
 
-          <p className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed mb-2">
-            {/* Tampilkan @username penanda reply di sini */}
+          <p className="text-[#FDF6F7]/90 text-sm whitespace-pre-wrap leading-relaxed mb-3">
             {replyToUsername && (
-              <span className="text-celestia-pink font-bold mr-1.5">
+              <span className="text-[#F4B8C6] font-bold mr-1.5">
                 @{replyToUsername}
               </span>
             )}
@@ -279,10 +277,12 @@ export default function CommentSection({ topicId, title = "Comments" }) {
               alt="Attachment"
               width={400}
               height={240}
-              className="max-h-60 w-auto rounded-xl border border-white/10 bg-black/30 object-contain mb-2"
+              unoptimized
+              className="max-h-60 w-auto rounded-2xl border border-[#F4B8C6]/20 bg-[#161218]/60 object-contain mb-3"
             />
           )}
-          <div className="flex flex-wrap items-center gap-3 relative">
+
+          <div className="flex flex-wrap items-center gap-2.5 relative">
             <button
               type="button"
               onClick={(e) => {
@@ -296,29 +296,31 @@ export default function CommentSection({ topicId, title = "Comments" }) {
                   setTimeout(() => textareaRef.current.focus(), 500);
                 }
               }}
-              className="text-[11px] text-gray-500 hover:text-white font-bold transition-colors"
+              className="text-xs text-[#AD9CA6] hover:text-[#F4B8C6] font-bold px-2.5 py-1 rounded-full bg-white/[0.03] hover:bg-[#F4B8C6]/10 transition-colors"
             >
-              Reply
+              Balas
             </button>
 
             <button
+              type="button"
               onClick={() =>
                 setActiveReactComment(
                   activeReactComment === comment.id ? null : comment.id,
                 )
               }
-              className="text-[11px] text-gray-500 hover:text-celestia-pink font-bold transition-colors"
+              className="text-xs text-[#AD9CA6] hover:text-[#F4B8C6] font-bold px-2.5 py-1 rounded-full bg-white/[0.03] hover:bg-[#F4B8C6]/10 transition-colors"
             >
-              React +
+              + Reaksi
             </button>
 
             {activeReactComment === comment.id && (
-              <div className="absolute top-6 left-0 bg-[#1E1B2E] border border-white/10 rounded-xl p-2 shadow-2xl z-20 flex gap-1 animate-fade-in w-max">
+              <div className="absolute top-8 left-0 bg-[#251E29] border border-[#F4B8C6]/30 rounded-2xl p-2 shadow-vogue-card z-20 flex gap-1.5 animate-fade-in w-max">
                 {reactEmojis.map((em, i) => (
                   <button
                     key={i}
+                    type="button"
                     onClick={() => toggleReaction(comment, em)}
-                    className="text-lg hover:scale-125 transition-transform"
+                    className="text-lg hover:scale-125 transition-transform px-1"
                   >
                     {em}
                   </button>
@@ -330,23 +332,25 @@ export default function CommentSection({ topicId, title = "Comments" }) {
               Object.entries(comment.reactions).map(([emoji, users]) => (
                 <button
                   key={emoji}
+                  type="button"
                   onClick={() => toggleReaction(comment, emoji)}
-                  className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold border transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border transition-all ${
                     users.includes(user?.id)
-                      ? "bg-celestia-pink/20 border-celestia-pink text-celestia-pink"
-                      : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                      ? "bg-[#F4B8C6]/20 border-[#F4B8C6] text-[#F4B8C6]"
+                      : "bg-white/[0.03] border-white/10 text-[#AD9CA6] hover:border-[#F4B8C6]/30"
                   }`}
                 >
-                  <span>{emoji}</span> <span>{users.length}</span>
+                  <span>{emoji}</span>
+                  <span>{users.length}</span>
                 </button>
               ))}
           </div>
 
-          {/* TOMBOL DROPDOWN LIHAT BALASAN (Hanya untuk Komentar Induk) */}
           {!isReply && descendants.length > 0 && (
             <button
+              type="button"
               onClick={() => setShowReplies(!showReplies)}
-              className="mt-3 flex items-center gap-2 text-xs font-bold text-celestia-pink hover:text-white transition-colors bg-celestia-pink/10 hover:bg-celestia-pink/20 px-4 py-1.5 rounded-full w-max"
+              className="mt-3 flex items-center gap-2 text-xs font-bold text-[#F4B8C6] hover:text-[#FDF6F7] transition-colors bg-[#F4B8C6]/10 hover:bg-[#F4B8C6]/20 border border-[#F4B8C6]/25 px-3.5 py-1.5 rounded-full w-max"
             >
               {showReplies
                 ? "Sembunyikan Balasan ▲"
@@ -354,7 +358,6 @@ export default function CommentSection({ topicId, title = "Comments" }) {
             </button>
           )}
 
-          {/* DAFTAR BALASAN FLAT SATU JALUR */}
           {!isReply && showReplies && (
             <div className="mt-2 flex flex-col">
               {descendants.map((child) => (
@@ -375,27 +378,83 @@ export default function CommentSection({ topicId, title = "Comments" }) {
   const parentComments = comments.filter((c) => !c.parent_id);
 
   return (
-    <div className="mt-16 w-full max-w-[1200px] mx-auto bg-[#0D0B1A] rounded-2xl border border-white/5 p-6 md:p-10 shadow-xl animate-fade-in">
-      <div className="bg-[#151226]/80 rounded-2xl border border-white/10 p-1 mb-10 shadow-inner">
+    <div className="mt-12 w-full max-w-[1400px] mx-auto bg-[#1B151E]/90 rounded-[32px] border border-[#F4B8C6]/20 p-5 sm:p-8 md:p-10 shadow-vogue-card animate-fade-in">
+      {/* Header Komunitas */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 pb-5 border-b border-[#F4B8C6]/15">
+        <div>
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#E88D9E] mb-1">
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            <span>Forum Diskusi</span>
+          </div>
+          <h3 className="text-2xl md:text-3xl font-extrabold text-[#FDF6F7] flex flex-wrap items-center gap-3">
+            <span>{title.replace("💬 ", "")}</span>
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#F4B8C6]/15 border border-[#F4B8C6]/30 text-[#F4B8C6]">
+              {comments.length} Komentar
+            </span>
+          </h3>
+        </div>
+
+        {/* Sort Pill Switcher */}
+        <div className="flex items-center bg-[#161218] p-1 rounded-full border border-[#F4B8C6]/20 text-xs font-bold">
+          <button
+            type="button"
+            onClick={() => setSortOrder("latest")}
+            className={`px-4 py-1.5 rounded-full transition-all ${
+              sortOrder === "latest"
+                ? "bg-[#F4B8C6] text-[#161218]"
+                : "text-[#AD9CA6] hover:text-[#FDF6F7]"
+            }`}
+          >
+            Terbaru
+          </button>
+          <button
+            type="button"
+            onClick={() => setSortOrder("oldest")}
+            className={`px-4 py-1.5 rounded-full transition-all ${
+              sortOrder === "oldest"
+                ? "bg-[#F4B8C6] text-[#161218]"
+                : "text-[#AD9CA6] hover:text-[#FDF6F7]"
+            }`}
+          >
+            Terlama
+          </button>
+        </div>
+      </div>
+
+      {/* Input Composer Box */}
+      <div className="bg-[#211B24] rounded-[24px] border border-[#F4B8C6]/20 p-1 mb-8 shadow-inner">
         {user ? (
           <form onSubmit={handleSubmit} className="relative p-4 md:p-5">
-            <div className="flex flex-col md:flex-row md:items-center justify-between text-[11px] md:text-xs text-gray-400 mb-4 pb-4 border-b border-dashed border-white/10 gap-3">
+            <div className="flex flex-wrap items-center justify-between text-xs text-[#AD9CA6] mb-3 pb-3 border-b border-[#F4B8C6]/10 gap-2">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-gray-500">NickName</span>
-                <span className="text-celestia-sky font-medium">
+                <span className="w-2 h-2 rounded-full bg-[#F4B8C6]" />
+                <span>Berkomentar sebagai</span>
+                <span className="text-[#F4B8C6] font-bold">
                   {user.user_metadata?.full_name || user.email.split("@")[0]}
                 </span>
               </div>
 
               {replyTo && (
-                <div className="flex items-center gap-2 bg-celestia-pink/10 text-celestia-pink px-3 py-1 rounded-full animate-fade-in">
+                <div className="flex items-center gap-2 bg-[#F4B8C6]/15 border border-[#F4B8C6]/30 text-[#F4B8C6] px-3 py-1 rounded-full">
                   <span>
-                    Membalas <b>{replyTo.user_name}</b>
+                    Membalas <b>@{replyTo.user_name}</b>
                   </span>
                   <button
                     type="button"
                     onClick={() => setReplyTo(null)}
-                    className="ml-2 bg-celestia-pink/20 hover:bg-celestia-pink text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]"
+                    className="hover:text-white font-bold"
                   >
                     ✕
                   </button>
@@ -409,38 +468,39 @@ export default function CommentSection({ topicId, title = "Comments" }) {
               onChange={(e) => setNewComment(e.target.value)}
               placeholder={
                 replyTo
-                  ? `Balas komentar ${replyTo.user_name}...`
-                  : "Tulis pendapatmu..."
+                  ? `Tulis balasan untuk ${replyTo.user_name}...`
+                  : "Tulis komentar atau pendapatmu..."
               }
-              className="w-full bg-transparent text-gray-200 outline-none resize-none min-h-[120px] text-sm leading-relaxed"
+              className="w-full bg-transparent text-[#FDF6F7] placeholder-[#AD9CA6]/60 outline-none resize-none min-h-[100px] text-sm leading-relaxed"
             />
 
             {imagePreview && (
-              <div className="relative inline-block mt-2 mb-4">
+              <div className="relative inline-block mt-2 mb-3">
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  className="h-40 object-contain rounded-xl border border-white/10 bg-black/50"
+                  className="h-36 object-contain rounded-2xl border border-[#F4B8C6]/30 bg-[#161218]"
                 />
                 <button
                   type="button"
                   onClick={clearAttachment}
-                  className="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shadow-lg transition-colors"
+                  className="absolute -top-2.5 -right-2.5 bg-[#E88D9E] text-[#161218] rounded-full w-6 h-6 flex items-center justify-center text-xs font-extrabold shadow-md"
                 >
                   ✕
                 </button>
               </div>
             )}
 
-            <div className="flex flex-wrap justify-between items-center mt-4 pt-4 border-t border-white/5 gap-4 relative">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-wrap justify-between items-center mt-3 pt-3 border-t border-[#F4B8C6]/10 gap-4 relative">
+              <div className="flex items-center gap-2.5">
                 <button
                   type="button"
                   onClick={() => {
                     setShowEmoji(!showEmoji);
                     setShowGifPicker(false);
                   }}
-                  className="text-gray-400 hover:text-celestia-gold transition-colors"
+                  className="w-9 h-9 rounded-full bg-[#161218] hover:bg-[#F4B8C6]/20 border border-[#F4B8C6]/20 flex items-center justify-center text-[#AD9CA6] hover:text-[#F4B8C6] transition-colors"
+                  title="Tambah Emoji"
                 >
                   <svg
                     className="w-5 h-5"
@@ -456,8 +516,9 @@ export default function CommentSection({ topicId, title = "Comments" }) {
                     />
                   </svg>
                 </button>
+
                 {showEmoji && (
-                  <div className="absolute top-10 left-0 z-50">
+                  <div className="absolute top-12 left-0 z-50">
                     <EmojiPicker
                       onEmojiClick={(e) => {
                         setNewComment((prev) => prev + e.emoji);
@@ -465,22 +526,24 @@ export default function CommentSection({ topicId, title = "Comments" }) {
                       }}
                       theme="dark"
                       width={300}
-                      height={400}
+                      height={380}
                     />
                   </div>
                 )}
+
                 <button
                   type="button"
                   onClick={() => {
                     setShowGifPicker(!showGifPicker);
                     setShowEmoji(false);
                   }}
-                  className="text-gray-400 hover:text-celestia-pink transition-colors font-black text-xs border border-gray-400 hover:border-celestia-pink px-1.5 py-0.5 rounded"
+                  className="px-3 h-9 rounded-full bg-[#161218] hover:bg-[#F4B8C6]/20 border border-[#F4B8C6]/20 text-[#AD9CA6] hover:text-[#F4B8C6] transition-colors font-extrabold text-xs"
                 >
                   GIF
                 </button>
+
                 {showGifPicker && (
-                  <div className="absolute top-10 left-0 bg-[#1E1B2E] border border-white/10 rounded-xl p-4 shadow-2xl z-50 w-[300px] sm:w-[350px]">
+                  <div className="absolute top-12 left-0 bg-[#251E29] border border-[#F4B8C6]/30 rounded-2xl p-4 shadow-vogue-card z-50 w-[300px] sm:w-[340px]">
                     <div className="flex gap-2 mb-3">
                       <input
                         type="text"
@@ -493,20 +556,20 @@ export default function CommentSection({ topicId, title = "Comments" }) {
                             searchGiphy(gifSearchTerm);
                           }
                         }}
-                        className="w-full bg-black/40 border border-white/10 rounded text-sm px-3 py-2 text-white outline-none focus:border-celestia-pink"
+                        className="w-full bg-[#161218] border border-[#F4B8C6]/25 rounded-full text-xs px-3.5 py-2 text-[#FDF6F7] outline-none focus:border-[#F4B8C6]"
                       />
                       <button
                         type="button"
                         onClick={() => searchGiphy(gifSearchTerm)}
-                        className="bg-white/10 px-3 rounded hover:bg-white/20 text-sm"
+                        className="bg-[#F4B8C6] text-[#161218] px-3.5 rounded-full font-bold text-xs"
                       >
-                        🔍
+                        Cari
                       </button>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 max-h-[250px] min-h-[100px] overflow-y-auto custom-scrollbar">
+                    <div className="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto custom-scrollbar">
                       {isSearchingGif ? (
-                        <div className="col-span-2 text-center text-xs text-celestia-pink font-bold animate-pulse py-4">
-                          Mencari...
+                        <div className="col-span-2 text-center text-xs text-[#F4B8C6] py-6">
+                          Mencari GIF...
                         </div>
                       ) : (
                         gifResults.map((gif) => (
@@ -517,13 +580,14 @@ export default function CommentSection({ topicId, title = "Comments" }) {
                             onClick={() =>
                               handleSelectGif(gif.images.downsized_medium.url)
                             }
-                            className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity bg-black/50"
+                            className="w-full h-24 object-cover rounded-xl cursor-pointer hover:opacity-80 transition-opacity bg-[#161218]"
                           />
                         ))
                       )}
                     </div>
                   </div>
                 )}
+
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -534,10 +598,11 @@ export default function CommentSection({ topicId, title = "Comments" }) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-gray-400 hover:text-celestia-sky transition-colors"
+                  className="w-9 h-9 rounded-full bg-[#161218] hover:bg-[#F4B8C6]/20 border border-[#F4B8C6]/20 flex items-center justify-center text-[#AD9CA6] hover:text-[#F4B8C6] transition-colors"
+                  title="Upload Gambar"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -551,27 +616,49 @@ export default function CommentSection({ topicId, title = "Comments" }) {
                   </svg>
                 </button>
               </div>
+
               <button
                 type="submit"
                 disabled={
                   loading ||
                   (!newComment.trim() && !imageFile && !selectedGifUrl)
                 }
-                className="px-6 py-2 bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white font-bold text-sm rounded-lg hover:shadow-glow-purple transition-all disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] font-extrabold text-xs rounded-full shadow-vogue-blush transition-all disabled:opacity-40"
               >
-                {loading ? "MENGIRIM..." : replyTo ? "BALAS KOMENTAR" : "KIRIM"}
+                <span>
+                  {loading
+                    ? "Mengirim..."
+                    : replyTo
+                      ? "Balas Komentar"
+                      : "Kirim Komentar"}
+                </span>
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
+                </svg>
               </button>
             </div>
           </form>
         ) : (
-          <div className="p-8 text-center flex flex-col items-center justify-center min-h-[200px]">
-            <span className="text-4xl mb-3">🔒</span>
-            <p className="text-gray-400 text-sm mb-4">
-              Anda harus login untuk ikut berdiskusi.
+          <div className="p-8 text-center flex flex-col items-center justify-center min-h-[170px]">
+            <p className="font-serif italic text-base text-[#F4B8C6] mb-1">
+              Bergabung dalam Diskusi MangNime
+            </p>
+            <p className="text-[#AD9CA6] text-xs mb-4">
+              Silakan masuk ke akunmu untuk ikut berkomentar dan memberi reaksi.
             </p>
             <Link
               href={`/login?next=${pathname}`}
-              className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-bold transition-all border border-white/10"
+              className="px-6 py-2.5 bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] rounded-full text-xs font-extrabold transition-all shadow-vogue-blush"
             >
               Login Sekarang
             </Link>
@@ -579,29 +666,12 @@ export default function CommentSection({ topicId, title = "Comments" }) {
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-white/5 pb-4">
-        <h3 className="text-xl md:text-2xl font-black text-white">{title}</h3>
-        <div className="flex gap-4 text-xs md:text-sm font-bold">
-          <button
-            onClick={() => setSortOrder("latest")}
-            className={`transition-colors ${sortOrder === "latest" ? "text-celestia-lavender" : "text-gray-500 hover:text-white"}`}
-          >
-            Terbaru
-          </button>
-          <button
-            onClick={() => setSortOrder("oldest")}
-            className={`transition-colors ${sortOrder === "oldest" ? "text-celestia-lavender" : "text-gray-500 hover:text-white"}`}
-          >
-            Terlama
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-4">
+      {/* Daftar Komentar */}
+      <div className="space-y-3.5">
         {comments.length === 0 ? (
-          <div className="text-center py-10">
-            <p className="text-gray-500 font-medium">
-              Jadilah yang pertama berkomentar!
+          <div className="text-center py-12 rounded-2xl bg-[#211B24]/40 border border-[#F4B8C6]/10">
+            <p className="text-[#AD9CA6] text-sm">
+              Belum ada komentar. Jadilah yang pertama berkomentar!
             </p>
           </div>
         ) : (

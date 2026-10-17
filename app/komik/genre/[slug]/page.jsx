@@ -1,23 +1,21 @@
 import { KomikProvider } from "@/services/komikApi";
 import KomikCard from "@/components/komik/KomikCard";
+import Pagination from "@/components/ui/Pagination";
 import Link from "next/link";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export async function generateMetadata({ params }) {
-  const resolvedParams = await params;
-  const genreName = (resolvedParams?.slug || "")
+  const { slug } = await params;
+  const genreName = (slug || "")
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
   return { title: `Komik Genre ${genreName} - MangNime` };
 }
 
-// 🔥 Paksa bypass build
-export const dynamic = "force-dynamic";
+export const revalidate = 1800;
 
 export default async function KomikGenreDetailPage({ params, searchParams }) {
-  const resolvedParams = await params;
-  const genreSlug = resolvedParams?.slug;
-
+  const { slug: genreSlug } = await params;
   const resolvedSearchParams = await searchParams;
   const page = parseInt(resolvedSearchParams?.page || 1);
 
@@ -30,26 +28,27 @@ export default async function KomikGenreDetailPage({ params, searchParams }) {
   const pagination = res?.pagination || null;
 
   return (
-    <div className="min-h-screen bg-[#0D0B1A] pt-32 pb-20 px-4">
-      <div className="container mx-auto max-w-[1400px] animate-fade-in">
-        <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 md:p-12 mb-8 relative overflow-hidden shadow-2xl backdrop-blur-xl flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-celestia-pink/15 blur-[120px] rounded-full pointer-events-none"></div>
-
-          <div className="relative z-10 text-center md:text-left">
-            <h1 className="font-heading text-4xl md:text-5xl font-black text-white mb-2">
+    <div className="min-h-screen bg-[#161218] pt-8 pb-20 px-4 md:px-8">
+      <div className="container mx-auto max-w-[1400px] animate-fade-in space-y-10">
+        <div className="bg-[#211B24]/90 border border-[#F4B8C6]/20 rounded-[32px] p-7 md:p-11 relative overflow-hidden shadow-vogue-card flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="relative z-10 text-center md:text-left space-y-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#B8C4D4]">
+              Kategori Genre Komik
+            </span>
+            <h1 className="text-3xl md:text-5xl font-extrabold text-[#FDF6F7]">
               Genre{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-celestia-gold to-celestia-pink">
+              <span className="font-serif italic font-normal text-[#F4B8C6]">
                 {displayTitle}
               </span>
             </h1>
-            <p className="text-celestia-lavender/70 font-light text-sm md:text-base">
-              Menampilkan daftar komik dengan genre {displayTitle}.
+            <p className="text-[#AD9CA6] text-xs md:text-sm">
+              Menampilkan daftar komik pilihan dengan genre {displayTitle}.
             </p>
           </div>
 
           <Link
             href="/komik/genres"
-            className="relative z-10 flex items-center gap-2 bg-white/5 hover:bg-celestia-royal border border-white/10 hover:border-celestia-lavender text-white px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 hover:shadow-glow-purple"
+            className="relative z-10 flex items-center gap-2 bg-[#161218] hover:bg-[#F4B8C6] border border-[#F4B8C6]/25 text-[#FDF6F7] hover:text-[#161218] px-5 py-2.5 rounded-full text-xs font-extrabold transition-all"
           >
             <svg
               className="w-4 h-4"
@@ -64,13 +63,13 @@ export default async function KomikGenreDetailPage({ params, searchParams }) {
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            Kembali ke Daftar Genre
+            Semua Genre
           </Link>
         </div>
 
         {komikList.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-7">
               {komikList.map((komik, idx) => (
                 <ScrollReveal key={komik.slug || idx}>
                   <KomikCard komik={komik} />
@@ -78,77 +77,19 @@ export default async function KomikGenreDetailPage({ params, searchParams }) {
               ))}
             </div>
 
-            {pagination && (
-              <div className="mt-12 flex justify-center">
-                <OpenEndedPagination
-                  pagination={pagination}
-                  basePath={`/komik/genre/${genreSlug}`}
-                />
-              </div>
-            )}
+            <Pagination
+              pagination={pagination}
+              basePath={`/komik/genre/${genreSlug}`}
+            />
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-white/50 border border-white/5 rounded-2xl bg-white/5">
-            <p>Tidak ada komik ditemukan untuk genre ini.</p>
+          <div className="flex flex-col items-center justify-center py-20 text-[#AD9CA6] border border-[#F4B8C6]/15 rounded-3xl bg-[#211B24]/60">
+            <p className="text-sm">
+              Tidak ada komik ditemukan untuk genre ini.
+            </p>
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function OpenEndedPagination({ pagination, basePath }) {
-  if (!pagination) return null;
-
-  const currentPage = Number(
-    pagination.current_page || pagination.currentPage || 1,
-  );
-  const totalPages = Number(
-    pagination.total_pages || pagination.totalPages || 1,
-  );
-
-  const hasPrevPage = currentPage > 1;
-  const hasNextPage = currentPage < totalPages;
-  const prevPage = currentPage - 1;
-  const nextPage = currentPage + 1;
-
-  return (
-    <div className="flex items-center justify-center gap-2 w-full">
-      {hasPrevPage ? (
-        <Link
-          href={`${basePath}?page=${prevPage}`}
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all inline-block"
-        >
-          &laquo; Prev
-        </Link>
-      ) : (
-        <button
-          disabled
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
-        >
-          &laquo; Prev
-        </button>
-      )}
-
-      <div className="px-6 py-2 rounded-xl bg-purple-600/10 border border-purple-500/20 text-purple-300 font-bold flex items-center shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-        Halaman {currentPage} {totalPages > 1 ? `/ ${totalPages}` : ""}
-      </div>
-
-      {hasNextPage ? (
-        <Link
-          href={`${basePath}?page=${nextPage}`}
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 hover:border-purple-500/30 transition-all inline-block"
-        >
-          Next &raquo;
-        </Link>
-      ) : (
-        <button
-          disabled
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
-        >
-          Next &raquo;
-        </button>
-      )}
     </div>
   );
 }

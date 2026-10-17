@@ -6,62 +6,63 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-[#0D0B1A] pb-20 pt-10 animate-fade-in">
-      <div className="container mx-auto px-4 max-w-[900px]">
-        <div className="mb-10 text-center">
-          <h1 className="font-heading text-4xl md:text-5xl font-black text-white mb-4">
-            Syarat & <span className="text-celestia-lavender">Ketentuan</span>
+    <div className="min-h-screen bg-[#161218] pb-20 pt-8 animate-fade-in">
+      <div className="container mx-auto px-4 md:px-8 max-w-[900px] space-y-8">
+        <div className="text-center space-y-2">
+          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#E88D9E]">
+            Terms &amp; Conditions
+          </span>
+          <h1 className="text-3xl md:text-5xl font-extrabold text-[#FDF6F7]">
+            Syarat &amp;{" "}
+            <span className="font-serif italic font-normal text-[#F4B8C6]">
+              Ketentuan
+            </span>
           </h1>
-          <p className="text-gray-400">Terms of Service & DMCA Disclaimer.</p>
+          <p className="text-[#AD9CA6] text-xs md:text-sm">
+            Terms of Service &amp; DMCA Disclaimer.
+          </p>
         </div>
 
-        <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 md:p-10 shadow-2xl space-y-6 text-gray-300 backdrop-blur-xl leading-relaxed">
-          <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2">
+        <div className="bg-[#211B24]/90 border border-[#F4B8C6]/20 rounded-[32px] p-6 md:p-10 shadow-vogue-card space-y-6 text-[#AD9CA6] text-sm md:text-base leading-relaxed">
+          <h2 className="text-lg md:text-xl font-extrabold text-[#FDF6F7] border-b border-[#F4B8C6]/15 pb-2">
             1. Ketentuan Penggunaan
           </h2>
           <p>
             Dengan mengakses dan menggunakan situs MangNime, Anda menerima dan
-            setuju untuk terikat dengan syarat dan ketentuan perjanjian ini.
-            Jika Anda tidak menyetujui syarat-syarat ini, Anda tidak
-            diperkenankan menggunakan situs ini.
+            setuju untuk mematuhi syarat dan ketentuan layanan ini.
           </p>
 
-          <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2 pt-4">
+          <h2 className="text-lg md:text-xl font-extrabold text-[#FDF6F7] border-b border-[#F4B8C6]/15 pb-2 pt-2">
             2. Disclaimer Hak Cipta (DMCA)
           </h2>
           <p>
             MangNime adalah situs penyedia layanan indeks tautan yang menautkan
             konten ke sumber pihak ketiga.{" "}
-            <strong>
+            <strong className="text-[#FDF6F7]">
               MangNime TIDAK menyimpan file video, gambar, atau media apa pun di
               server kami sendiri.
             </strong>
           </p>
           <p>
-            Semua video yang Anda tonton di MangNime di-<strong>hosting </strong> oleh layanan
-            pihak ketiga (seperti Google Drive, Mega, VidHide, Mp4upload, dan
-            lainnya) yang tidak berada di bawah kendali kami. Oleh karena itu,
-            MangNime tidak bertanggung jawab atas kepatuhan hak cipta,
-            legalitas, keakuratan, atau kelayakan materi yang terkandung dalam
-            situs pihak ketiga tersebut.
+            Semua media yang ditampilkan di-hosting oleh layanan pihak ketiga
+            yang tidak berada di bawah kendali langsung MangNime.
           </p>
 
-          <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-2 pt-4">
+          <h2 className="text-lg md:text-xl font-extrabold text-[#FDF6F7] border-b border-[#F4B8C6]/15 pb-2 pt-2">
             3. Penghapusan Konten
           </h2>
           <p>
             Jika Anda adalah pemilik hak cipta dan merasa bahwa konten Anda
-            telah diunggah atau ditautkan tanpa izin di situs ini, silakan
-            hubungi layanan pihak ketiga tempat <strong>file</strong> tersebut di-<strong>hosting </strong>
-            untuk meminta penghapusan. Karena kami tidak menyimpan <strong>file </strong>
-            tersebut, kami tidak dapat menghapusnya dari peredaran internet.
+            telah ditautkan tanpa izin, silakan hubungi layanan penyedia hosting
+            pihak ketiga tempat file tersebut disimpan untuk meminta
+            penghapusan.
           </p>
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="text-center">
           <Link
             href="/"
-            className="inline-flex px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white font-bold transition-all"
+            className="inline-flex px-8 py-3 bg-[#F4B8C6] text-[#161218] rounded-full text-xs font-extrabold shadow-vogue-blush transition-all"
           >
             Kembali ke Beranda
           </Link>

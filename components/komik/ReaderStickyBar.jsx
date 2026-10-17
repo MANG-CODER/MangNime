@@ -19,7 +19,6 @@ export default function ReaderStickyBar({
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-
       if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
         setIsVisible(false);
       } else {
@@ -43,22 +42,21 @@ export default function ReaderStickyBar({
 
   return (
     <div
-      className={`sticky z-40 bg-[#0D0B1A]/80 backdrop-blur-2xl border-y border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)] mb-8 transition-all duration-300 ease-in-out ${
+      className={`sticky z-40 bg-[#161218]/85 backdrop-blur-2xl border-b border-[#F4B8C6]/15 shadow-vogue-card mb-6 transition-all duration-300 ${
         isVisible
-          ? "top-[64px] md:top-[72px] translate-y-0 opacity-100"
+          ? "top-[64px] md:top-[80px] translate-y-0 opacity-100"
           : "top-0 -translate-y-full opacity-0 pointer-events-none"
       }`}
     >
-      <div className="container mx-auto max-w-4xl px-4 py-3 flex items-center justify-between gap-2 md:gap-4">
-        {/* Tombol Kembali ke Detail Komik */}
+      <div className="container mx-auto max-w-4xl px-4 py-2.5 flex items-center justify-between gap-2 md:gap-4">
         <Link
           href={`/komik/${slug}`}
           prefetch={false}
-          className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 shrink-0 rounded-full bg-white/5 hover:bg-celestia-pink hover:text-white transition-all text-gray-400 group"
+          className="flex items-center justify-center w-9 h-9 shrink-0 rounded-full bg-[#211B24] hover:bg-[#F4B8C6] text-[#AD9CA6] hover:text-[#161218] border border-[#F4B8C6]/20 transition-all group"
           title="Kembali ke Detail"
         >
           <svg
-            className="w-4 h-4 md:w-5 md:h-5 transform group-hover:-translate-x-1 transition-transform"
+            className="w-4 h-4 transform group-hover:-translate-x-0.5 transition-transform"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -72,111 +70,58 @@ export default function ReaderStickyBar({
           </svg>
         </Link>
 
-        {/* Bagian Tengah (Prev + Judul + Next) */}
-        <div className="flex items-center justify-center gap-2 md:gap-4 flex-1 min-w-0">
-          {/* Tombol Prev Chapter */}
+        <div className="flex items-center justify-center gap-2 md:gap-3 flex-1 min-w-0">
           {prevChapterSlug ? (
             <Link
               href={`/komik/${slug}/${prevChapterSlug}`}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-celestia-pink hover:border-celestia-pink/30 hover:bg-celestia-pink/10 transition-all text-xs font-bold shadow-sm"
+              className="shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#211B24] border border-[#F4B8C6]/20 text-[#FDF6F7] hover:bg-[#F4B8C6] hover:text-[#161218] transition-all text-xs font-bold"
               title="Chapter Sebelumnya"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+              <span>&larr;</span>
               <span className="hidden sm:inline">Prev</span>
             </Link>
           ) : (
             <button
               disabled
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed text-xs font-bold"
+              className="shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#211B24]/40 border border-white/5 text-[#AD9CA6]/40 cursor-not-allowed text-xs font-bold"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+              <span>&larr;</span>
               <span className="hidden sm:inline">Prev</span>
             </button>
           )}
 
-          {/* Info Judul Tengah */}
-          <div className="flex flex-col items-center flex-1 min-w-0 px-1">
-            <h1 className="text-[13px] md:text-base font-black text-white truncate text-center w-full drop-shadow-md">
+          <div className="flex flex-col items-center flex-1 min-w-0 px-2">
+            <h1 className="text-xs md:text-sm font-extrabold text-[#FDF6F7] truncate text-center w-full">
               {pageTitle}
             </h1>
             {createdAt && (
-              <span className="text-[10px] md:text-[11px] text-gray-500 mt-0.5 hidden md:block">
+              <span className="text-[10px] text-[#AD9CA6] hidden md:block">
                 {formatDate(createdAt)}
               </span>
             )}
           </div>
 
-          {/* Tombol Next Chapter */}
           {nextChapterSlug ? (
             <Link
               href={`/komik/${slug}/${nextChapterSlug}`}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-celestia-sky hover:border-celestia-sky/30 hover:bg-celestia-sky/10 transition-all text-xs font-bold shadow-sm"
+              className="shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#F4B8C6] text-[#161218] hover:bg-[#f8c7d3] transition-all text-xs font-extrabold"
               title="Chapter Selanjutnya"
             >
               <span className="hidden sm:inline">Next</span>
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+              <span>&rarr;</span>
             </Link>
           ) : (
             <button
               disabled
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed text-xs font-bold"
+              className="shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#211B24]/40 border border-white/5 text-[#AD9CA6]/40 cursor-not-allowed text-xs font-bold"
             >
               <span className="hidden sm:inline">Next</span>
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+              <span>&rarr;</span>
             </button>
           )}
         </div>
 
-        {/* Tombol Bookmark */}
-        <div className="shrink-0 scale-75 origin-right md:scale-90">
+        <div className="shrink-0 scale-90 origin-right">
           <BookmarkButton
             item={{
               slug: currentChapter,

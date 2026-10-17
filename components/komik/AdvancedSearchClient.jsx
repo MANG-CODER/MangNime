@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import KomikCard from "@/components/komik/KomikCard";
+import Pagination from "@/components/ui/Pagination";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export default function AdvancedSearchClient({
@@ -12,7 +13,6 @@ export default function AdvancedSearchClient({
 }) {
   const router = useRouter();
 
-  // State untuk menampung filter (diubah menjadi array agar bisa multi-pilih)
   const [selectedFormats, setSelectedFormats] = useState(
     currentFilters.format ? currentFilters.format.split(",") : [],
   );
@@ -64,32 +64,49 @@ export default function AdvancedSearchClient({
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0B1A] pt-32 pb-20 px-4">
+    <div className="min-h-screen bg-[#161218] pt-8 pb-20 px-4 md:px-8">
       <div className="container mx-auto max-w-[1400px] animate-fade-in">
         {/* HEADER & FILTER BOX */}
-        <div className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-10 mb-10 relative overflow-hidden backdrop-blur-xl shadow-2xl">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-celestia-pink/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-
+        <div className="bg-[#211B24]/90 border border-[#F4B8C6]/20 rounded-[32px] p-6 md:p-10 mb-10 relative overflow-hidden shadow-vogue-card">
           <div className="relative z-10">
-            <h1 className="text-3xl md:text-4xl font-black text-white mb-2 tracking-wide">
-              Pencarian <span className="text-celestia-pink">Lanjutan</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#161218] border border-[#F4B8C6]/30 text-[11px] font-bold uppercase tracking-[0.18em] text-[#F4B8C6] mb-2">
+              <svg
+                className="w-3.5 h-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                />
+              </svg>
+              <span>Archive Filter</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#FDF6F7] mb-2 tracking-tight">
+              Pencarian{" "}
+              <span className="font-serif italic font-normal text-[#F4B8C6]">
+                Lanjutan Komik
+              </span>
             </h1>
-            <p className="text-gray-400 text-sm md:text-base mb-8">
-              Saring komik berdasarkan format, status cerita, dan genre secara
-              fleksibel (bisa pilih lebih dari satu).
+            <p className="text-[#AD9CA6] text-xs md:text-sm mb-8">
+              Saring katalog komik berdasarkan format negara, status rilis, dan
+              kombinasi genre favoritmu.
             </p>
 
             <form onSubmit={handleSearch} className="flex flex-col gap-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Format Komik (Pills) */}
+                {/* Format Komik */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-[#FDF6F7]">
                     Format Komik{" "}
-                    <span className="text-celestia-pink font-normal">
-                      (Bisa pilih lebih dari satu)
+                    <span className="text-[#AD9CA6] font-normal lowercase">
+                      (bisa multi-pilih)
                     </span>
                   </label>
-                  <div className="flex flex-wrap gap-2 p-3.5 rounded-2xl bg-black/40 border border-white/10">
+                  <div className="flex flex-wrap gap-2 p-3.5 rounded-2xl bg-[#161218] border border-[#F4B8C6]/15">
                     {FORMAT_OPTIONS.map((f, idx) => {
                       const isSelected = selectedFormats.includes(f.value);
                       return (
@@ -103,10 +120,10 @@ export default function AdvancedSearchClient({
                               setSelectedFormats,
                             )
                           }
-                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          className={`px-4 py-1.5 rounded-full text-xs font-extrabold transition-all border ${
                             isSelected
-                              ? "bg-celestia-sky text-white border-celestia-sky shadow-glow-blue scale-105"
-                              : "bg-white/5 text-gray-400 border-white/5 hover:border-white/20 hover:text-white"
+                              ? "bg-[#B8C4D4] text-[#161218] border-[#B8C4D4]"
+                              : "bg-[#211B24] text-[#AD9CA6] border-[#F4B8C6]/10 hover:border-[#B8C4D4]/40 hover:text-[#FDF6F7]"
                           }`}
                         >
                           {isSelected && <span className="mr-1.5">✓</span>}
@@ -117,15 +134,15 @@ export default function AdvancedSearchClient({
                   </div>
                 </div>
 
-                {/* Status Cerita (Pills) */}
+                {/* Status Cerita */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-[#FDF6F7]">
                     Status Cerita{" "}
-                    <span className="text-celestia-pink font-normal">
-                      (Bisa pilih lebih dari satu)
+                    <span className="text-[#AD9CA6] font-normal lowercase">
+                      (bisa multi-pilih)
                     </span>
                   </label>
-                  <div className="flex flex-wrap gap-2 p-3.5 rounded-2xl bg-black/40 border border-white/10">
+                  <div className="flex flex-wrap gap-2 p-3.5 rounded-2xl bg-[#161218] border border-[#F4B8C6]/15">
                     {STATUS_OPTIONS.map((s, idx) => {
                       const isSelected = selectedStatuses.includes(s.value);
                       return (
@@ -139,10 +156,10 @@ export default function AdvancedSearchClient({
                               setSelectedStatuses,
                             )
                           }
-                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          className={`px-4 py-1.5 rounded-full text-xs font-extrabold transition-all border ${
                             isSelected
-                              ? "bg-celestia-gold text-black border-celestia-gold shadow-glow-gold scale-105"
-                              : "bg-white/5 text-gray-400 border-white/5 hover:border-white/20 hover:text-white"
+                              ? "bg-[#F7D6C4] text-[#161218] border-[#F7D6C4]"
+                              : "bg-[#211B24] text-[#AD9CA6] border-[#F4B8C6]/10 hover:border-[#F7D6C4]/40 hover:text-[#FDF6F7]"
                           }`}
                         >
                           {isSelected && <span className="mr-1.5">✓</span>}
@@ -157,24 +174,24 @@ export default function AdvancedSearchClient({
               {/* MULTI-SELECT GENRE PILLS */}
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                  <label className="text-xs font-extrabold uppercase tracking-wider text-[#FDF6F7]">
                     Pilih Genre{" "}
-                    <span className="text-celestia-pink font-normal">
-                      (Bisa pilih lebih dari satu)
+                    <span className="text-[#AD9CA6] font-normal lowercase">
+                      (bisa multi-pilih)
                     </span>
                   </label>
                   {selectedGenres.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setSelectedGenres([])}
-                      className="text-xs text-celestia-pink hover:underline"
+                      className="text-xs font-bold text-[#F4B8C6] hover:underline"
                     >
                       Reset Genre ({selectedGenres.length} dipilih)
                     </button>
                   )}
                 </div>
 
-                <div className="flex flex-wrap gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 max-h-52 overflow-y-auto custom-scrollbar">
+                <div className="flex flex-wrap gap-2 p-4 rounded-2xl bg-[#161218] border border-[#F4B8C6]/15 max-h-52 overflow-y-auto custom-scrollbar">
                   {genresList.map((g, idx) => {
                     const isSelected = selectedGenres.includes(g.slug);
                     return (
@@ -188,10 +205,10 @@ export default function AdvancedSearchClient({
                             setSelectedGenres,
                           )
                         }
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border ${
                           isSelected
-                            ? "bg-celestia-pink text-white border-celestia-pink shadow-glow-pink scale-105"
-                            : "bg-white/5 text-gray-400 border-white/5 hover:border-white/20 hover:text-white"
+                            ? "bg-[#F4B8C6] text-[#161218] border-[#F4B8C6] font-extrabold shadow-vogue-blush"
+                            : "bg-[#211B24] text-[#AD9CA6] border-[#F4B8C6]/10 hover:border-[#F4B8C6]/40 hover:text-[#FDF6F7]"
                         }`}
                       >
                         {isSelected && <span className="mr-1.5">✓</span>}
@@ -207,13 +224,13 @@ export default function AdvancedSearchClient({
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 text-sm font-bold transition-all"
+                  className="px-6 py-2.5 rounded-full bg-[#161218] border border-[#F4B8C6]/20 text-[#AD9CA6] hover:text-[#FDF6F7] text-xs font-bold transition-all"
                 >
-                  Reset Semua
+                  Reset Filter
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-celestia-royal to-celestia-pink text-white text-sm font-bold shadow-glow-purple hover:scale-105 transition-all"
+                  className="px-7 py-2.5 rounded-full bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] text-xs font-extrabold shadow-vogue-blush active:scale-95 transition-all"
                 >
                   Terapkan Filter
                 </button>
@@ -225,87 +242,26 @@ export default function AdvancedSearchClient({
         {/* KONTEN HASIL GRID */}
         {initialData.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 animate-fade-in-up">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 md:gap-7">
               {initialData.map((komik, idx) => (
-                <ScrollReveal key={idx}>
+                <ScrollReveal key={komik.slug || idx}>
                   <KomikCard komik={komik} />
                 </ScrollReveal>
               ))}
             </div>
 
-            {initialPagination && (
-              <div className="mt-12 flex justify-center">
-                <OpenEndedPagination
-                  pagination={initialPagination}
-                  currentFilters={currentFilters}
-                />
-              </div>
-            )}
+            <Pagination
+              pagination={initialPagination}
+              basePath="/komik/advanced-search"
+              queryParams={currentFilters}
+            />
           </>
         ) : (
-          <div className="text-center py-32 text-gray-500 bg-white/5 rounded-2xl border border-white/10 border-dashed">
+          <div className="text-center py-24 text-[#AD9CA6] bg-[#211B24]/60 rounded-3xl border border-[#F4B8C6]/15">
             Tidak ada komik yang cocok dengan kriteria filter tersebut.
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function OpenEndedPagination({ pagination, currentFilters }) {
-  if (!pagination) return null;
-  const currentPage = Number(pagination.current_page || 1);
-  const totalPages = Number(pagination.total_pages || 1);
-
-  const hasPrevPage = currentPage > 1;
-  const hasNextPage = currentPage < totalPages;
-
-  const buildUrl = (targetPage) => {
-    const params = new URLSearchParams();
-    if (currentFilters.format) params.set("format", currentFilters.format);
-    if (currentFilters.status) params.set("status", currentFilters.status);
-    if (currentFilters.genre) params.set("genre", currentFilters.genre);
-    params.set("page", targetPage);
-    return `/komik/advanced-search?${params.toString()}`;
-  };
-
-  return (
-    <div className="flex items-center justify-center gap-2 w-full">
-      {hasPrevPage ? (
-        <a
-          href={buildUrl(currentPage - 1)}
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 transition-all inline-block"
-        >
-          &laquo; Prev
-        </a>
-      ) : (
-        <button
-          disabled
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
-        >
-          &laquo; Prev
-        </button>
-      )}
-
-      <div className="px-6 py-2 rounded-xl bg-purple-600/10 border border-purple-500/20 text-purple-300 font-bold flex items-center">
-        Halaman {currentPage} {totalPages > 1 ? `/ ${totalPages}` : ""}
-      </div>
-
-      {hasNextPage ? (
-        <a
-          href={buildUrl(currentPage + 1)}
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-purple-600/20 hover:text-purple-400 transition-all inline-block"
-        >
-          Next &raquo;
-        </a>
-      ) : (
-        <button
-          disabled
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
-        >
-          Next &raquo;
-        </button>
-      )}
     </div>
   );
 }

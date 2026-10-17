@@ -2,7 +2,7 @@ export default function robots() {
   return {
     rules: [
       {
-        // Daftar bot yang diblokir sepenuhnya
+        // 1. Daftar bot AI & Scraper berat yang diblokir sepenuhnya
         userAgent: [
           "ClaudeBot",
           "Claude-SearchBot",
@@ -14,23 +14,35 @@ export default function robots() {
           "CCBot",
           "meta-externalagent",
           "facebookexternalhit",
-          "meta-webindexer", // <--- Tambahan
+          "meta-webindexer",
           "Facebot",
           "HeadlessChrome",
           "Bytespider",
           "Amazonbot",
           "PetalBot",
-          "AhrefsBot", // <--- Tambahan
+          "AhrefsBot",
         ],
         disallow: "/",
       },
       {
-        // Aturan untuk bot biasa (Googlebot, Bingbot, dll)
+        // 2. Aturan untuk mesin pencari utama (Googlebot, Bingbot, dll)
         userAgent: "*",
         allow: "/",
-        disallow: ["/komik/*/*", "/api/"],
+        disallow: [
+          "/komik/*/*",
+          "/api/",
+          "/callback",
+          "/profile",
+          "/bookmark",
+          "/login",
+          "/register",
+          "/forgot-password",
+          "/reset-password",
+          "/maintenance",
+        ],
       },
     ],
     sitemap: "https://mangnime.my.id/sitemap.xml",
+    host: "https://mangnime.my.id",
   };
 }

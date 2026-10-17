@@ -39,46 +39,55 @@ export default function BookmarkPage() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-[#0D0B1A] flex items-center justify-center text-white">
-        Memuat...
+      <div className="min-h-screen bg-[#161218] flex items-center justify-center text-[#F4B8C6] text-sm font-bold">
+        Memuat koleksi...
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-[#0D0B1A] pt-32 pb-20 px-4">
-      <div className="container mx-auto max-w-6xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-black text-white uppercase tracking-wider flex items-center gap-3">
-              <svg
-                className="w-8 h-8 text-celestia-gold drop-shadow-md"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                />
-              </svg>
-              Bookmarks
-            </h1>
-            <span className="bg-white/10 text-celestia-pink px-3 py-1 rounded-full text-sm font-bold border border-white/10">
-              {filteredBookmarks.length} Item
-            </span>
+    <div className="min-h-screen bg-[#161218] pt-8 pb-20 px-4 md:px-8">
+      <div className="container mx-auto max-w-[1320px] space-y-8 animate-fade-in">
+        {/* HEADER */}
+        <div className="bg-[#211B24]/90 border border-[#F4B8C6]/20 rounded-[32px] p-6 md:p-9 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-vogue-card">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-xl bg-[#161218] border border-[#F4B8C6]/25 text-[#F4B8C6]">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                  />
+                </svg>
+              </span>
+              <h1 className="text-2xl md:text-4xl font-extrabold text-[#FDF6F7]">
+                Koleksi{" "}
+                <span className="font-serif italic font-normal text-[#F4B8C6]">
+                  Tersimpan
+                </span>
+              </h1>
+              <span className="bg-[#F4B8C6]/15 text-[#F4B8C6] px-3 py-1 rounded-full text-xs font-extrabold border border-[#F4B8C6]/30">
+                {filteredBookmarks.length} Item
+              </span>
+            </div>
           </div>
 
-          <div className="flex overflow-x-auto bg-white/5 p-1 rounded-xl border border-white/10 custom-scrollbar">
+          <div className="flex overflow-x-auto bg-[#161218] p-1.5 rounded-full border border-[#F4B8C6]/20 no-scrollbar">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                className={`px-5 py-2 rounded-full text-xs font-extrabold transition-all whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "bg-celestia-pink text-white"
-                    : "text-gray-400 hover:text-white"
+                    ? "bg-[#F4B8C6] text-[#161218] shadow-vogue-blush"
+                    : "text-[#AD9CA6] hover:text-[#FDF6F7]"
                 }`}
               >
                 {tab.label}
@@ -87,43 +96,67 @@ export default function BookmarkPage() {
           </div>
         </div>
 
+        {/* LIST ITEM */}
         {filteredBookmarks.length === 0 ? (
-          <div className="bg-[#151226]/80 backdrop-blur-xl border border-white/5 rounded-3xl p-12 text-center shadow-2xl">
-            <div className="text-6xl mb-4">📭</div>
-            <h2 className="text-2xl font-bold text-white mb-2">
+          <div className="bg-[#211B24]/70 border border-[#F4B8C6]/15 rounded-[32px] p-14 text-center shadow-vogue-card space-y-3">
+            <svg
+              className="w-10 h-10 text-[#F4B8C6]/40 mx-auto"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.6}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+              />
+            </svg>
+            <h2 className="text-lg font-extrabold text-[#FDF6F7]">
               Belum ada {activeTab} tersimpan
             </h2>
+            <p className="text-xs text-[#AD9CA6]">
+              Klik tombol Simpan pada halaman anime atau komik untuk
+              menambahkannya ke sini.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 md:gap-7">
             {filteredBookmarks.map((item) => (
-              <div
-                key={item.slug}
-                className="group relative rounded-2xl overflow-hidden bg-black/40 border border-white/5 hover:border-white/20 transition-all"
-              >
-                <Link href={item.url || `/${item.type}/${item.slug}`}>
-                  <div className="relative aspect-[3/4] overflow-hidden">
+              <div key={item.slug} className="group flex flex-col">
+                <div className="relative aspect-[2/3] rounded-[20px] overflow-hidden bg-[#211B24] ring-1 ring-[#F4B8C6]/15 group-hover:ring-[#F4B8C6]/50 shadow-vogue-card transition-all">
+                  <Link href={item.url || `/${item.type}/${item.slug}`}>
                     <Image
-                      src={item.image}
+                      src={
+                        item.image ||
+                        "https://placehold.co/300x450/211B24/F4B8C6"
+                      }
                       alt={item.title}
                       fill
-                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
+                      unoptimized
+                      sizes="(max-width: 768px) 45vw, 20vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0D0B1A] via-[#0D0B1A]/40 to-transparent"></div>
-                  </div>
-                </Link>
-                <div className="p-4 absolute bottom-0 left-0 w-full">
-                  <h3 className="text-white font-bold text-sm line-clamp-2 mb-3 drop-shadow-md">
-                    {item.title}
-                  </h3>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#161218]/90 via-transparent to-transparent" />
+                  </Link>
+
                   <button
+                    type="button"
                     onClick={() => removeBookmark(item.slug)}
-                    className="w-full py-2 bg-red-500/80 text-white text-xs font-bold rounded-lg hover:bg-red-500 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all"
+                    className="absolute top-3 right-3 z-10 px-3 py-1 rounded-full bg-[#161218]/85 hover:bg-[#E88D9E] text-[#E88D9E] hover:text-[#161218] border border-[#E88D9E]/40 text-[10px] font-extrabold transition-all"
                   >
                     Hapus
                   </button>
                 </div>
+
+                <Link
+                  href={item.url || `/${item.type}/${item.slug}`}
+                  className="mt-2.5 px-1"
+                >
+                  <h3 className="text-sm font-bold text-[#FDF6F7] group-hover:text-[#F4B8C6] line-clamp-2 transition-colors">
+                    {item.title}
+                  </h3>
+                </Link>
               </div>
             ))}
           </div>

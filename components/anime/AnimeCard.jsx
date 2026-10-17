@@ -11,7 +11,7 @@ export default function AnimeCard({ anime, index = 0, hideMeta = false }) {
     anime.poster ||
     anime.image ||
     anime.thumb ||
-    "https://placehold.co/300x400/0d0b1a/8b6cff?text=No+Image";
+    "https://placehold.co/300x450/211B24/F4B8C6?text=No+Image";
 
   const typeOrDay = anime.releaseDay || anime.type || anime.status;
   const score = anime.score || anime.rating;
@@ -21,69 +21,72 @@ export default function AnimeCard({ anime, index = 0, hideMeta = false }) {
     <Link
       href={targetUrl}
       prefetch={false}
-      className="group relative flex flex-col gap-3 rounded-2xl p-2.5 transition-all duration-500 hover:bg-white/[0.02] border border-transparent hover:border-celestia-lavender/30 hover:shadow-glow-purple"
+      className="group flex flex-col select-none active:scale-[0.98] transition-transform duration-300"
     >
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-celestia-deep shadow-lg">
+      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[20px] bg-[#211B24] ring-1 ring-[#F4B8C6]/15 group-hover:ring-[#F4B8C6]/50 shadow-vogue-card transition-all duration-300">
         <Image
           src={imageUrl}
           alt={anime.title || "Anime Poster"}
           fill
-          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-          quality={75}
-          className="object-cover transition-transform duration-700 group-hover:scale-110"
+          unoptimized
+          sizes="(max-width: 768px) 45vw, (max-width: 1200px) 25vw, 20vw"
+          className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
           priority={index < 4}
         />
 
-        {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-celestia-night/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#161218]/90 via-[#161218]/15 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
 
-        {/* Badges */}
+        <div className="absolute inset-2 rounded-[14px] border border-[#F4B8C6]/0 group-hover:border-[#F4B8C6]/35 transition-colors duration-500 pointer-events-none z-10" />
+
         {!hideMeta && (
-          <div className="absolute top-2 right-2 flex flex-col gap-1.5 items-end">
-            {typeOrDay && (
-              <div className="bg-celestia-royal/90 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded-md border border-celestia-sky/20 uppercase shadow-glow-blue tracking-wider">
-                {typeOrDay}
+          <>
+            {episodes && episodes !== "?" && (
+              <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-[#161218]/80 backdrop-blur-md border border-[#F4B8C6]/30 text-[10px] font-bold text-[#FDF6F7] tracking-wide">
+                {String(episodes).toLowerCase().includes("ep")
+                  ? episodes
+                  : `Ep ${episodes}`}
               </div>
             )}
 
             {score && (
-              <div className="bg-celestia-night/90 backdrop-blur-md text-celestia-gold text-[10px] font-black px-2 py-1 rounded-md border border-celestia-gold/20 flex items-center gap-1 shadow-glow-gold">
-                ★ {score}
+              <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#161218]/80 backdrop-blur-md border border-white/10 text-[10px] font-bold text-[#F7D6C4]">
+                <span>★</span>
+                <span>{score}</span>
               </div>
             )}
-
-            {episodes && episodes !== "?" && (
-              <div className="bg-celestia-night/90 backdrop-blur-md text-celestia-pink text-[10px] font-bold px-2 py-1 rounded-md border border-celestia-pink/20">
-                Ep {episodes}
-              </div>
-            )}
-          </div>
+          </>
         )}
 
-        {/* Play Button */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-celestia-royal to-celestia-lavender flex items-center justify-center shadow-glow-purple transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-            <svg
-              className="w-5 h-5 text-white ml-1"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
+          <div className="px-4 py-2 rounded-full bg-[#F4B8C6]/95 text-[#161218] font-extrabold text-xs flex items-center gap-1.5 shadow-vogue-blush transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
+            <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
               <path d="M4 4l12 6-12 6z" />
             </svg>
+            <span>Tonton</span>
           </div>
         </div>
       </div>
 
-      <div className="px-1">
-        <h3 className="text-sm font-bold text-gray-200 group-hover:text-celestia-sky transition-colors line-clamp-2 leading-snug">
+      <div className="mt-3 px-1 space-y-0.5">
+        <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#E88D9E]">
+          <svg
+            className="w-3 h-3 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.2}
+          >
+            <rect x="2" y="7" width="20" height="15" rx="2" ry="2" />
+            <polyline points="17 2 12 7 7 2" />
+          </svg>
+          <span className="truncate">
+            {typeOrDay || anime.studios || anime.studio || "Anime"}
+          </span>
+        </div>
+
+        <h3 className="text-sm font-bold text-[#FDF6F7] group-hover:text-[#F4B8C6] transition-colors line-clamp-2 leading-snug">
           {anime.title}
         </h3>
-
-        {(anime.studios || anime.studio) && (
-          <p className="text-[11px] text-celestia-lavender/70 mt-1.5 line-clamp-1">
-            {anime.studios || anime.studio}
-          </p>
-        )}
       </div>
     </Link>
   );

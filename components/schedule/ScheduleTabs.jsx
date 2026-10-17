@@ -26,25 +26,31 @@ export default function ScheduleTabs({ scheduleData }) {
     scheduleData.find((d) => d.day === activeTab)?.anime_list || [];
 
   return (
-    <div className="space-y-10">
-      <div className="flex overflow-x-auto custom-scrollbar pb-4 gap-4 snap-x px-2">
+    <div className="space-y-8">
+      {/* Day Selector Pills */}
+      <div className="flex overflow-x-auto no-scrollbar pb-2 gap-2.5 snap-x">
         {daysOrder.map((day) => {
           const isActive = activeTab === day;
+          const isToday = day === today;
           return (
             <button
               key={day}
+              type="button"
               onClick={() => setActiveTab(day)}
-              className={`snap-center shrink-0 px-8 py-3 rounded-full font-bold transition-all duration-300 border ${
+              className={`snap-center shrink-0 px-6 py-2.5 rounded-full text-xs md:text-sm font-extrabold transition-all duration-300 border flex items-center gap-2 ${
                 isActive
-                  ? "bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white border-transparent shadow-glow-purple transform scale-105"
-                  : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-celestia-sky hover:border-celestia-sky/30"
+                  ? "bg-[#F4B8C6] text-[#161218] border-[#F4B8C6] shadow-vogue-blush"
+                  : "bg-[#211B24] text-[#AD9CA6] border-[#F4B8C6]/15 hover:text-[#FDF6F7] hover:border-[#F4B8C6]/40"
               }`}
             >
-              {day}{" "}
-              {isActive && (
-                <span className="ml-1 text-celestia-gold drop-shadow-md">
-                  ✨
-                </span>
+              <span>{day}</span>
+              {isToday && (
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isActive ? "bg-[#161218]" : "bg-[#F4B8C6]"
+                  }`}
+                  title="Hari Ini"
+                />
               )}
             </button>
           );
@@ -52,33 +58,54 @@ export default function ScheduleTabs({ scheduleData }) {
       </div>
 
       {/* Konten Area Jadwal */}
-      <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
-        <div className="absolute -top-20 -left-20 w-64 h-64 bg-celestia-pink/10 blur-[80px] rounded-full pointer-events-none"></div>
-
-        <div className="relative z-10 flex items-center gap-4 mb-8 pb-4 border-b border-white/5">
-          <span className="w-2 h-8 bg-celestia-sky rounded-full shadow-[0_0_15px_rgba(76,201,255,0.6)]"></span>
-          <h2 className="font-heading text-3xl font-black text-white tracking-wide">
-            {activeTab}
-          </h2>
-
-          {activeTab === today && (
-            <span className="bg-celestia-pink/10 border border-celestia-pink/30 text-celestia-pink text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-[0_0_15px_rgba(255,120,198,0.4)] ml-2">
-              Hari Ini
+      <div className="bg-[#211B24]/85 border border-[#F4B8C6]/20 rounded-[32px] p-6 md:p-8 shadow-vogue-card relative overflow-hidden">
+        <div className="relative z-10 flex items-center justify-between gap-4 mb-7 pb-4 border-b border-[#F4B8C6]/15">
+          <div className="flex items-center gap-3">
+            <span className="p-2 rounded-xl bg-[#161218] border border-[#F4B8C6]/25 text-[#F4B8C6]">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
             </span>
-          )}
+            <h2 className="text-2xl md:text-3xl font-extrabold text-[#FDF6F7]">
+              Hari{" "}
+              <span className="font-serif italic font-normal text-[#F4B8C6]">
+                {activeTab}
+              </span>
+            </h2>
+
+            {activeTab === today && (
+              <span className="bg-[#F4B8C6]/15 border border-[#F4B8C6]/35 text-[#F4B8C6] text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                Hari Ini
+              </span>
+            )}
+          </div>
+
+          <span className="text-xs font-bold text-[#AD9CA6]">
+            {activeData.length} Judul
+          </span>
         </div>
 
         {activeData.length > 0 ? (
           <div
             key={`schedule-${activeTab}`}
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 animate-fade-in-up"
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-7"
           >
             {activeData.map((anime, idx) => (
               <AnimeCard key={idx} anime={anime} index={idx} hideMeta />
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 text-gray-500 font-light">
+          <div className="text-center py-16 text-[#AD9CA6] text-sm">
             Tidak ada jadwal rilis untuk hari {activeTab}.
           </div>
         )}

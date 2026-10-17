@@ -9,24 +9,22 @@ export default function Button({
   ...props
 }) {
   const baseStyles =
-    "inline-flex items-center justify-center font-bold transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none";
+    "inline-flex items-center justify-center font-extrabold transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none";
 
-  // Ukuran tombol
   const sizes = {
-    sm: "px-5 py-1.5 text-xs rounded-full",
-    md: "px-8 py-2.5 text-sm rounded-full",
-    lg: "px-10 py-3.5 text-base rounded-full",
+    sm: "px-5 py-2 text-xs rounded-full",
+    md: "px-7 py-3 text-xs md:text-sm rounded-full",
+    lg: "px-9 py-3.5 text-sm md:text-base rounded-full",
   };
 
-  // Varian gaya sesuai Style Guide Celestia
   const variants = {
     primary:
-      "bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white shadow-glow-purple hover:shadow-[0_0_30px_rgba(139,92,246,0.6)] hover:-translate-y-0.5",
+      "bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] shadow-vogue-blush hover:-translate-y-0.5",
     secondary:
-      "bg-celestia-royal text-white hover:bg-celestia-lavender border border-celestia-lavender/20",
+      "bg-[#211B24] text-[#FDF6F7] hover:bg-[#2B232F] border border-[#F4B8C6]/30 hover:border-[#F4B8C6]",
     tertiary:
-      "bg-celestia-night text-white border border-white/10 hover:bg-white/5",
-    gold: "bg-gradient-to-r from-celestia-gold to-celestia-pink text-celestia-night shadow-glow-gold hover:-translate-y-1",
+      "bg-[#161218] text-[#AD9CA6] hover:text-[#FDF6F7] border border-[#F4B8C6]/15 hover:bg-[#211B24]",
+    gold: "bg-gradient-to-r from-[#F7D6C4] to-[#F4B8C6] text-[#161218] shadow-glow-gold hover:-translate-y-0.5",
   };
 
   const combinedClasses = `${baseStyles} ${sizes[size]} ${variants[variant]} ${className}`;

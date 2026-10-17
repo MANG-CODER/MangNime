@@ -14,7 +14,7 @@ export default function AnimeActionButtons({ anime, slug, latestEpisode }) {
         JSON.parse(localStorage.getItem("mangnime_history")) || {};
       const animeHistory = histData.anime || {};
       if (animeHistory[slug]) setHistory(animeHistory[slug]);
-    } catch (e) {}
+    } catch {}
   }, [slug]);
 
   const handleShare = () => {
@@ -33,18 +33,18 @@ export default function AnimeActionButtons({ anime, slug, latestEpisode }) {
     : "Tonton Sekarang";
 
   return (
-    <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-6 relative">
+    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3.5 pt-6 relative">
       {/* Tombol Tonton */}
       <Link
         href={watchUrl}
         prefetch={false}
-        className={`flex items-center gap-3 px-10 py-4 rounded-2xl font-black text-sm transition-transform shadow-glow-purple ${
+        className={`flex items-center gap-2.5 px-8 py-3.5 rounded-full font-extrabold text-xs md:text-sm transition-all ${
           latestEpisode
-            ? "bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white hover:scale-105"
-            : "bg-white/5 text-gray-500 cursor-not-allowed pointer-events-none"
+            ? "bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] shadow-vogue-blush active:scale-95"
+            : "bg-[#211B24] text-[#AD9CA6]/50 cursor-not-allowed pointer-events-none"
         }`}
       >
-        <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
+        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
           <path d="M4 4l12 6-12 6z" />
         </svg>
         {watchText}
@@ -64,11 +64,12 @@ export default function AnimeActionButtons({ anime, slug, latestEpisode }) {
 
       {/* Tombol Share */}
       <button
+        type="button"
         onClick={handleShare}
-        className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold bg-white/10 text-white hover:bg-white/20 border border-white/10 transition-all self-stretch md:self-auto"
+        className="flex items-center gap-2 px-6 py-3 rounded-full text-xs md:text-sm font-bold bg-[#211B24] text-[#FDF6F7] hover:bg-[#2B232F] border border-[#F4B8C6]/25 transition-all active:scale-95"
       >
         <svg
-          className="w-5 h-5"
+          className="w-4 h-4 text-[#F4B8C6]"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -83,25 +84,13 @@ export default function AnimeActionButtons({ anime, slug, latestEpisode }) {
         Bagikan
       </button>
 
-      {/* Toast Notification - SUDAH DIPERBAIKI */}
+      {/* Toast Notification */}
       {showToast && (
-        <div className="absolute -top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none w-max max-w-[90vw]">
-          <div className="flex items-center gap-2.5 bg-[#151226] border border-celestia-sky/50 text-white px-5 py-3 rounded-2xl text-xs font-bold shadow-[0_0_20px_rgba(76,201,255,0.3)] animate-fade-in-up whitespace-nowrap">
-            <div className="bg-celestia-sky/20 p-1 rounded-full shrink-0">
-              <svg
-                className="w-4 h-4 text-celestia-sky"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="3"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
+        <div className="absolute -top-14 left-1/2 -translate-x-1/2 z-50 pointer-events-none w-max">
+          <div className="flex items-center gap-2 bg-[#211B24] border border-[#F4B8C6]/50 text-[#FDF6F7] px-4 py-2.5 rounded-full text-xs font-bold shadow-vogue-card animate-fade-in">
+            <span className="w-4 h-4 rounded-full bg-[#F4B8C6] text-[#161218] flex items-center justify-center text-[10px] font-extrabold">
+              ✓
+            </span>
             Tautan berhasil disalin!
           </div>
         </div>

@@ -1,21 +1,248 @@
-export default function sitemap() {
-  const baseUrl = "https://mangnime.my.id";
+const BASE_URL = "https://mangnime.my.id";
 
-  const staticLastModified = new Date("2026-09-11T00:00:00.000Z");
-
-  return [
+export default async function sitemap() {
+  const now = new Date();
+  const rawUrls = [
+    // Halaman Utama & Direktori
     "",
     "/ongoing",
     "/completed",
-    "/search",
+    "/schedule",
+    "/genre",
     "/komik/latest",
     "/komik/popular",
     "/komik/genres",
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: staticLastModified,
-    changeFrequency:
-      route === "" || route.includes("/komik/") ? "daily" : "weekly",
-    priority: route === "" ? 1.0 : 0.8,
-  }));
+    "/komik/advanced-search",
+    "/about",
+    "/guide",
+    "/policy",
+    "/terms",
+    "/report",
+
+    // Anime Detail
+    "/anime/keroro-gunsou-sub-indo",
+    "/anime/uchi-otouto-sumimasen-sub-indo",
+    "/anime/hotaru-yomeiri-sub-indo",
+    "/anime/kusuriya-hitorigoto-s3-sub-indo",
+    "/anime/toaru-anbu-item-sub-indo",
+    "/anime/tougen-nikko-kegon-sub-indo",
+    "/anime/tokyo-revs-sanhen-sub-indo",
+    "/anime/jojo-steel-ball-run-sub-indo",
+    "/anime/tsuihou-game-chishiki-suru-sub-indo",
+    "/anime/shuiro-kamen-sub-indo",
+    "/anime/hyouken-suberu-s2-sub-indo",
+    "/anime/tetsuryou-meet-tetsudou-sub-indo",
+    "/anime/koori-jouheki-s2-sub-indo",
+    "/anime/fx-senshi-kurumi-sub-indo",
+    "/anime/sasaki-pii-chan-s2-sub-indo",
+    "/anime/saijo-osewa-sub-indo",
+    "/anime/world-dancing-sub-indo",
+    "/anime/kaijuu-carameliser-sub-indo",
+    "/anime/sayonara-lara-sub-indo",
+    "/anime/oni-hanayome-sub-indo",
+    "/anime/hyakkano-s3-sub-ind",
+    "/anime/ryoumin-ryoushu-sub-indo",
+    "/anime/hanazakari-kimitachi-s2-sub-indo",
+    "/anime/lv999-murabito-sub-indo",
+    "/anime/bang-dream-yume%e2%88%9emita-sub-indo",
+    "/anime/shin-u-17-world-cup-sub-indo",
+    "/anime/kikansha-mahou-tokubetsu-s2-sub-indo",
+    "/anime/tensei-deshita-s2-sub-indo",
+    "/anime/sora-akai-kawa-hotori-sub-indo",
+    "/anime/tante-mou-shindeiru-s2-sub-indo",
+    "/anime/sekai-hajimemashita-sub-indo",
+    "/anime/genso-suikoden-sub-indo",
+    "/anime/chii-fuyo-sub-indo",
+    "/anime/chitose-ramune-bin-naka-p2-sub-indo",
+    "/anime/tensei-skill-nariagaru-s3-sub-ind",
+    "/anime/rakudai-kenja-gakuin-musou-sub-indo",
+    "/anime/neko-ryuu-sub-indo",
+    "/anime/heroine-seijo-iie-sub-indo",
+    "/anime/my-ribdiculous-reincarnation-sub-indo",
+    "/anime/snowball-earth-sub-indo",
+    "/anime/marratoxin-sub-indo",
+    "/anime/koori-jouheki-sub-indo",
+    "/anime/hidarikiki-eren-sub-indo",
+    "/anime/nippon-sangoku-sub-indo",
+    "/anime/replica-datte-suru-sub-indo",
+    "/anime/tsue-tsurugi-wistoria-s2-sub-indo",
+    "/anime/yozakura-daisakusen-s2-sub-indo",
+    "/anime/kill-ao-sub-indo",
+    "/anime/shunkashuutou-daikousha-sub-indo",
+    "/anime/yowayowa-sensei-sub-indo",
+
+    // Genre Anime
+    "/genre/action",
+    "/genre/adventure",
+    "/genre/comedy",
+    "/genre/demons",
+    "/genre/drama",
+    "/genre/ecchi",
+    "/genre/fantasy",
+    "/genre/game",
+    "/genre/harem",
+    "/genre/historical",
+    "/genre/horror",
+    "/genre/josei",
+    "/genre/magic",
+    "/genre/martial-arts",
+    "/genre/mecha",
+    "/genre/military",
+    "/genre/music",
+    "/genre/mystery",
+    "/genre/psychological",
+    "/genre/parody",
+    "/genre/police",
+    "/genre/romance",
+    "/genre/samurai",
+    "/genre/school",
+    "/genre/sci-fi",
+    "/genre/seinen",
+    "/genre/shoujo",
+    "/genre/shoujo-ai",
+    "/genre/shounen",
+    "/genre/slice-of-life",
+    "/genre/sports",
+    "/genre/space",
+    "/genre/super-power",
+    "/genre/supernatural",
+    "/genre/thriller",
+    "/genre/vampire",
+
+    // Komik Detail
+    "/komik/revenge-of-the-iron-blooded-sword-hound",
+    "/komik/pick-me-up",
+    "/komik/the-regressed-mercenary-s-machinations",
+    "/komik/nano-machine",
+    "/komik/swordmaster-s-youngest-son",
+    "/komik/infinite-mage",
+    "/komik/became-the-patron-of-villains",
+    "/komik/star-embracing-swordmaster",
+    "/komik/solo-max-level-newbie",
+    "/komik/the-extra-s-academy-survival-guide",
+    "/komik/sister-in-law-of-the-heroine-in-a-childcare-novel",
+    "/komik/reincarnator",
+    "/komik/i-ll-retire-after-saving-the-world",
+    "/komik/the-saint-levels-up-through-necromancy",
+    "/komik/the-regressor-and-the-blind-saintess",
+    "/komik/wall-street-genius-s-time-limited-investment-method",
+    "/komik/we-re-not-a-couple",
+    "/komik/third-rate-martial-family-becomes-the-best-under-heaven",
+    "/komik/the-villainess-is-a-millionaire-solver",
+    "/komik/margrave-s-bastard-son-was-the-emperor",
+    "/komik/the-return-of-the-disaster-class-hero",
+    "/komik/player-who-returned-10-000-years-later",
+    "/komik/the-greatest-estate-developer",
+    "/komik/return-of-the-mount-hua-sect",
+    "/komik/the-legendary-hero-is-an-academy-honors-student",
+    "/komik/eleceed",
+    "/komik/academy-s-genius-swordmaster",
+    "/komik/omniscient-reader-s-viewpoint",
+    "/komik/the-regressed-son-of-a-duke-is-an-assassin",
+    "/komik/magic-academy-s-genius-blinker",
+    "/komik/psychopath-in-murim",
+    "/komik/lookism",
+    "/komik/sss-class-suicide-hunter",
+    "/komik/only-i-have-an-ex-grade-summon",
+    "/komik/the-crazy-villain-regains-his-sanity",
+    "/komik/the-demon-slayer-s-restaurant",
+    "/komik/healing-life-through-camping-in-another-world",
+    "/komik/kanojo-okarishimasu",
+    "/komik/how-to-live-as-the-vampire-lord",
+    "/komik/global-class-transition-the-magic-king-s-skills-have-infinite-affixes",
+    "/komik/my-avatar-is-becoming-the-final-boss-remake",
+    "/komik/the-evil-alchemist-can-t-handle-his-own-experiment",
+    "/komik/villain-to-kill",
+    "/komik/cataclysm-hunter-i-have-an-exp-system",
+    "/komik/i-really-don-t-want-to-learn-forbidden-spells",
+    "/komik/king-account-at-the-start",
+    "/komik/supreme-cursemancer",
+    "/komik/murim-s-debt-king",
+    "/komik/reality-quest",
+    "/komik/i-quit-everything-to-selling-cola",
+
+    // Genre Komik
+    "/komik/genre/action",
+    "/komik/genre/adaptation",
+    "/komik/genre/adult",
+    "/komik/genre/adventure",
+    "/komik/genre/comedy",
+    "/komik/genre/cooking",
+    "/komik/genre/crime",
+    "/komik/genre/demon",
+    "/komik/genre/demons",
+    "/komik/genre/dra-genre",
+    "/komik/genre/drama",
+    "/komik/genre/ecchi",
+    "/komik/genre/fantasy",
+    "/komik/genre/fight",
+    "/komik/genre/fighting-genre",
+    "/komik/genre/game",
+    "/komik/genre/gender-bender",
+    "/komik/genre/harem",
+    "/komik/genre/historical",
+    "/komik/genre/horror",
+    "/komik/genre/isekai",
+    "/komik/genre/josei-genre",
+    "/komik/genre/latest",
+    "/komik/genre/love",
+    "/komik/genre/magic",
+    "/komik/genre/martial-arts",
+    "/komik/genre/mature",
+    "/komik/genre/mecha",
+    "/komik/genre/medical",
+    "/komik/genre/murim",
+    "/komik/genre/mystery",
+    "/komik/genre/philosophical",
+    "/komik/genre/psychological",
+    "/komik/genre/regression",
+    "/komik/genre/reincarnation-genre",
+    "/komik/genre/revenge",
+    "/komik/genre/romance",
+    "/komik/genre/school-life",
+    "/komik/genre/sci-fi",
+    "/komik/genre/seinen",
+    "/komik/genre/shoujo",
+    "/komik/genre/shounen",
+    "/komik/genre/slice-of-life",
+    "/komik/genre/smut",
+    "/komik/genre/sports",
+    "/komik/genre/supernatural",
+    "/komik/genre/supranatural",
+    "/komik/genre/thriller",
+    "/komik/genre/tragedy",
+    "/komik/genre/violence",
+    "/komik/genre/wuxia",
+  ];
+
+  return rawUrls.map((path) => {
+    let priority = 0.8;
+    let changeFrequency = "daily";
+
+    if (path === "") {
+      priority = 1.0;
+      changeFrequency = "hourly";
+    } else if (path.includes("/ongoing") || path.includes("/latest")) {
+      priority = 0.9;
+      changeFrequency = "hourly";
+    } else if (path.includes("/genre/")) {
+      priority = 0.6;
+      changeFrequency = "weekly";
+    } else if (
+      path.includes("/about") ||
+      path.includes("/guide") ||
+      path.includes("/policy") ||
+      path.includes("/terms")
+    ) {
+      priority = 0.3;
+      changeFrequency = "yearly";
+    }
+
+    return {
+      url: `${BASE_URL}${path}`,
+      lastModified: now,
+      changeFrequency,
+      priority,
+    };
+  });
 }

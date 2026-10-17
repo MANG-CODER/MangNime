@@ -23,9 +23,7 @@ export async function generateMetadata({ params }) {
 
     const ogTitle = `${komikTitle} ${chapterTitle} Bahasa Indonesia | MangNime`;
     const ogDescription = `Baca ${komikTitle} ${chapterTitle} bahasa Indonesia gratis di MangNime. Update chapter terbaru setiap hari.`;
-
     const komikCover = komikData?.image || chapterData.images?.[0] || null;
-
     const canonicalUrl = `https://mangnime.my.id/komik/${slug}/${chapterSlug}`;
 
     return {
@@ -80,21 +78,20 @@ export default async function ReadChapterPage({ params }) {
 
   if (!chapterData) {
     return (
-      <div className="min-h-screen bg-[#0D0B1A] flex flex-col items-center justify-center text-center px-4 animate-fade-in">
-        <h1 className="text-4xl font-black text-celestia-pink mb-4">
+      <div className="min-h-[70vh] bg-[#161218] flex flex-col items-center justify-center text-center px-4 animate-fade-in">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-[#F4B8C6] mb-3">
           Chapter Tidak Ditemukan
         </h1>
-        <p className="text-gray-400 mb-6">
+        <p className="text-[#AD9CA6] text-sm mb-6">
           Lembaran komik ini mungkin belum rilis atau terjadi kesalahan.
-          <br />
-          <span className="text-xs text-gray-600 mt-2 block">
-            (Chapter ID: {chapterSlug})
+          <span className="text-xs text-[#AD9CA6]/60 mt-1 block">
+            (ID: {chapterSlug})
           </span>
         </p>
         <Link
           href={`/komik/${slug}`}
           prefetch={false}
-          className="bg-white/10 px-6 py-2 rounded-full font-bold text-white hover:bg-white/20 transition-all"
+          className="bg-[#F4B8C6] px-6 py-2.5 rounded-full font-extrabold text-xs text-[#161218] shadow-vogue-blush"
         >
           Kembali ke Detail Komik
         </Link>
@@ -105,7 +102,7 @@ export default async function ReadChapterPage({ params }) {
   const images = chapterData.images || [];
   const komikTitle = komikData?.title || "Judul Tidak Diketahui";
   const chapterTitle = chapterData.chapterTitle || "";
-  const pageTitle = `${komikTitle} - ${chapterTitle}`;
+  const pageTitle = `${komikTitle} — ${chapterTitle}`;
   const komikCover = komikData?.image || images[0] || "";
 
   const prevChapterUrl = chapterData.prevChapterSlug
@@ -116,7 +113,7 @@ export default async function ReadChapterPage({ params }) {
     : null;
 
   return (
-    <div className="min-h-screen bg-[#0D0B1A] pt-20 md:pt-24 pb-20 animate-fade-in relative">
+    <div className="min-h-screen bg-[#161218] pb-20 animate-fade-in relative">
       <ChapterHistoryTracker
         slug={slug}
         title={komikTitle}
@@ -134,62 +131,58 @@ export default async function ReadChapterPage({ params }) {
         nextChapterSlug={chapterData.nextChapterSlug}
       />
 
+      {/* READER CANVAS */}
       <div className="container mx-auto max-w-3xl px-0 sm:px-4 flex flex-col items-center">
         {images.length > 0 ? (
-          <div className="w-full flex flex-col items-center sm:rounded-xl overflow-hidden sm:shadow-[0_0_40px_rgba(0,0,0,0.5)] sm:border border-white/5 bg-black">
-            {images.map((imgUrl, idx) => {
-              return (
-                <Image
-                  key={idx}
-                  src={imgUrl}
-                  alt={`Page ${idx + 1}`}
-                  width={800}
-                  height={1200}
-                  quality={75}
-                  sizes="(max-width: 768px) 100vw, 768px"
-                  loading={idx === 0 ? "eager" : "lazy"}
-                  priority={idx === 0}
-                  className="w-full h-auto block m-0 p-0 animate-fade-in-up"
-                  style={{ width: "100%", height: "auto" }}
-                  unoptimized={true}
-                />
-              );
-            })}
+          <div className="w-full flex flex-col items-center sm:rounded-2xl overflow-hidden shadow-vogue-card sm:border border-[#F4B8C6]/15 bg-[#0B090D]">
+            {images.map((imgUrl, idx) => (
+              <Image
+                key={idx}
+                src={imgUrl}
+                alt={`Page ${idx + 1}`}
+                width={800}
+                height={1200}
+                quality={75}
+                sizes="(max-width: 768px) 100vw, 768px"
+                loading={idx === 0 ? "eager" : "lazy"}
+                priority={idx === 0}
+                className="w-full h-auto block m-0 p-0"
+                style={{ width: "100%", height: "auto" }}
+                unoptimized={true}
+              />
+            ))}
           </div>
         ) : (
-          <div className="py-32 text-center text-gray-500 bg-white/5 rounded-2xl w-full border border-white/10">
+          <div className="py-28 text-center text-[#AD9CA6] bg-[#211B24] rounded-3xl w-full border border-[#F4B8C6]/15">
             Gambar gagal dimuat dari server. Coba muat ulang halaman.
           </div>
         )}
       </div>
 
-      <div className="container mx-auto max-w-3xl px-4 py-10 mt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* BOTTOM NAVIGATION BAR */}
+      <div className="container mx-auto max-w-3xl px-4 py-8 mt-8 border-t border-[#F4B8C6]/15 flex flex-col sm:flex-row items-center justify-between gap-3.5">
         {prevChapterUrl ? (
           <Link
             href={prevChapterUrl}
             prefetch={false}
-            className="w-full sm:w-auto px-6 py-3.5 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 hover:border-celestia-sky/50 transition-all text-center flex items-center justify-center gap-2 group"
+            className="w-full sm:w-auto px-6 py-3 bg-[#211B24] border border-[#F4B8C6]/20 text-[#FDF6F7] hover:bg-[#F4B8C6] hover:text-[#161218] text-xs font-extrabold rounded-full transition-all text-center flex items-center justify-center gap-2"
           >
-            <span className="transform group-hover:-translate-x-1 transition-transform text-celestia-sky">
-              &laquo;
-            </span>
-            <span className="group-hover:text-celestia-sky transition-colors">
-              Chapter Sebelumnya
-            </span>
+            <span>&larr;</span>
+            <span>Chapter Sebelumnya</span>
           </Link>
         ) : (
           <button
             disabled
-            className="w-full sm:w-auto px-6 py-3.5 bg-black/20 border border-white/5 text-gray-600 font-bold rounded-2xl cursor-not-allowed text-center"
+            className="w-full sm:w-auto px-6 py-3 bg-[#211B24]/40 border border-white/5 text-[#AD9CA6]/40 text-xs font-bold rounded-full cursor-not-allowed text-center"
           >
-            &laquo; Pertama
+            &larr; Chapter Pertama
           </button>
         )}
 
         <Link
           href={`/komik/${slug}`}
           prefetch={false}
-          className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-celestia-royal to-celestia-lavender text-white font-black rounded-2xl hover:scale-105 hover:shadow-glow-purple transition-all text-center"
+          className="w-full sm:w-auto px-7 py-3 bg-[#211B24] hover:bg-[#2B232F] text-[#F4B8C6] border border-[#F4B8C6]/35 text-xs font-extrabold rounded-full transition-all text-center"
         >
           Daftar Chapter
         </Link>
@@ -198,26 +191,22 @@ export default async function ReadChapterPage({ params }) {
           <Link
             href={nextChapterUrl}
             prefetch={false}
-            className="w-full sm:w-auto px-6 py-3.5 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 hover:border-celestia-pink/50 transition-all text-center flex items-center justify-center gap-2 group"
+            className="w-full sm:w-auto px-6 py-3 bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] text-xs font-extrabold rounded-full shadow-vogue-blush transition-all text-center flex items-center justify-center gap-2"
           >
-            <span className="group-hover:text-celestia-pink transition-colors">
-              Chapter Selanjutnya
-            </span>
-            <span className="transform group-hover:translate-x-1 transition-transform text-celestia-pink">
-              &raquo;
-            </span>
+            <span>Chapter Selanjutnya</span>
+            <span>&rarr;</span>
           </Link>
         ) : (
           <button
             disabled
-            className="w-full sm:w-auto px-6 py-3.5 bg-black/20 border border-white/5 text-gray-600 font-bold rounded-2xl cursor-not-allowed text-center"
+            className="w-full sm:w-auto px-6 py-3 bg-[#211B24]/40 border border-white/5 text-[#AD9CA6]/40 text-xs font-bold rounded-full cursor-not-allowed text-center"
           >
-            Terbaru &raquo;
+            Chapter Terbaru &rarr;
           </button>
         )}
       </div>
 
-      <div className="container mx-auto max-w-4xl px-4 mt-8">
+      <div className="container mx-auto max-w-4xl px-4 mt-6">
         <CommentSection
           topicId={`chapter-${slug}-${chapterSlug}`}
           title="Diskusi Chapter Ini"

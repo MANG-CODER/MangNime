@@ -8,7 +8,6 @@ export default function LastReadButton({ slug }) {
   useEffect(() => {
     const savedHistory =
       JSON.parse(localStorage.getItem("mangnime_history")) || {};
-
     const komikHistory = savedHistory.komik || {};
 
     if (komikHistory[slug]) {
@@ -22,10 +21,10 @@ export default function LastReadButton({ slug }) {
     <Link
       href={lastRead.url}
       prefetch={false}
-      className="w-full sm:w-auto px-6 py-3 bg-white/5 border border-celestia-gold/30 text-celestia-gold font-bold rounded-xl hover:bg-celestia-gold/10 hover:shadow-glow-gold transition-all flex items-center justify-center gap-2 group"
+      className="w-full sm:w-auto px-5 py-2.5 bg-[#F7D6C4]/10 border border-[#F7D6C4]/35 text-[#F7D6C4] text-xs font-extrabold rounded-full hover:bg-[#F7D6C4]/20 transition-all flex items-center justify-center gap-2 group"
     >
       <svg
-        className="w-5 h-5 group-hover:scale-110 transition-transform"
+        className="w-4 h-4 group-hover:scale-110 transition-transform"
         fill="currentColor"
         viewBox="0 0 20 20"
       >
@@ -35,7 +34,7 @@ export default function LastReadButton({ slug }) {
           clipRule="evenodd"
         />
       </svg>
-      Lanjut Ch. {lastRead.chapterIndex || lastRead.chapter}
+      Terakhir Dibaca: Ch. {lastRead.chapterIndex || lastRead.chapter}
     </Link>
   );
 }

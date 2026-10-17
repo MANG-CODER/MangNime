@@ -11,9 +11,9 @@ const InteractivePlayer = dynamic(
   () => import("@/components/episode/InteractivePlayer"),
   {
     loading: () => (
-      <div className="w-full h-[250px] md:h-[400px] bg-white/5 animate-pulse rounded-2xl md:rounded-3xl flex items-center justify-center border border-white/10 text-gray-400 font-medium">
+      <div className="w-full aspect-video bg-[#211B24] animate-pulse rounded-[26px] flex items-center justify-center border border-[#F4B8C6]/20 text-[#AD9CA6] text-sm font-medium">
         <svg
-          className="w-6 h-6 animate-spin mr-3 text-celestia-sky"
+          className="w-5 h-5 animate-spin mr-3 text-[#F4B8C6]"
           fill="none"
           viewBox="0 0 24 24"
         >
@@ -24,12 +24,12 @@ const InteractivePlayer = dynamic(
             r="10"
             stroke="currentColor"
             strokeWidth="4"
-          ></circle>
+          />
           <path
             className="opacity-75"
             fill="currentColor"
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
+          />
         </svg>
         Memuat Player Video...
       </div>
@@ -68,7 +68,6 @@ export async function generateMetadata({ params }) {
     if (!epData || !epData.title) throw new Error("Data tidak ada");
 
     const poster = await getAnimePoster(epData.animeId);
-
     const episodeMatch = epData.title.match(/Episode\s+(\d+(\.\d+)?)/i);
     const episodeNumber = episodeMatch ? episodeMatch[1] : null;
 
@@ -78,11 +77,10 @@ export async function generateMetadata({ params }) {
       .trim();
 
     const ogTitle = episodeNumber
-      ? `${animeTitle} - Episode ${episodeNumber} Sub Indo | MangNime`
+      ? `${animeTitle} Episode ${episodeNumber} Sub Indo | MangNime`
       : `${epData.title} | MangNime`;
 
     const ogDescription = `Nonton ${epData.title} subtitle Indonesia gratis di MangNime. Streaming anime berkualitas HD tanpa iklan.`;
-
     const canonicalUrl = `https://mangnime.my.id/episode/${slug}`;
 
     return {
@@ -128,13 +126,13 @@ export default async function EpisodePage({ params }) {
 
   if (!epData || !epData.title) {
     return (
-      <div className="text-center py-32 text-gray-500 font-body">
+      <div className="text-center py-32 text-[#AD9CA6]">
         Data episode tidak ditemukan.
       </div>
     );
   }
 
-  let animePoster = "https://placehold.co/300x400";
+  let animePoster = "https://placehold.co/300x400/211B24/F4B8C6";
 
   if (epData.animeId) {
     const fetchedPoster = await getAnimePoster(epData.animeId);
@@ -190,7 +188,7 @@ export default async function EpisodePage({ params }) {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 md:px-8 space-y-5 md:space-y-6 animate-fade-in pb-16 relative overflow-x-clip">
+    <div className="max-w-[1400px] mx-auto px-4 md:px-8 pt-6 md:pt-8 space-y-6 animate-fade-in pb-16 relative overflow-x-clip">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
@@ -203,78 +201,36 @@ export default async function EpisodePage({ params }) {
         episodeNumber={episodeNumber}
       />
 
-      <div className="absolute top-[-5%] md:top-[-10%] left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[300px] md:h-[400px] bg-celestia-royal/20 blur-[100px] md:blur-[120px] rounded-full pointer-events-none z-0"></div>
-
-      <div className="relative z-10 bg-white/[0.02] border border-white/5 p-5 md:p-8 rounded-2xl md:rounded-3xl flex flex-col gap-5 md:gap-6 backdrop-blur-xl shadow-lg">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 md:gap-6">
-          <div>
-            <h1 className="font-heading text-xl md:text-3xl lg:text-4xl font-black text-white drop-shadow-md">
-              {epData.title}
-            </h1>
-            <p className="text-xs md:text-sm text-celestia-lavender font-medium mt-2 md:mt-3 flex items-center gap-2">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              {epData.releaseTime || "Waktu rilis tidak diketahui"}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <BookmarkButton
-              item={{
-                slug: slug,
-                title: epData.title,
-                image: animePoster,
-                status: "Tersimpan",
-                type: "episode",
-                url: `/episode/${slug}`,
-              }}
-            />
-            <Button
+      {/* HEADER INFO EPISODE */}
+      <div className="relative z-10 bg-[#211B24]/90 border border-[#F4B8C6]/20 p-5 md:p-7 rounded-[28px] flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-vogue-card">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#F4B8C6]">
+            <Link
               href={`/anime/${epData.animeId}`}
-              variant="secondary"
-              size="md"
-              className="text-xs md:text-sm px-3 py-2"
+              className="hover:underline flex items-center gap-1.5"
             >
               <svg
-                className="w-4 h-4 md:mr-2"
+                className="w-3.5 h-3.5"
                 fill="none"
-                stroke="currentColor"
                 viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                ></path>
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
               </svg>
-              <span className="hidden md:inline">Semua Episode</span>
-              <span className="inline md:hidden ml-2">Episode Lain</span>
-            </Button>
+              Kembali ke Detail Anime
+            </Link>
           </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 md:gap-6 relative z-10">
-        <div className="lg:col-span-3 space-y-5 md:space-y-6">
-          <Link
-            href={`/anime/${epData.animeId}`}
-            prefetch={false}
-            className="inline-flex items-center gap-2 text-celestia-lavender hover:text-white transition-colors text-xs md:text-sm font-medium bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/10 w-max backdrop-blur-md"
-          >
+          <h1 className="text-xl md:text-3xl font-extrabold text-[#FDF6F7] leading-snug">
+            {epData.title}
+          </h1>
+          <p className="text-xs text-[#AD9CA6] flex items-center gap-1.5">
             <svg
-              className="w-4 h-4"
+              className="w-3.5 h-3.5 text-[#E88D9E]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -282,64 +238,109 @@ export default async function EpisodePage({ params }) {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth="2.5"
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                strokeWidth="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Kembali ke Detail Anime
-          </Link>
+            {epData.releaseTime || "Sub Indo HD"}
+          </p>
+        </div>
 
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <BookmarkButton
+            item={{
+              slug: slug,
+              title: epData.title,
+              image: animePoster,
+              status: "Tersimpan",
+              type: "episode",
+              url: `/episode/${slug}`,
+            }}
+          />
+          <Button
+            href={`/anime/${epData.animeId}`}
+            variant="secondary"
+            size="md"
+          >
+            Semua Episode
+          </Button>
+        </div>
+      </div>
+
+      {/* GRID PLAYER & PLAYLIST EPISODE */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 relative z-10">
+        <div className="lg:col-span-3 space-y-5">
           <InteractivePlayer
             defaultUrl={epData.defaultStreamingUrl}
             qualities={epData.server?.qualities}
             onFetchServer={fetchServerUrl}
           />
 
-          <div className="flex justify-between items-center bg-white/[0.02] p-4 md:p-5 rounded-2xl border border-white/5 backdrop-blur-md">
+          {/* NAVIGASI PREV / NEXT EPISODE */}
+          <div className="flex justify-between items-center bg-[#211B24]/90 p-3.5 md:p-4 rounded-full border border-[#F4B8C6]/20 shadow-vogue-card">
             {epData.hasPrevEpisode && epData.prevEpisode ? (
               <Link
                 href={`/episode/${epData.prevEpisode.episodeId}`}
                 prefetch={false}
-                className="text-gray-300 hover:text-celestia-pink font-bold flex items-center gap-1 md:gap-2 transition-colors text-xs md:text-base group"
+                className="px-5 py-2 rounded-full bg-[#161218] hover:bg-[#F4B8C6] text-[#FDF6F7] hover:text-[#161218] font-bold flex items-center gap-2 transition-all text-xs md:text-sm"
               >
-                <span className="transform group-hover:-translate-x-1 transition-transform">
-                  &laquo;
-                </span>
-                <span className="hidden md:inline">Eps Sebelumnya</span>
-                <span className="inline md:hidden">Prev</span>
+                <span>&larr;</span>
+                <span className="hidden sm:inline">Episode Sebelumnya</span>
+                <span className="sm:hidden">Prev</span>
               </Link>
             ) : (
-              <span className="text-gray-600 font-bold text-xs md:text-base">
-                &laquo; Mentok Kiri
+              <span className="px-5 py-2 rounded-full bg-[#161218]/40 text-[#AD9CA6]/40 font-bold text-xs md:text-sm cursor-not-allowed">
+                &larr; Pertama
               </span>
             )}
+
+            <span className="font-serif italic text-xs md:text-sm text-[#F4B8C6]">
+              Episode {episodeNumber}
+            </span>
 
             {epData.hasNextEpisode && epData.nextEpisode ? (
               <Link
                 href={`/episode/${epData.nextEpisode.episodeId}`}
                 prefetch={false}
-                className="text-gray-300 hover:text-celestia-sky font-bold flex items-center gap-1 md:gap-2 transition-colors text-xs md:text-base group"
+                className="px-5 py-2 rounded-full bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] font-extrabold flex items-center gap-2 transition-all text-xs md:text-sm shadow-vogue-blush"
               >
-                <span className="hidden md:inline">Eps Selanjutnya</span>
-                <span className="inline md:hidden">Next</span>
-                <span className="transform group-hover:translate-x-1 transition-transform">
-                  &raquo;
-                </span>
+                <span className="hidden sm:inline">Episode Selanjutnya</span>
+                <span className="sm:hidden">Next</span>
+                <span>&rarr;</span>
               </Link>
             ) : (
-              <span className="text-gray-600 font-bold text-xs md:text-base">
-                Mentok Kanan &raquo;
+              <span className="px-5 py-2 rounded-full bg-[#161218]/40 text-[#AD9CA6]/40 font-bold text-xs md:text-sm cursor-not-allowed">
+                Terbaru &rarr;
               </span>
             )}
           </div>
         </div>
 
-        <div className="bg-white/[0.02] border border-white/5 rounded-2xl md:rounded-3xl p-4 md:p-6 flex flex-col h-[400px] md:h-[600px] lg:h-auto backdrop-blur-xl shadow-xl">
-          <h3 className="font-heading text-lg md:text-xl font-bold text-white mb-4 md:mb-5 flex items-center gap-3 pb-3 md:pb-4 border-b border-white/5">
-            <span className="w-2 h-5 md:h-6 bg-celestia-lavender rounded-full shadow-glow-purple"></span>
-            Daftar Episode
-          </h3>
-          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-2.5">
+        {/* SIDEBAR DAFTAR EPISODE */}
+        <div className="bg-[#211B24]/90 border border-[#F4B8C6]/20 rounded-[28px] p-5 flex flex-col h-[420px] md:h-[580px] lg:h-auto shadow-vogue-card">
+          <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-[#F4B8C6]/15">
+            <h3 className="text-base md:text-lg font-extrabold text-[#FDF6F7] flex items-center gap-2">
+              <svg
+                className="w-4 h-4 text-[#F4B8C6]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                />
+              </svg>
+              Daftar Episode
+            </h3>
+            <span className="text-[11px] font-bold text-[#F4B8C6]">
+              {epData.info?.episodeList?.length || 0} Ep
+            </span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar pr-1.5 flex flex-col gap-2">
             {epData.info?.episodeList?.map((ep) => {
               const isCurrent = slug === ep.episodeId;
               return (
@@ -347,17 +348,19 @@ export default async function EpisodePage({ params }) {
                   href={`/episode/${ep.episodeId}`}
                   key={ep.episodeId}
                   prefetch={false}
-                  className={`px-4 py-3 rounded-xl md:rounded-2xl border transition-all duration-300 text-xs md:text-sm font-medium flex justify-between items-center group ${
+                  className={`px-4 py-3 rounded-2xl border transition-all text-xs font-bold flex justify-between items-center ${
                     isCurrent
-                      ? "bg-celestia-royal/20 border-celestia-lavender/50 text-white shadow-glow-purple"
-                      : "bg-black/20 border-white/5 text-gray-400 hover:bg-white/5 hover:text-white hover:border-white/10"
+                      ? "bg-[#F4B8C6] border-[#F4B8C6] text-[#161218] shadow-vogue-blush"
+                      : "bg-[#161218]/70 border-[#F4B8C6]/10 text-[#AD9CA6] hover:bg-[#161218] hover:text-[#FDF6F7] hover:border-[#F4B8C6]/35"
                   }`}
                 >
                   <span className="line-clamp-1 pr-2">
                     {ep.title.split("Subtitle")[0]}
                   </span>
                   {isCurrent && (
-                    <span className="w-2 h-2 rounded-full bg-celestia-gold shadow-glow-gold animate-pulse flex-shrink-0"></span>
+                    <span className="px-2 py-0.5 rounded-full bg-[#161218] text-[#F4B8C6] text-[9px] uppercase tracking-wider shrink-0">
+                      Diputar
+                    </span>
                   )}
                 </Link>
               );
@@ -365,6 +368,7 @@ export default async function EpisodePage({ params }) {
           </div>
         </div>
       </div>
+
       <CommentSection topicId={`episode-${slug}`} title="Diskusi Episode" />
     </div>
   );

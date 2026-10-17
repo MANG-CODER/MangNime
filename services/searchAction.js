@@ -6,7 +6,7 @@ export async function searchKomikServer(keyword) {
   try {
     if (!keyword) return { data: [], total: 0 };
 
-    const headersList = headers();
+    const headersList = await headers();
     const ip = headersList.get("x-forwarded-for") || "global-ip";
 
     const result = await KomikProvider.search(keyword, 1, ip);

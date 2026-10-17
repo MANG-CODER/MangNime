@@ -83,98 +83,64 @@ export default function LoginPage() {
     : "";
 
   return (
-    <div className="min-h-screen bg-[#0D0B1A] flex items-center justify-center relative px-4 overflow-hidden py-12">
-      {/* --- FLOATING ALERT (Lolos dari halangan Navbar) --- */}
+    <div className="min-h-[82vh] bg-[#161218] flex items-center justify-center relative px-4 overflow-hidden py-12">
       {alertInfo.show && (
         <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[100] animate-fade-in w-[90%] max-w-md">
           <div
-            className={`flex items-start justify-between p-4 rounded-2xl border backdrop-blur-xl shadow-2xl ${alertInfo.type === "error" ? "bg-red-500/10 border-red-500/50" : "bg-green-500/10 border-green-500/50"}`}
+            className={`flex items-start justify-between p-4 rounded-2xl border backdrop-blur-2xl shadow-vogue-card ${
+              alertInfo.type === "error"
+                ? "bg-[#211B24]/95 border-[#E88D9E]/60 text-[#FDF6F7]"
+                : "bg-[#211B24]/95 border-[#F4B8C6]/60 text-[#FDF6F7]"
+            }`}
           >
             <div className="flex items-center gap-3">
-              <div
-                className={`p-2 rounded-full ${alertInfo.type === "error" ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"}`}
-              >
-                {alertInfo.type === "error" ? (
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                )}
-              </div>
-              <p
-                className={`text-sm font-medium ${alertInfo.type === "error" ? "text-red-200" : "text-green-200"}`}
-              >
-                {alertInfo.text}
-              </p>
+              <span className="w-6 h-6 rounded-full bg-[#F4B8C6]/20 text-[#F4B8C6] flex items-center justify-center text-xs font-extrabold shrink-0">
+                {alertInfo.type === "error" ? "!" : "✓"}
+              </span>
+              <p className="text-xs md:text-sm font-medium">{alertInfo.text}</p>
             </div>
             <button
               onClick={closeAlert}
-              className={`ml-4 p-1.5 rounded-lg transition-colors ${alertInfo.type === "error" ? "text-red-400 hover:bg-red-500/20" : "text-green-400 hover:bg-green-500/20"}`}
+              className="ml-4 text-[#AD9CA6] hover:text-[#FDF6F7]"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                ></path>
-              </svg>
+              ✕
             </button>
           </div>
         </div>
       )}
 
-      <div className="w-full max-w-md bg-[#151226]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10 animate-fade-in mt-4">
-        <div className="flex justify-center mb-8">
+      <div className="w-full max-w-md bg-[#211B24]/90 backdrop-blur-2xl border border-[#F4B8C6]/25 rounded-[32px] p-8 md:p-10 shadow-vogue-card relative z-10 animate-fade-in">
+        <div className="flex justify-center mb-6">
           <Link href="/">
             <Image
-              src="/img/logo.png"
+              src="/img/logo.svg"
               alt="MangNime"
-              width={180}
-              height={50}
+              width={160}
+              height={44}
               className="object-contain"
             />
           </Link>
         </div>
 
-        <h2 className="text-2xl font-black text-white text-center mb-6">
-          Masuk ke <span className="text-[#FF78C6]">Anak Tangga</span>
-        </h2>
+        <div className="text-center mb-7">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[#FDF6F7]">
+            Masuk ke{" "}
+            <span className="font-serif italic font-normal text-[#F4B8C6]">
+              MangNime
+            </span>
+          </h1>
+          <p className="text-xs text-[#AD9CA6] mt-1">
+            Sinkronkan komentar dan profil komunitasmu
+          </p>
+        </div>
 
         <button
+          type="button"
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="w-full py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-3 shadow-lg disabled:opacity-50 mb-6"
+          className="w-full py-3 bg-[#FDF6F7] text-[#161218] font-extrabold text-xs md:text-sm rounded-full hover:bg-white transition-all flex items-center justify-center gap-3 shadow-md disabled:opacity-50 mb-6 active:scale-95"
         >
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               fill="#4285F4"
@@ -196,16 +162,16 @@ export default function LoginPage() {
         </button>
 
         <div className="flex items-center gap-4 mb-6">
-          <div className="flex-1 h-px bg-white/10"></div>
-          <span className="text-gray-500 text-xs font-bold tracking-widest">
-            ATAU EMAIL
+          <div className="flex-1 h-px bg-[#F4B8C6]/15" />
+          <span className="text-[#AD9CA6] text-[10px] font-bold tracking-[0.2em] uppercase">
+            Atau Email
           </span>
-          <div className="flex-1 h-px bg-white/10"></div>
+          <div className="flex-1 h-px bg-[#F4B8C6]/15" />
         </div>
 
         <form onSubmit={handleSignIn} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#AD9CA6] mb-1.5">
               Email
             </label>
             <input
@@ -213,35 +179,43 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="nama@email.com"
-              className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-[#8B6CFF] focus:bg-white/5 transition-all"
+              className="w-full bg-[#161218] border border-[#F4B8C6]/20 text-[#FDF6F7] text-sm rounded-2xl px-4 py-3 outline-none focus:border-[#F4B8C6] transition-all"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1.5">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#AD9CA6]">
+                Password
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-xs font-bold text-[#F4B8C6] hover:underline"
+              >
+                Lupa Password?
+              </Link>
+            </div>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-[#8B6CFF] focus:bg-white/5 transition-all"
+              className="w-full bg-[#161218] border border-[#F4B8C6]/20 text-[#FDF6F7] text-sm rounded-2xl px-4 py-3 outline-none focus:border-[#F4B8C6] transition-all"
             />
           </div>
-          <div className="pt-2 flex flex-col gap-3">
+          <div className="pt-3 flex flex-col gap-3">
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-[#5538A8] to-[#8B6CFF] text-white font-bold rounded-xl hover:scale-[1.02] transition-transform shadow-lg disabled:opacity-50"
+              className="w-full py-3.5 bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] font-extrabold text-xs md:text-sm rounded-full shadow-vogue-blush active:scale-95 transition-all disabled:opacity-50"
             >
-              {loading ? "MEMPROSES..." : "MASUK"}
+              {loading ? "MEMPROSES..." : "MASUK SEKARANG"}
             </button>
 
             <Link
               href={`/register${nextTarget}`}
-              className="w-full py-3 bg-white/5 border border-white/10 text-gray-300 font-bold rounded-xl hover:bg-white/10 hover:text-white transition-colors flex items-center justify-center text-sm"
+              className="w-full py-3 bg-[#161218] border border-[#F4B8C6]/20 text-[#AD9CA6] font-bold rounded-full hover:text-[#FDF6F7] hover:border-[#F4B8C6]/45 transition-all flex items-center justify-center text-xs"
             >
-              DAFTAR AKUN BARU
+              Daftar Akun Baru
             </Link>
           </div>
         </form>

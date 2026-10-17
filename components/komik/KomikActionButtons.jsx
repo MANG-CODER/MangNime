@@ -22,14 +22,12 @@ export default function KomikActionButtons({ komik, slug, firstChapter }) {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // 1. URL untuk Mulai Baca
   const readUrl = history
     ? history.url
     : firstChapter?.slug
       ? `/komik/${slug}/${firstChapter.slug}`
       : "#";
 
-  // 2. Perbaikan Teks Tombol
   const readText = history
     ? `Lanjut ${history.chapter || ""}`
     : firstChapter?.title
@@ -37,23 +35,31 @@ export default function KomikActionButtons({ komik, slug, firstChapter }) {
       : "Belum Ada Chapter";
 
   return (
-    <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-6 relative">
-      {/* Tombol Baca */}
+    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3.5 pt-6 relative">
       <Link
         href={readUrl}
-        className={`flex items-center gap-3 px-8 py-3 rounded-xl font-black text-sm transition-all shadow-glow-purple ${
+        className={`flex items-center gap-2.5 px-8 py-3.5 rounded-full font-extrabold text-xs md:text-sm transition-all ${
           firstChapter
-            ? "bg-gradient-to-r from-celestia-pink to-celestia-lavender text-white hover:scale-105"
-            : "bg-white/5 text-gray-500 cursor-not-allowed pointer-events-none"
+            ? "bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] shadow-vogue-blush active:scale-95"
+            : "bg-[#211B24] text-[#AD9CA6]/50 cursor-not-allowed pointer-events-none"
         }`}
       >
-        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-          <path d="M8 5v14l11-7z" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+          />
         </svg>
         {readText}
       </Link>
 
-      {/* Tombol Bookmark */}
       <BookmarkButton
         item={{
           slug: slug,
@@ -65,13 +71,13 @@ export default function KomikActionButtons({ komik, slug, firstChapter }) {
         }}
       />
 
-      {/* Tombol Share */}
       <button
+        type="button"
         onClick={handleShare}
-        className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold bg-white/10 text-white hover:bg-white/20 border border-white/10 transition-all"
+        className="flex items-center gap-2 px-6 py-3 rounded-full text-xs md:text-sm font-bold bg-[#211B24] text-[#FDF6F7] hover:bg-[#2B232F] border border-[#F4B8C6]/25 transition-all active:scale-95"
       >
         <svg
-          className="w-5 h-5"
+          className="w-4 h-4 text-[#F4B8C6]"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -86,25 +92,14 @@ export default function KomikActionButtons({ komik, slug, firstChapter }) {
         Bagikan
       </button>
 
-      {/* Toast Notification Premium */}
       {showToast && (
-        <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex items-center gap-2.5 bg-[#151226] border border-celestia-sky/50 text-white px-5 py-3 rounded-2xl text-xs font-bold shadow-[0_0_20px_rgba(76,201,255,0.3)] animate-fade-in-up z-50 whitespace-nowrap pointer-events-none">
-          <div className="bg-celestia-sky/20 p-1 rounded-full">
-            <svg
-              className="w-4 h-4 text-celestia-sky"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="3"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+        <div className="absolute -top-14 left-1/2 -translate-x-1/2 z-50 pointer-events-none w-max">
+          <div className="flex items-center gap-2 bg-[#211B24] border border-[#F4B8C6]/50 text-[#FDF6F7] px-4 py-2.5 rounded-full text-xs font-bold shadow-vogue-card animate-fade-in">
+            <span className="w-4 h-4 rounded-full bg-[#F4B8C6] text-[#161218] flex items-center justify-center text-[10px] font-extrabold">
+              ✓
+            </span>
+            Tautan berhasil disalin!
           </div>
-          Tautan berhasil disalin!
         </div>
       )}
     </div>
