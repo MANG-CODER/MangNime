@@ -97,12 +97,6 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 5500) {
   }
 }
 
-console.log("[CORE FETCH DEBUG]", {
-  url,
-  timestamp: new Date().toISOString(),
-  stack: new Error().stack,
-});
-
 export async function coreFetcher(url, options = {}) {
   const useCache =
     options.cache !== false &&
