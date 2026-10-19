@@ -7,44 +7,50 @@ const MAINTENANCE_MODE = false;
 
 export function proxy(request) {
   const pathname = request.nextUrl.pathname;
+  const userAgent = request.headers.get("user-agent") || "";
+  const host = request.headers.get("host") || "";
 
-  // =========================================================
-  // MAINTENANCE MODE
-  // =========================================================
-  if (
-    MAINTENANCE_MODE &&
-    pathname !== "/maintenance" &&
-    !pathname.startsWith("/_next/") &&
-    !pathname.startsWith("/img/")
-  ) {
-    return NextResponse.redirect(new URL("/maintenance", request.url));
+  if (host.endsWith(".vercel.app")) {
+    return NextResponse.next();
   }
 
   // =========================================================
-  // BYPASS ASSET STATIS
+  // 0. BYPASS MUTLAK: SITEMAP, ROBOTS.TXT, & ASET STATIS
+  // (Agar Googlebot & GSC Inspection Tool tidak pernah terhalang)
   // =========================================================
   if (
-    pathname.startsWith("/_next/") || pathname.startsWith("/img/") ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/sitemap-index.xml" ||
+    pathname === "/robots.txt" ||
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/img/") ||
+    pathname.startsWith("/assets/") ||
     pathname.match(
-      /\.(ico|png|jpg|jpeg|svg|webp|gif|avif|css|js|woff|woff2|ttf)$/i,
+      /\.(ico|png|jpg|jpeg|svg|webp|gif|avif|css|js|woff|woff2|ttf|xml|txt)$/i,
     )
   ) {
     return NextResponse.next();
   }
 
   // =========================================================
-  // NORMAL SECURITY LOGIC
+  // 1. MAINTENANCE MODE
   // =========================================================
-  const userAgent = request.headers.get("user-agent") || "";
+  if (MAINTENANCE_MODE && pathname !== "/maintenance") {
+    return NextResponse.redirect(new URL("/maintenance", request.url));
+  }
+
+  // =========================================================
+  // 2. NORMAL SECURITY LOGIC
+  // =========================================================
   const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown";
 
-  // 1. WHITELIST IP DEVELOPER
+  // Whitelist IP Developer
   const whitelistedIps = ["125.160.210.25", "127.0.0.1", "::1"];
   if (whitelistedIps.includes(ip)) {
     return NextResponse.next();
   }
 
-  // 2. BYPASS NEXT.JS PREFETCH
+  // Bypass Next.js Prefetch
   const isPrefetch =
     request.headers.get("next-router-prefetch") === "1" ||
     request.headers.get("purpose") === "prefetch";
@@ -53,14 +59,14 @@ export function proxy(request) {
     return NextResponse.next();
   }
 
-  // 3. GOOD BOTS
-  const goodBots = /googlebot|bingbot|yandexbot|slurp/i;
+  // Good Bots & Google Search Console Inspection Tools
+  const goodBots =
+    /googlebot|google-inspectiontool|googleother|bingbot|yandexbot|slurp/i;
   if (goodBots.test(userAgent)) {
     return NextResponse.next();
   }
 
-  // 4. BAD BOTS & GENERIC SCRAPERS (UPDATED)
-  // Ditambah: ahrefsbot, meta-webindexer, dan scraper pattern (python, curl, wget, urllib)
+  // Bad Bots & Generic Scrapers
   const badBots =
     /claude-searchbot|claudebot|anthropic|gptbot|chatgpt-user|oai-searchbot|meta-externalagent|facebookexternalhit|facebot|ccbot|headlesschrome|google-extended|bytespider|amazonbot|petalbot|ahrefsbot|meta-webindexer|scraper|python|curl|wget|urllib/i;
 
@@ -68,7 +74,7 @@ export function proxy(request) {
     return new NextResponse(null, { status: 403 });
   }
 
-  // 5. RATE LIMIT
+  // Rate Limit
   const LIMIT = 40;
   const TIME_WINDOW_MS = 60 * 1000;
 
