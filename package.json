@@ -1,7 +1,7 @@
 {
   "name": "mangnime",
-  "version": "1.0.0",
-  "description": "",
+  "version": "3.1.0",
+  "description": "MangNime Platform",
   "main": "next.config.js",
   "directories": {
     "lib": "lib"

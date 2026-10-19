@@ -93,8 +93,11 @@ export const OtakudesuProvider = {
 
   search: async (query) => {
     try {
+      const cleanQuery = query.trim().toLowerCase();
       const res = await coreFetcher(
-        `${BASE_URL}${OTAKUDESU_ENDPOINTS.SEARCH}${encodeURIComponent(query)}`,
+        `${BASE_URL}${OTAKUDESU_ENDPOINTS.SEARCH}${encodeURIComponent(
+          cleanQuery,
+        )}`,
       );
       const data = res?.data?.animeList || res?.data || [];
       return OtakudesuProvider.normalizeList(data);
@@ -104,6 +107,7 @@ export const OtakudesuProvider = {
   },
 
   getDetail: async (slug) => {
+    if (!slug) return null;
     try {
       const res = await coreFetcher(
         `${BASE_URL}${OTAKUDESU_ENDPOINTS.ANIME}${slug}`,
@@ -115,6 +119,7 @@ export const OtakudesuProvider = {
   },
 
   getEpisode: async (slug) => {
+    if (!slug) return null;
     try {
       const res = await coreFetcher(
         `${BASE_URL}${OTAKUDESU_ENDPOINTS.EPISODE}${slug}`,
@@ -157,7 +162,7 @@ export const OtakudesuProvider = {
 
       return {
         data: OtakudesuProvider.normalizeList(data),
-        pagination: res?.pagination || null,
+        pagination: OtakudesuProvider.normalizePagination(res?.pagination),
       };
     } catch {
       return { data: [], pagination: null };
@@ -165,6 +170,7 @@ export const OtakudesuProvider = {
   },
 
   getBatch: async (slug) => {
+    if (!slug) return null;
     try {
       const res = await coreFetcher(
         `${BASE_URL}${OTAKUDESU_ENDPOINTS.BATCH}${slug}`,

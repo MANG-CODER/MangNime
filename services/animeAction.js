@@ -1,55 +1,60 @@
 "use server";
 
 import { AnimeProvider } from "./providers";
-import { getCache, setCache, checkRateLimit } from "./core/cache";
+import {
+  getCache,
+  getStaleCache,
+  setCache,
+  checkRateLimit,
+  withSingleflight,
+} from "./core/cache";
 import { headers } from "next/headers";
 
 export async function searchAllAnime(query) {
-  if (!query) return [];
+  const cleanQuery = (query || "").trim().toLowerCase();
+  if (!cleanQuery) return [];
 
-  const headerList = await headers();
-  const ip = headerList.get("x-forwarded-for") || "anonymous";
-
-  try {
-    if (!checkRateLimit(ip)) {
-      console.warn("Rate Limit tercapai:", ip);
-    }
-  } catch (e) {}
-
-  const cacheKey = `search_v4_${query.toLowerCase()}`;
+  const cacheKey = `search_v4_${cleanQuery}`;
   const cachedData = getCache(cacheKey);
-
   if (cachedData && cachedData.length > 0) {
     return cachedData;
   }
 
-  const otakudesuRes = await AnimeProvider.Otakudesu.search(query);
+  try {
+    const headerList = await headers();
+    const ip = headerList.get("x-forwarded-for") || "anonymous";
 
-  const results = Array.isArray(otakudesuRes) ? otakudesuRes : [];
+    if (!checkRateLimit(ip, 20, 60 * 1000)) {
+      console.warn(
+        `🛑 [Search Rate Limit] IP ${ip} melebihi batas search/menit.`,
+      );
+      return getStaleCache(cacheKey) || [];
+    }
+  } catch {}
 
-  const finalResults = [...results].sort((a, b) => {
-    const titleA = (a.title || "").toLowerCase();
-    const titleB = (b.title || "").toLowerCase();
-    const q = query.toLowerCase();
+  return withSingleflight(cacheKey, async () => {
+    const otakudesuRes = await AnimeProvider.Otakudesu.search(cleanQuery);
+    const results = Array.isArray(otakudesuRes) ? otakudesuRes : [];
 
-    const aStarts = titleA.startsWith(q) ? 1 : 0;
-    const bStarts = titleB.startsWith(q) ? 1 : 0;
-    if (aStarts !== bStarts) return bStarts - aStarts;
+    const finalResults = [...results].sort((a, b) => {
+      const titleA = (a.title || "").toLowerCase();
+      const titleB = (b.title || "").toLowerCase();
 
-    const aContains = titleA.includes(q) ? 1 : 0;
-    const bContains = titleB.includes(q) ? 1 : 0;
-    if (aContains !== bContains) return bContains - aContains;
+      const aStarts = titleA.startsWith(cleanQuery) ? 1 : 0;
+      const bStarts = titleB.startsWith(cleanQuery) ? 1 : 0;
+      if (aStarts !== bStarts) return bStarts - aStarts;
 
-    return titleA.length - titleB.length;
+      const aContains = titleA.includes(cleanQuery) ? 1 : 0;
+      const bContains = titleB.includes(cleanQuery) ? 1 : 0;
+      if (aContains !== bContains) return bContains - aContains;
+
+      return titleA.length - titleB.length;
+    });
+
+    if (finalResults.length > 0) {
+      setCache(cacheKey, finalResults, 1800);
+    }
+
+    return finalResults;
   });
-
-  console.log(
-    `[Search: ${query}] Otakudesu: ${results.length} hasil | Final: ${finalResults.length} hasil`,
-  );
-
-  if (finalResults.length > 0) {
-    setCache(cacheKey, finalResults, 1800);
-  }
-
-  return finalResults;
 }
