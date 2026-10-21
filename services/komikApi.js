@@ -54,7 +54,6 @@ function toSlug(title) {
     .replace(/(^-|-$)/g, "");
 }
 
-// Helper untuk mengekstrak slug sekaligus menyimpan mapping slug -> manga_id ke memori
 function extractAndRegisterSlug(item) {
   const slug = item.slug || toSlug(item.title) || item.manga_id || "";
   if (item.manga_id) {
@@ -64,7 +63,22 @@ function extractAndRegisterSlug(item) {
   return slug;
 }
 
-// Shinigami: Sekarang otomatis melewati coreFetcher (L1/L2 Cache + Singleflight + Netlify Proxy)
+// Helper format item chapter Shinigami (dipakai di getDetail & getChaptersPage)
+function formatShinigamiChapter(ch) {
+  const uuid = ch.chapter_id || ch.id;
+  const chNum = ch.chapter_number;
+  return {
+    chapterId: uuid,
+    title: ch.chapter_title
+      ? `Chapter ${chNum}: ${ch.chapter_title}`
+      : `Chapter ${chNum}`,
+    slug: `chapter-${chNum}-${uuid}`,
+    chapterNumber: chNum,
+    views: ch.views || 0,
+    createdAt: ch.release_date || ch.updated_at || "",
+  };
+}
+
 const fetchAPI = async (endpoint, ttlSeconds) => {
   const fullUrl = `${SHINIGAMI_BASE_URL}${endpoint}`;
   return coreFetcher(fullUrl, {
@@ -75,7 +89,6 @@ const fetchAPI = async (endpoint, ttlSeconds) => {
   });
 };
 
-// Komiku: Melewati coreFetcher dengan Direct Fetch
 const fetchKomikuAPI = async (endpoint, ttlSeconds = 3600) => {
   const fullUrl = `${KOMIKU_BASE_URL}${endpoint}`;
   return coreFetcher(fullUrl, {
@@ -99,9 +112,22 @@ function normalizeKomikuSearch(item) {
 }
 
 function normalizeKomikuDetail(raw) {
+  const chapters = (raw.chapters || []).map((ch) => {
+    const chNumMatch = ch.chapter.match(/([0-9.]+)/);
+    const chNum = chNumMatch ? chNumMatch[1] : ch.chapter;
+    return {
+      chapterId: ch.slug,
+      title: ch.chapter,
+      slug: ch.slug,
+      chapterNumber: chNum,
+      createdAt: ch.date || "",
+    };
+  });
+
   return {
     title: raw.title,
     slug: `komikudetail-${raw.slug}`,
+    mangaId: `komikudetail-${raw.slug}`,
     image: proxyImage(raw.image),
     synopsis: raw.synopsis || raw.synopsis_full || "Tidak ada sinopsis.",
     genres: raw.genres?.map((g) => g.name) || [],
@@ -111,17 +137,13 @@ function normalizeKomikuDetail(raw) {
     score: "",
     type: raw.metadata?.type || "Manga",
     source: "komiku",
-    chapters: (raw.chapters || []).map((ch) => {
-      const chNumMatch = ch.chapter.match(/([0-9.]+)/);
-      const chNum = chNumMatch ? chNumMatch[1] : ch.chapter;
-      return {
-        chapterId: ch.slug,
-        title: ch.chapter,
-        slug: ch.slug,
-        chapterNumber: chNum,
-        createdAt: ch.date || "",
-      };
-    }),
+    chapters,
+    chaptersPagination: {
+      currentPage: 1,
+      totalPages: 1,
+      totalRecord: chapters.length,
+      pageSize: chapters.length,
+    },
   };
 }
 
@@ -157,18 +179,13 @@ function normalizeKomikuChapter(raw) {
   };
 }
 
-/**
- * Resolve Slug ke UUID Shinigami dengan 0 API Call jika sudah ada di Registry!
- */
 async function resolveMangaId(slugOrId) {
   if (!slugOrId) return "";
   if (UUID_REGEX.test(slugOrId)) return slugOrId;
 
-  // 1. Cek di Registry Memori (Diisi otomatis oleh Home/Latest/Popular/Genre/Search)
   const registeredUuid = getMangaUuid(slugOrId);
   if (registeredUuid) return registeredUuid;
 
-  // 2. Jika user masuk via direct link pada cold start, cari sekali lalu simpan permanen (7 hari)
   const keyword = slugOrId.replace(/-/g, " ");
   try {
     const searchRes = await fetchAPI(
@@ -236,6 +253,8 @@ const getDetail = async (slugOrId) => {
     }
 
     const chaptersList = chaptersFirstPageRes?.data || [];
+    const rawPagination = chaptersFirstPageRes?.pagination || null;
+
     const typeFormat =
       Array.isArray(raw.format) && raw.format.length > 0
         ? raw.format[0].name
@@ -244,6 +263,7 @@ const getDetail = async (slugOrId) => {
     const assembled = {
       title: raw.title,
       slug: raw.manga_id,
+      mangaId: raw.manga_id,
       image: proxyImage(raw.cover_portrait || raw.cover),
       synopsis: raw.description || "Tidak ada sinopsis.",
       genres: raw.genres?.map((g) => g.name) || [],
@@ -252,19 +272,13 @@ const getDetail = async (slugOrId) => {
       status: raw.status || "Unknown",
       score: raw.rating || "",
       type: typeFormat,
-      chapters: chaptersList.map((ch) => {
-        const uuid = ch.chapter_id || ch.id;
-        const chNum = ch.chapter_number;
-        return {
-          chapterId: uuid,
-          title: ch.chapter_title
-            ? `Chapter ${chNum}: ${ch.chapter_title}`
-            : `Chapter ${chNum}`,
-          slug: `chapter-${chNum}-${uuid}`,
-          chapterNumber: chNum,
-          createdAt: ch.updated_at || ch.release_date || "",
-        };
-      }),
+      chapters: chaptersList.map(formatShinigamiChapter),
+      chaptersPagination: {
+        currentPage: Number(rawPagination?.current_page) || 1,
+        totalPages: Number(rawPagination?.total_pages) || 1,
+        totalRecord: Number(rawPagination?.total_record) || chaptersList.length,
+        pageSize: Number(rawPagination?.page_size) || 24,
+      },
     };
 
     setCache(detailCacheKey, assembled, 1800);
@@ -537,6 +551,34 @@ export const KomikProvider = {
         type: item.format || item.type || "Manhwa",
       })),
       pagination: res.pagination || null,
+    };
+  },
+
+  // Fungsi baru khusus untuk memanggil halaman chapter ke-2, ke-3, dst. saat di-scroll
+  getChaptersPage: async (mangaSlugOrId, page = 2) => {
+    const cleanPage = Math.max(1, Number(page) || 1);
+    const mangaId = await resolveMangaId(mangaSlugOrId);
+    if (!mangaId) return { chapters: [], pagination: null };
+
+    const ttl = cleanPage === 1 ? 1800 : 12 * 3600;
+    const res = await fetchAPI(
+      `${SHINIGAMI_ENDPOINTS.CHAPTERS}${mangaId}?page=${cleanPage}`,
+      ttl,
+    );
+
+    if (!res || !Array.isArray(res.data)) {
+      return { chapters: [], pagination: null };
+    }
+
+    const rawPag = res.pagination || {};
+    return {
+      chapters: res.data.map(formatShinigamiChapter),
+      pagination: {
+        currentPage: Number(rawPag.current_page) || cleanPage,
+        totalPages: Number(rawPag.total_pages) || cleanPage,
+        totalRecord: Number(rawPag.total_record) || 0,
+        pageSize: Number(rawPag.page_size) || 24,
+      },
     };
   },
 

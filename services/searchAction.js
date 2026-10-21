@@ -34,3 +34,26 @@ export async function searchKomikServer(keyword) {
     return { data: [], total: 0 };
   }
 }
+
+// Server Action khusus Infinite Scroll Chapter Komik
+export async function getMoreKomikChapters(mangaId, page = 2) {
+  try {
+    if (!mangaId || page < 2) return { chapters: [], pagination: null };
+
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") || "global-ip";
+
+    if (!checkRateLimit(`komik_ch_scroll_${ip}`, 15, 60 * 1000)) {
+      return {
+        chapters: [],
+        pagination: null,
+        rateLimited: true,
+      };
+    }
+
+    return await KomikProvider.getChaptersPage(mangaId, page);
+  } catch (error) {
+    console.error("Gagal memuat halaman chapter berikutnya:", error);
+    return { chapters: [], pagination: null };
+  }
+}

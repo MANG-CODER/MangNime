@@ -8,17 +8,7 @@ import CommentSection from "@/components/ui/CommentSection";
 import BackButton from "@/components/ui/BackButton";
 import LastReadButton from "@/components/komik/LastReadButton";
 import RecommendationSidebar from "@/components/ui/RecommendationSidebar";
-
-function formatDate(dateStr) {
-  if (!dateStr) return null;
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+import ChapterListInfinite from "@/components/komik/ChapterListInfinite";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -35,7 +25,7 @@ export async function generateMetadata({ params }) {
     const canonicalUrl = `https://mangnime.my.id/komik/${slug}`;
 
     return {
-      title: `${komik.title} - MangNime`,
+      title: `${komik.title} Baca Online | MangNime`,
       description: shortSynopsis,
       openGraph: {
         title: `${komik.title} Baca Online | MangNime`,
@@ -61,7 +51,7 @@ export async function generateMetadata({ params }) {
       .replace(/-/g, " ")
       .replace(/\b\w/g, (l) => l.toUpperCase());
     return {
-      title: `${fallbackTitle} - MangNime`,
+      title: `${fallbackTitle} | MangNime`,
       description:
         "Baca komik manga manhwa manhua bahasa Indonesia di MangNime.",
     };
@@ -182,7 +172,8 @@ export default async function DetailKomikPage({ params }) {
                 </span>
               )}
               <span className="bg-[#211B24] text-[#FDF6F7] border border-[#F4B8C6]/20 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-                {chapters.length} Chapter
+                {komik.chaptersPagination?.totalRecord || chapters.length}{" "}
+                Chapter
               </span>
               {komik.author && komik.author !== "-" && (
                 <span className="text-[#AD9CA6] text-xs font-semibold px-3 py-1.5 border-l border-[#F4B8C6]/20">
@@ -251,70 +242,14 @@ export default async function DetailKomikPage({ params }) {
               </section>
             </ScrollReveal>
 
+            {/* DAFTAR CHAPTER DENGAN INFINITE SCROLL & LAZY FETCH */}
             <ScrollReveal>
-              <section>
-                <div className="flex items-center justify-between gap-4 mb-5 pb-3 border-b border-[#F4B8C6]/15">
-                  <div className="flex items-center gap-3">
-                    <span className="p-2 rounded-xl bg-[#211B24] border border-[#B8C4D4]/30 text-[#B8C4D4]">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                        />
-                      </svg>
-                    </span>
-                    <h2 className="text-2xl md:text-3xl font-extrabold text-[#FDF6F7]">
-                      Daftar{" "}
-                      <span className="font-serif italic font-normal text-[#B8C4D4]">
-                        Chapter
-                      </span>
-                    </h2>
-                  </div>
-                  <span className="text-[#B8C4D4] text-xs font-extrabold bg-[#B8C4D4]/15 px-3.5 py-1.5 rounded-full border border-[#B8C4D4]/30">
-                    {chapters.length} Chapter
-                  </span>
-                </div>
-
-                <div className="bg-[#211B24]/80 border border-[#F4B8C6]/15 rounded-[28px] p-4 md:p-6 max-h-[540px] overflow-y-auto custom-scrollbar shadow-vogue-card">
-                  {chapters.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pr-1">
-                      {chapters.map((ch, idx) => (
-                        <Link
-                          key={idx}
-                          href={`/komik/${slug}/${ch.slug}`}
-                          prefetch={false}
-                          className="bg-[#161218]/80 border border-[#F4B8C6]/10 hover:border-[#F4B8C6]/45 hover:bg-[#F4B8C6]/[0.06] px-4 py-3.5 rounded-2xl flex items-center justify-between group transition-all"
-                        >
-                          <div className="flex flex-col gap-0.5 min-w-0">
-                            <span className="font-bold text-xs md:text-sm text-[#FDF6F7] group-hover:text-[#F4B8C6] transition-colors truncate">
-                              {ch.title}
-                            </span>
-                            {ch.createdAt && (
-                              <span className="text-[10px] text-[#AD9CA6]">
-                                {formatDate(ch.createdAt)}
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[#AD9CA6] group-hover:text-[#F4B8C6] transform group-hover:translate-x-0.5 transition-all shrink-0 text-xs">
-                            &rarr;
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-14 text-[#AD9CA6] bg-[#161218]/50 rounded-2xl border border-[#F4B8C6]/10">
-                      Data chapter belum tersedia.
-                    </div>
-                  )}
-                </div>
-              </section>
+              <ChapterListInfinite
+                komikSlug={slug}
+                mangaId={komik.mangaId || komik.slug}
+                initialChapters={chapters}
+                pagination={komik.chaptersPagination}
+              />
             </ScrollReveal>
           </div>
 

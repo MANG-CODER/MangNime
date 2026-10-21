@@ -11,7 +11,7 @@ export const metadata = {
   title: "MangNime - Streaming Anime & Baca Komik Gratis",
 };
 
-export const revalidate = 1800;
+export const revalidate = 7200;
 
 function SectionHeader({
   issue,
@@ -33,7 +33,7 @@ function SectionHeader({
             {icon}
           </span>
           <span>{issue}</span>
-          <span className="text-[#AD9CA6]">• {tag}</span>
+          <span className="text-[#AD9CA6]">{tag}</span>
         </div>
         <h2 className="text-2xl md:text-4xl font-extrabold text-[#FDF6F7] tracking-tight">
           {title}{" "}
@@ -89,13 +89,11 @@ export default async function Home() {
 
   return (
     <div className="space-y-16 pb-20 animate-fade-in">
-      {/* Hero Carousel Anime */}
       {ongoingList.length > 0 && (
         <HeroCarousel items={ongoingList.slice(0, 5)} />
       )}
 
       <div className="container mx-auto px-4 md:px-8 max-w-[1400px] space-y-20 mt-8">
-        {/* Callout Pencarian Katalog */}
         <ScrollReveal>
           <div className="relative rounded-[28px] bg-gradient-to-r from-[#211B24] via-[#28202C] to-[#211B24] border border-[#F4B8C6]/25 p-5 md:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-vogue-card overflow-hidden">
             <div className="flex items-center gap-4 relative z-10">
@@ -166,7 +164,6 @@ export default async function Home() {
           </div>
         </ScrollReveal>
 
-        {/* 01. Ongoing Anime */}
         <section>
           <SectionHeader
             issue="01"
@@ -208,7 +205,6 @@ export default async function Home() {
           )}
         </section>
 
-        {/* 02. Completed Anime */}
         <section>
           <SectionHeader
             issue="02"
@@ -254,7 +250,6 @@ export default async function Home() {
           )}
         </section>
 
-        {/* 03. Populer Komik */}
         <section>
           <SectionHeader
             issue="03"
@@ -300,7 +295,6 @@ export default async function Home() {
           )}
         </section>
 
-        {/* 04. Update Terbaru Komik */}
         <section>
           <SectionHeader
             issue="04"

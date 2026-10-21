@@ -8,38 +8,42 @@ import {
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const DENO_PROXY_URL =
-  /* process.env.DENO_PROXY_URL || "https://mgcdanm.vestiapani.deno.net"; */
-  process.env.DENO_PROXY_URL || "https://mgcanm2.mangpani.deno.net/";
+const DENO_PROXY_LIST = [
+  process.env.DENO_PROXY_PRIMARY ||
+    process.env.DENO_PROXY_URL ||
+    "https://mgcanm2.mangpani.deno.net",
+  process.env.DENO_PROXY_BACKUP || "",
+].filter(Boolean);
+
 const NETLIFY_KOMIK_PROXY_URL = "https://mangnimeprxykmk.netlify.app";
 
-
+// Durasi TTL dalam satuan DETIK (Sudah diperpanjang agar hemat Memory Time Deno)
 const CACHE_TTL_SECONDS_MAP = {
-  "/anime/ongoing-anime": 2 * 3600,   // 2 Jam (sebelumnya 30 menit)
-  "/anime/complete-anime": 12 * 3600, // 12 Jam (sebelumnya 2 jam)
-  "/anime/schedule": 24 * 3600,       // 24 Jam (jadwal rilis hanya berubah seminggu sekali)
-  "/anime/genre/": 6 * 3600,          // 6 Jam
-  "/anime/genre": 7 * 24 * 3600,      // 7 Hari
-  "/anime/home": 2 * 3600,            // 2 Jam (mengurangi wake-up /home hingga 4x lipat!)
-  "/anime/search/": 6 * 3600,         // 6 Jam
-  "/anime/episode/": 7 * 24 * 3600,   // 7 Hari (episode yang sudah rilis datanya statis)
-  "/anime/batch/": 7 * 24 * 3600,     // 7 Hari
-  "/anime/server/": 900,              // 15 Menit
-  "/anime/anime/": 12 * 3600,         // 12 Jam (detail anime)
-  "/genres": 7 * 24 * 3600,           // 7 Hari
-  "/advanced-search": 2 * 3600,       // 2 Jam
-  "/chapters/": 2 * 3600,             // 2 Jam
-  "/chapter/": 7 * 24 * 3600,         // 7 Hari
-  "/detail/": 12 * 3600,              // 12 Jam
-  "/read/": 7 * 24 * 3600,            // 7 Hari
-  "/popular": 6 * 3600,               // 6 Jam
-  "/latest": 3600,                    // 1 Jam
-  "/search": 6 * 3600,                // 6 Jam
-  "/home": 2 * 3600,                  // 2 Jam
-  default: 2 * 3600,                  // 2 Jam
+  "/anime/ongoing-anime": 2 * 3600, // 2 Jam
+  "/anime/complete-anime": 12 * 3600, // 12 Jam
+  "/anime/schedule": 24 * 3600, // 24 Jam
+  "/anime/genre/": 6 * 3600, // 6 Jam
+  "/anime/genre": 7 * 24 * 3600, // 7 Hari
+  "/anime/home": 2 * 3600, // 2 Jam
+  "/anime/search/": 6 * 3600, // 6 Jam
+  "/anime/episode/": 7 * 24 * 3600, // 7 Hari
+  "/anime/batch/": 7 * 24 * 3600, // 7 Hari
+  "/anime/server/": 900, // 15 Menit
+  "/anime/anime/": 12 * 3600, // 12 Jam
+  "/genres": 7 * 24 * 3600, // 7 Hari
+  "/advanced-search": 2 * 3600, // 2 Jam
+  "/chapters/": 2 * 3600, // 2 Jam
+  "/chapter/": 7 * 24 * 3600, // 7 Hari
+  "/detail/": 12 * 3600, // 12 Jam
+  "/read/": 7 * 24 * 3600, // 7 Hari
+  "/popular": 6 * 3600, // 6 Jam
+  "/latest": 3600, // 1 Jam
+  "/search": 6 * 3600, // 6 Jam
+  "/home": 2 * 3600, // 2 Jam
+  default: 2 * 3600, // 2 Jam
 };
 
-// Urutkan key dari yang paling panjang/spesifik ke yang paling pendek
+// Urutkan key dari yang paling panjang/spesifik agar "/anime/" tidak menimpa "/anime/ongoing-anime"
 const SORTED_TTL_KEYS = Object.keys(CACHE_TTL_SECONDS_MAP)
   .filter((k) => k !== "default")
   .sort((a, b) => b.length - a.length);
@@ -68,10 +72,13 @@ function buildProxyUrl(targetUrl, proxyType = "deno") {
   if (proxyType === "netlify") {
     return `${NETLIFY_KOMIK_PROXY_URL}?url=${encodeURIComponent(targetUrl)}`;
   }
-  return `${DENO_PROXY_URL}/?url=${encodeURIComponent(targetUrl)}`;
+  if (proxyType === "deno_backup" && DENO_PROXY_LIST[1]) {
+    return `${DENO_PROXY_LIST[1]}/?url=${encodeURIComponent(targetUrl)}`;
+  }
+  return `${DENO_PROXY_LIST[0]}/?url=${encodeURIComponent(targetUrl)}`;
 }
 
-// Gunakan header statis yang konsisten agar Next.js Data Cache (lintas instance Vercel) bekerja optimal
+// Header statis murni agar Next.js Data Cache (force-cache) berjalan lintas instance Vercel
 const STATIC_FETCH_HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
@@ -128,8 +135,8 @@ export async function coreFetcher(url, options = {}) {
       (bucket === "komik"
         ? "netlify"
         : bucket === "komiku"
-        ? "direct"
-        : "deno");
+          ? "direct"
+          : "deno");
 
     if (!acquireUpstreamSlot(bucket)) {
       const stale = getStaleCache(url);
@@ -137,12 +144,16 @@ export async function coreFetcher(url, options = {}) {
     }
 
     const isDev = process.env.NODE_ENV === "development";
+    const hasBackupDeno = Boolean(DENO_PROXY_LIST[1]);
+
     const routeChain =
       isDev && defaultProxy === "deno"
-        ? ["direct", "deno"]
-        : [defaultProxy];
+        ? ["direct", "deno", ...(hasBackupDeno ? ["deno_backup"] : [])]
+        : defaultProxy === "deno" && hasBackupDeno
+          ? ["deno", "deno_backup"]
+          : [defaultProxy];
 
-    const maxRetries = options.retries ?? 2;
+    const maxRetries = options.retries ?? routeChain.length;
     const timeoutMs = options.timeout || 4500;
     let lastError = null;
 
@@ -152,7 +163,6 @@ export async function coreFetcher(url, options = {}) {
       const targetFetchUrl = buildProxyUrl(url, currentProxy);
 
       try {
-        // LOG KORELASI: Mencatat URL, TTL yang terpilih, dan waktu sebelum menembak proxy
         console.log("[CORE FETCH]", {
           via: currentProxy,
           url,
@@ -173,14 +183,16 @@ export async function coreFetcher(url, options = {}) {
         const res = await fetchWithTimeout(
           targetFetchUrl,
           fetchOptions,
-          timeoutMs
+          timeoutMs,
         );
 
         if (!res.ok) {
           if (res.status === 429 || res.status === 403) {
             const stale = getStaleCache(url);
             if (stale) return stale;
-            const fatalErr = new Error(`[HTTP ${res.status}] Upstream menolak request`);
+            const fatalErr = new Error(
+              `[HTTP ${res.status}] Upstream menolak request`,
+            );
             fatalErr.noRetry = true;
             throw fatalErr;
           }

@@ -1,4 +1,3 @@
-// Gunakan singleton di globalThis agar cache tidak hilang saat HMR atau antar-invokasi hangat di Vercel
 const globalStore = globalThis.__MANGNIME_CORE_STORE__ || {
   cache: new Map(),
   inFlight: new Map(),
@@ -11,20 +10,17 @@ if (!globalThis.__MANGNIME_CORE_STORE__) {
   globalThis.__MANGNIME_CORE_STORE__ = globalStore;
 }
 
-const MAX_CACHE_ENTRIES = 1200;
+const MAX_CACHE_ENTRIES = 1500;
 const RATE_LIMIT_WINDOW = 60 * 1000;
 const DEFAULT_MAX_REQUESTS = 30;
 
-// Batas aman di bawah limit Sanka (Anime: 25 RPM -> diset 23, Komik: 20 RPM -> diset 18)
+// Batas aman di bawah limit Sanka (Anime: 25 RPM -> 23, Komik: 20 RPM -> 18)
 const UPSTREAM_LIMITS = {
   anime: 23,
   komik: 18,
   komiku: 20,
 };
 
-/**
- * 1. Rate Limiter per IP Pengunjung (Untuk Search / Action)
- */
 export function checkRateLimit(
   ip = "global",
   maxRequests = DEFAULT_MAX_REQUESTS,
@@ -47,9 +43,6 @@ export function checkRateLimit(
   return record.count <= maxRequests;
 }
 
-/**
- * 2. Governor Kuota Upstream Sanka (Mencegah IP Proxy Kena Ban 429)
- */
 export function acquireUpstreamSlot(bucket = "anime") {
   const now = Date.now();
   const limit = UPSTREAM_LIMITS[bucket] || 20;
@@ -77,13 +70,10 @@ export function acquireUpstreamSlot(bucket = "anime") {
   return true;
 }
 
-/**
- * 3. L1 In-Memory Cache (Fresh & Stale-While-Error)
- */
 export function getCache(key) {
   const item = globalStore.cache.get(key);
   if (!item) return null;
-  if (Date.now() > item.expiry) return null; // Jangan dihapus agar bisa dipakai getStaleCache saat darurat
+  if (Date.now() > item.expiry) return null;
   return item.value;
 }
 
@@ -93,7 +83,6 @@ export function getStaleCache(key) {
 }
 
 export function setCache(key, value, ttlSeconds = 3600) {
-  // Jaga ukuran Map agar tidak membebani RAM server
   if (globalStore.cache.size >= MAX_CACHE_ENTRIES) {
     const oldestKey = globalStore.cache.keys().next().value;
     if (oldestKey) globalStore.cache.delete(oldestKey);
@@ -107,11 +96,6 @@ export function setCache(key, value, ttlSeconds = 3600) {
   });
 }
 
-/**
- * 4. Singleflight (In-Flight Request Deduplication)
- * Jika generateMetadata() dan Page() meminta data yang sama di milidetik yang sama,
- * hanya 1 request jaringan yang dijalankan!
- */
 export async function withSingleflight(key, asyncFn) {
   if (globalStore.inFlight.has(key)) {
     return globalStore.inFlight.get(key);
@@ -129,10 +113,6 @@ export async function withSingleflight(key, asyncFn) {
   return promise;
 }
 
-/**
- * 5. Registry Slug -> UUID Komik Shinigami
- * Menghilangkan kebutuhan request /search/ tambahan saat membuka halaman detail komik!
- */
 export function registerMangaSlug(slug, mangaId) {
   if (!slug || !mangaId) return;
   globalStore.mangaSlugRegistry.set(slug.toLowerCase().trim(), mangaId);
