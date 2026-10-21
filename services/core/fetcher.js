@@ -13,30 +13,30 @@ const DENO_PROXY_URL =
   process.env.DENO_PROXY_URL || "https://mgcanm2.mangpani.deno.net/";
 const NETLIFY_KOMIK_PROXY_URL = "https://mangnimeprxykmk.netlify.app";
 
-// Aturan TTL yang sudah spesifik (tidak lagi tertimpa oleh "/anime/")
+
 const CACHE_TTL_SECONDS_MAP = {
-  "/anime/ongoing-anime": 1800,    // 30 Menit
-  "/anime/complete-anime": 7200,   // 2 Jam
-  "/anime/schedule": 6 * 3600,     // 6 Jam
-  "/anime/genre/": 3600,           // 1 Jam (Daftar anime per genre)
-  "/anime/genre": 7 * 24 * 3600,   // 7 Hari (Daftar semua genre)
-  "/anime/home": 1800,             // 30 Menit
-  "/anime/search/": 1800,          // 30 Menit
-  "/anime/episode/": 12 * 3600,    // 12 Jam
-  "/anime/batch/": 24 * 3600,      // 24 Jam
-  "/anime/server/": 300,           // 5 Menit
-  "/anime/anime/": 2 * 3600,       // 2 Jam (Detail Anime: /anime/anime/{slug})
-  "/genres": 7 * 24 * 3600,        // 7 Hari (Genre Komik)
-  "/advanced-search": 1800,        // 30 Menit
-  "/chapters/": 1800,              // 30 Menit
-  "/chapter/": 24 * 3600,          // 24 Jam
-  "/detail/": 2 * 3600,            // 2 Jam
-  "/read/": 24 * 3600,             // 24 Jam
-  "/popular": 3600,                // 1 Jam
-  "/latest": 1200,                 // 20 Menit
-  "/search": 1800,                 // 30 Menit
-  "/home": 1800,                   // 30 Menit
-  default: 1800,                   // 30 Menit
+  "/anime/ongoing-anime": 2 * 3600,   // 2 Jam (sebelumnya 30 menit)
+  "/anime/complete-anime": 12 * 3600, // 12 Jam (sebelumnya 2 jam)
+  "/anime/schedule": 24 * 3600,       // 24 Jam (jadwal rilis hanya berubah seminggu sekali)
+  "/anime/genre/": 6 * 3600,          // 6 Jam
+  "/anime/genre": 7 * 24 * 3600,      // 7 Hari
+  "/anime/home": 2 * 3600,            // 2 Jam (mengurangi wake-up /home hingga 4x lipat!)
+  "/anime/search/": 6 * 3600,         // 6 Jam
+  "/anime/episode/": 7 * 24 * 3600,   // 7 Hari (episode yang sudah rilis datanya statis)
+  "/anime/batch/": 7 * 24 * 3600,     // 7 Hari
+  "/anime/server/": 900,              // 15 Menit
+  "/anime/anime/": 12 * 3600,         // 12 Jam (detail anime)
+  "/genres": 7 * 24 * 3600,           // 7 Hari
+  "/advanced-search": 2 * 3600,       // 2 Jam
+  "/chapters/": 2 * 3600,             // 2 Jam
+  "/chapter/": 7 * 24 * 3600,         // 7 Hari
+  "/detail/": 12 * 3600,              // 12 Jam
+  "/read/": 7 * 24 * 3600,            // 7 Hari
+  "/popular": 6 * 3600,               // 6 Jam
+  "/latest": 3600,                    // 1 Jam
+  "/search": 6 * 3600,                // 6 Jam
+  "/home": 2 * 3600,                  // 2 Jam
+  default: 2 * 3600,                  // 2 Jam
 };
 
 // Urutkan key dari yang paling panjang/spesifik ke yang paling pendek
@@ -162,11 +162,11 @@ export async function coreFetcher(url, options = {}) {
 
         const fetchOptions = {
           method: "GET",
-          headers: {
-            "x-trace-source": `nextjs-${process.env.NODE_ENV || "prod"}-ttl${ttlSeconds}`,
-          },
           ...(useCache
-            ? { next: { revalidate: ttlSeconds } }
+            ? {
+                cache: "force-cache",
+                next: { revalidate: ttlSeconds },
+              }
             : { cache: "no-store" }),
         };
 
