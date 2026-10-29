@@ -11,6 +11,9 @@ export default function InteractivePlayer({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleServerClick = async (serverId, serverName) => {
+    // Cegah request ganda saat masih loading atau saat klik server yang sudah aktif
+    if (isLoading || activeServer === serverName) return;
+
     setIsLoading(true);
     setActiveServer(serverName);
     try {
@@ -86,10 +89,11 @@ export default function InteractivePlayer({
                       <button
                         key={sIdx}
                         type="button"
+                        disabled={isLoading || isCurrent}
                         onClick={() =>
                           handleServerClick(srv.serverId, srv.title)
                         }
-                        className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border disabled:opacity-60 disabled:cursor-not-allowed ${
                           isCurrent
                             ? "bg-[#F4B8C6] text-[#161218] border-[#F4B8C6] shadow-vogue-blush"
                             : "bg-[#161218]/60 text-[#AD9CA6] border-[#F4B8C6]/15 hover:bg-[#161218] hover:text-[#FDF6F7] hover:border-[#F4B8C6]/45"

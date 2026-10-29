@@ -11,13 +11,18 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const DENO_PROXY_LIST = [
   process.env.DENO_PROXY_PRIMARY ||
     process.env.DENO_PROXY_URL ||
-    "https://mgcanm2.mangpani.deno.net",
+    /* "https://mgcanm2.mangpani.deno.net" */"",
   process.env.DENO_PROXY_BACKUP || "",
 ].filter(Boolean);
 
-const NETLIFY_KOMIK_PROXY_URL = "https://mangnimeprxykmk.netlify.app";
+// Gunakan site Netlify khusus anime jika ada di ENV, atau fallback ke Netlify komik karena domain upstream-nya sama (sankavollerei.web.id)
+const NETLIFY_KOMIK_PROXY_URL =
+  process.env.NETLIFY_KOMIK_PROXY_URL || "https://mangnimeprxykmk.netlify.app";
+const NETLIFY_ANIME_PROXY_URL =
+  process.env.NETLIFY_ANIME_PROXY_URL ||
+  "https://stately-mooncake-dec334.netlify.app";
 
-// Durasi TTL dalam satuan DETIK (Sudah diperpanjang agar hemat Memory Time Deno)
+// Durasi TTL dalam satuan DETIK
 const CACHE_TTL_SECONDS_MAP = {
   "/anime/ongoing-anime": 2 * 3600, // 2 Jam
   "/anime/complete-anime": 12 * 3600, // 12 Jam
@@ -43,7 +48,6 @@ const CACHE_TTL_SECONDS_MAP = {
   default: 2 * 3600, // 2 Jam
 };
 
-// Urutkan key dari yang paling panjang/spesifik agar "/anime/" tidak menimpa "/anime/ongoing-anime"
 const SORTED_TTL_KEYS = Object.keys(CACHE_TTL_SECONDS_MAP)
   .filter((k) => k !== "default")
   .sort((a, b) => b.length - a.length);
@@ -67,10 +71,13 @@ function detectBucket(url) {
   return "anime";
 }
 
-function buildProxyUrl(targetUrl, proxyType = "deno") {
+function buildProxyUrl(targetUrl, proxyType = "netlify_anime") {
   if (proxyType === "direct") return targetUrl;
   if (proxyType === "netlify") {
     return `${NETLIFY_KOMIK_PROXY_URL}?url=${encodeURIComponent(targetUrl)}`;
+  }
+  if (proxyType === "netlify_anime") {
+    return `${NETLIFY_ANIME_PROXY_URL}?url=${encodeURIComponent(targetUrl)}`;
   }
   if (proxyType === "deno_backup" && DENO_PROXY_LIST[1]) {
     return `${DENO_PROXY_LIST[1]}/?url=${encodeURIComponent(targetUrl)}`;
@@ -78,7 +85,6 @@ function buildProxyUrl(targetUrl, proxyType = "deno") {
   return `${DENO_PROXY_LIST[0]}/?url=${encodeURIComponent(targetUrl)}`;
 }
 
-// Header statis murni agar Next.js Data Cache (force-cache) berjalan lintas instance Vercel
 const STATIC_FETCH_HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
@@ -86,7 +92,7 @@ const STATIC_FETCH_HEADERS = {
   "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
 };
 
-async function fetchWithTimeout(url, options = {}, timeoutMs = 4500) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -108,10 +114,8 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 4500) {
 }
 
 export async function coreFetcher(url, options = {}) {
-  const useCache =
-    options.cache !== false &&
-    options.cache !== "no-store" &&
-    !url.includes("/server/");
+  // Hapus !url.includes("/server/") agar TTL 900 detik (15 menit) di CACHE_TTL_SECONDS_MAP berfungsi
+  const useCache = options.cache !== false && options.cache !== "no-store";
   const ttlSeconds = options.ttlSeconds || getTTLSeconds(url);
 
   // 1. Cek L1 Memory Cache
@@ -136,7 +140,7 @@ export async function coreFetcher(url, options = {}) {
         ? "netlify"
         : bucket === "komiku"
           ? "direct"
-          : "deno");
+          : "netlify_anime"); // <-- SEKARANG ANIME UTAMA KE NETLIFY
 
     if (!acquireUpstreamSlot(bucket)) {
       const stale = getStaleCache(url);
@@ -144,23 +148,31 @@ export async function coreFetcher(url, options = {}) {
     }
 
     const isDev = process.env.NODE_ENV === "development";
+    const hasPrimaryDeno = Boolean(DENO_PROXY_LIST[0]);
     const hasBackupDeno = Boolean(DENO_PROXY_LIST[1]);
 
-    const routeChain =
-      isDev && defaultProxy === "deno"
-        ? ["direct", "deno", ...(hasBackupDeno ? ["deno_backup"] : [])]
-        : defaultProxy === "deno" && hasBackupDeno
-          ? ["deno", "deno_backup"]
-          : [defaultProxy];
+    // Rantai Rute: Netlify Utama -> Deno Primary (Cadangan 1) -> Deno Backup (Cadangan 2)
+    let routeChain = [defaultProxy];
+    if (defaultProxy === "netlify_anime") {
+      routeChain = [
+        ...(isDev ? ["direct"] : []),
+        "netlify_anime",
+        ...(hasPrimaryDeno ? ["deno"] : []),
+        ...(hasBackupDeno ? ["deno_backup"] : []),
+      ];
+    } else if (defaultProxy === "netlify") {
+      routeChain = ["netlify", ...(hasPrimaryDeno ? ["deno"] : [])];
+    }
 
     const maxRetries = options.retries ?? routeChain.length;
-    const timeoutMs = options.timeout || 4500;
+    const timeoutMs = options.timeout || 5000;
     let lastError = null;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       const currentProxy =
         routeChain[Math.min(attempt - 1, routeChain.length - 1)];
       const targetFetchUrl = buildProxyUrl(url, currentProxy);
+      const isDeno = currentProxy.startsWith("deno");
 
       try {
         console.log("[CORE FETCH]", {
@@ -172,9 +184,10 @@ export async function coreFetcher(url, options = {}) {
 
         const fetchOptions = {
           method: "GET",
+          // Putus keep-alive jika nembak ke Deno agar isolate Deno langsung tidur & hemat Memory Time
+          headers: isDeno ? { Connection: "close" } : {},
           ...(useCache
             ? {
-                cache: "force-cache",
                 next: { revalidate: ttlSeconds },
               }
             : { cache: "no-store" }),
@@ -190,11 +203,10 @@ export async function coreFetcher(url, options = {}) {
           if (res.status === 429 || res.status === 403) {
             const stale = getStaleCache(url);
             if (stale) return stale;
-            const fatalErr = new Error(
-              `[HTTP ${res.status}] Upstream menolak request`,
+            // Jika 429/403 di proxy pertama (misal IP Netlify kena limit), izinkan lompat ke fallback Deno
+            throw new Error(
+              `[HTTP ${res.status}] Upstream menolak request via ${currentProxy}`,
             );
-            fatalErr.noRetry = true;
-            throw fatalErr;
           }
           throw new Error(`[HTTP ERROR] ${res.status}`);
         }
@@ -218,7 +230,7 @@ export async function coreFetcher(url, options = {}) {
       } catch (err) {
         lastError = err;
 
-        if (isDev && currentProxy === "direct" && routeChain.includes("deno")) {
+        if (isDev && currentProxy === "direct" && routeChain.length > 1) {
           continue;
         }
 
@@ -226,7 +238,7 @@ export async function coreFetcher(url, options = {}) {
           break;
         }
 
-        await delay(500 * attempt);
+        await delay(400 * attempt);
       }
     }
 

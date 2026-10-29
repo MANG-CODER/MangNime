@@ -150,8 +150,9 @@ export default async function EpisodePage({ params }) {
         process.env.SANKANIME_BASE_URL ||
         "https://www.sankavollerei.web.id/anime";
 
+      // Gunakan TTL 900 detik (15 menit) agar klik server yang sama dari banyak user cukup 1x fetch ke proxy
       const res = await coreFetcher(`${baseUrl}/server/${serverId}`, {
-        cache: "no-store",
+        ttlSeconds: 900,
       });
 
       return res?.data?.url || res?.url || res;
