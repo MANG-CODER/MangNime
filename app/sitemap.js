@@ -215,24 +215,26 @@ export default async function sitemap() {
     "/komik/genre/wuxia",
   ];
 
+  // Bagian mapping di bawah app/sitemap.js
   return rawUrls.map((path) => {
     let priority = 0.8;
-    let changeFrequency = "daily";
+    let changeFrequency = "weekly"; // Lebih aman buat kuota proxy dibanding "daily"
 
     if (path === "") {
       priority = 1.0;
-      changeFrequency = "hourly";
+      changeFrequency = "daily"; // Ubah dari hourly ke daily
     } else if (path.includes("/ongoing") || path.includes("/latest")) {
       priority = 0.9;
-      changeFrequency = "hourly";
+      changeFrequency = "weekly"; // Ubah dari hourly ke daily
     } else if (path.includes("/genre/")) {
       priority = 0.6;
-      changeFrequency = "weekly";
+      changeFrequency = "monthly";
     } else if (
       path.includes("/about") ||
       path.includes("/guide") ||
       path.includes("/policy") ||
-      path.includes("/terms")
+      path.includes("/terms") ||
+      path.includes("/report")
     ) {
       priority = 0.3;
       changeFrequency = "yearly";

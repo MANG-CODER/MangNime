@@ -1,16 +1,22 @@
+// app/robots.js
 export default function robots() {
   return {
     rules: [
       {
-        // 1. Daftar bot AI & Scraper berat yang diblokir sepenuhnya
+        // 1. Daftar bot AI, SEO & Scraper berat yang diblokir sepenuhnya
         userAgent: [
+          "Reflectionbot",
           "ClaudeBot",
           "Claude-SearchBot",
+          "Claude-Web",
           "anthropic-ai",
           "GPTBot",
           "ChatGPT-User",
           "OAI-SearchBot",
+          "PerplexityBot",
+          "Perplexity-User",
           "Google-Extended",
+          "GoogleOther",
           "CCBot",
           "meta-externalagent",
           "facebookexternalhit",
@@ -18,18 +24,36 @@ export default function robots() {
           "Facebot",
           "HeadlessChrome",
           "Bytespider",
+          "TikTokSpider",
           "Amazonbot",
+          "Applebot-Extended",
           "PetalBot",
           "AhrefsBot",
+          "SemrushBot",
+          "DotBot",
+          "MJ12bot",
+          "BLEXBot",
+          "DataForSeoBot",
+          "Diffbot",
+          "ImagesiftBot",
+          "YouBot",
+          "Scrapy",
+          "YandexBot",
+          "Baiduspider",
+          "DuckDuckBot",
         ],
         disallow: "/",
       },
       {
-        // 2. Aturan untuk mesin pencari utama (Googlebot, Bingbot, dll)
+        // 2. Aturan untuk mesin pencari utama (Googlebot, Bingbot)
         userAgent: "*",
         allow: "/",
         disallow: [
-          "/komik/*/*",
+          "/anime/*/*", // Blokir halaman episode/streaming di dalam detail anime
+          "/episode/", // Blokir jika ada route /episode/...
+          "/batch/", // Blokir jika ada route /batch/...
+          "/watch/", // Blokir jika ada route /watch/...
+          "/komik/*/*", // Blokir halaman baca chapter komik
           "/api/",
           "/callback",
           "/profile",

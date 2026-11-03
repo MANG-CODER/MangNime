@@ -5,14 +5,31 @@ const rateLimitMap = new Map();
 // 🔧 true = seluruh website dalam maintenance
 const MAINTENANCE_MODE = false;
 
+// 1. Hanya izinkan bot mesin pencari utama untuk SEO (Google & Bing)
+// Catatan: GoogleOther & YandexBot dihapus karena sering nyepam request tanpa bantu ranking Google Search
+const GOOD_BOTS = /googlebot|google-inspectiontool|bingbot/i;
+
+// 2. Tangkap SEMUA jenis bot/crawler/scraper/AI (termasuk yang mengandung kata "bot" seperti Reflectionbot)
+const ALL_BOTS_AND_SCRAPERS =
+  /bot|crawler|spider|crawling|scraper|reflection|claude|anthropic|gpt|chatgpt|oai-search|perplexity|meta-externalagent|facebookexternalhit|facebot|ccbot|headless|google-extended|googleother|bytespider|tiktokspider|amazonbot|applebot|petalbot|ahrefs|semrush|mj12bot|dotbot|blexbot|yandex|baiduspider|duckduckbot|slurp|meta-webindexer|diffbot|imagesift|youbot|scrapy|python|curl|wget|urllib|axios|go-http-client|node-fetch|undici|httpie|postman/i;
+
+// 3. Route berat yang memicu request ke Proxy API (Episode, Batch, Chapter Komik)
+// Bot SEO (Googlebot/Bingbot) TIDAK BOLEH masuk ke route ini agar proxy tidak kena ban
+function isHeavyProxyRoute(pathname) {
+  return (
+    pathname.includes("/episode") ||
+    pathname.includes("/batch") ||
+    pathname.includes("/watch") ||
+    pathname.startsWith("/api/") ||
+    /^\/anime\/[^/]+\/[^/]+/.test(pathname) || // Contoh: /anime/[slug]/[episode]
+    (/^\/komik\/[^/]+\/[^/]+/.test(pathname) && // Contoh: /komik/[slug]/[chapter] (kecuali /komik/genre/*)
+      !pathname.startsWith("/komik/genre/"))
+  );
+}
+
 export function proxy(request) {
   const pathname = request.nextUrl.pathname;
   const userAgent = request.headers.get("user-agent") || "";
-  const host = request.headers.get("host") || "";
-
-  if (host.endsWith(".vercel.app")) {
-    return NextResponse.next();
-  }
 
   // =========================================================
   // 0. BYPASS MUTLAK: SITEMAP, ROBOTS.TXT, & ASET STATIS
@@ -25,8 +42,8 @@ export function proxy(request) {
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/img/") ||
     pathname.startsWith("/assets/") ||
-    pathname.match(
-      /\.(ico|png|jpg|jpeg|svg|webp|gif|avif|css|js|woff|woff2|ttf|xml|txt)$/i,
+    /\.(ico|png|jpg|jpeg|svg|webp|gif|avif|css|js|woff|woff2|ttf|xml|txt)$/i.test(
+      pathname,
     )
   ) {
     return NextResponse.next();
@@ -40,9 +57,41 @@ export function proxy(request) {
   }
 
   // =========================================================
-  // 2. NORMAL SECURITY LOGIC
+  // 2. PROTEKSI ANTI-BOT & CRAWLER (PRIORITAS TERTINGGI)
   // =========================================================
-  const ip = request.ip || request.headers.get("x-forwarded-for") || "unknown";
+  // Blokir request yang tidak punya User-Agent sama sekali (biasanya script bot)
+  if (!userAgent || userAgent.trim().length < 10) {
+    return new NextResponse(null, { status: 403 });
+  }
+
+  // Cek apakah User-Agent terindikasi sebagai Bot / Scraper
+  if (ALL_BOTS_AND_SCRAPERS.test(userAgent)) {
+    // A. Jika BUKAN Googlebot/Bingbot (misal Reflectionbot, ClaudeBot, dll) -> BLOKIR TOTAL!
+    if (!GOOD_BOTS.test(userAgent)) {
+      return new NextResponse(null, { status: 403 });
+    }
+
+    // B. Jika Googlebot/Bingbot mencoba masuk ke halaman Episode/Batch/Chapter -> BLOKIR!
+    // (Cukup biarkan Google mengindeks halaman Home, Genre, dan Detail Sinopsis Anime/Komik saja)
+    if (isHeavyProxyRoute(pathname)) {
+      return new NextResponse("Crawling episode/chapter routes is disallowed", {
+        status: 403,
+        headers: { "X-Robots-Tag": "noindex, nofollow" },
+      });
+    }
+
+    // C. Googlebot/Bingbot di halaman aman (Home, Detail Anime/Komik, Genre) -> IZINKAN
+    return NextResponse.next();
+  }
+
+  // =========================================================
+  // 3. WHITELIST & PREFETCH (HANYA UNTUK USER MANUSIA)
+  // =========================================================
+  // Ambil IP asli paling depan jika lewat proxy/Cloudflare
+  const rawForwarded = request.headers.get("x-forwarded-for");
+  const ip =
+    request.ip ||
+    (rawForwarded ? rawForwarded.split(",")[0].trim() : "unknown");
 
   // Whitelist IP Developer
   const whitelistedIps = ["125.160.210.25", "127.0.0.1", "::1"];
@@ -50,7 +99,7 @@ export function proxy(request) {
     return NextResponse.next();
   }
 
-  // Bypass Next.js Prefetch
+  // Bypass Next.js Prefetch (setelah dipastikan bukan bot di tahap 2)
   const isPrefetch =
     request.headers.get("next-router-prefetch") === "1" ||
     request.headers.get("purpose") === "prefetch";
@@ -59,27 +108,20 @@ export function proxy(request) {
     return NextResponse.next();
   }
 
-  // Good Bots & Google Search Console Inspection Tools
-  const goodBots =
-    /googlebot|google-inspectiontool|googleother|bingbot|yandexbot|slurp/i;
-  if (goodBots.test(userAgent)) {
-    return NextResponse.next();
-  }
-
-  // Bad Bots & Generic Scrapers
-  const badBots =
-    /claude-searchbot|claudebot|anthropic|gptbot|chatgpt-user|oai-searchbot|meta-externalagent|facebookexternalhit|facebot|ccbot|headlesschrome|google-extended|bytespider|amazonbot|petalbot|ahrefsbot|meta-webindexer|scraper|python|curl|wget|urllib/i;
-
-  if (badBots.test(userAgent)) {
-    return new NextResponse(null, { status: 403 });
-  }
-
-  // Rate Limit
+  // =========================================================
+  // 4. RATE LIMITING (UNTUK MENCEGAH SPAM DARI BROWSER/FAKE UA)
+  // =========================================================
   const LIMIT = 40;
   const TIME_WINDOW_MS = 60 * 1000;
 
   if (ip !== "unknown") {
     const currentTime = Date.now();
+
+    // Bersihkan map jika sudah terlalu besar agar tidak bocor memori
+    if (rateLimitMap.size > 5000) {
+      rateLimitMap.clear();
+    }
+
     const requestData = rateLimitMap.get(ip) || {
       count: 0,
       startTime: currentTime,
