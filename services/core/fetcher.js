@@ -19,7 +19,8 @@ const DENO_PROXY_LIST = [
 const NETLIFY_KOMIK_PROXY_URL =
   process.env.NETLIFY_KOMIK_PROXY_URL || "https://mangnimeprxykmk.netlify.app";
 const NETLIFY_ANIME_PROXY_URL =
-  process.env.NETLIFY_ANIME_PROXY_URL || "https://mgnmv3.netlify.app/";
+  process.env.NETLIFY_ANIME_PROXY_URL ||
+  "https://script.google.com/macros/s/AKfycbwvofrDOWg5q-foeSN-0ZsRmOqBOrBH8H-WFOVrF-Pwfzkmj_ZS-5AUbGl7AjnCCCsk/exec";
 
 // Durasi TTL dalam satuan DETIK
 const CACHE_TTL_SECONDS_MAP = {
