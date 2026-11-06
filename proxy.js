@@ -10,9 +10,17 @@ const MAINTENANCE_MODE = false;
 const GOOD_BOTS = /googlebot|google-inspectiontool|bingbot/i;
 
 // 2. Tangkap SEMUA jenis bot/crawler/scraper/AI (termasuk yang mengandung kata "bot" seperti Reflectionbot)
+// Hapus library server-side (axios, node-fetch, undici) dari regex ini
 const ALL_BOTS_AND_SCRAPERS =
-  /bot|crawler|spider|crawling|scraper|reflection|claude|anthropic|gpt|chatgpt|oai-search|perplexity|meta-externalagent|facebookexternalhit|facebot|ccbot|headless|google-extended|googleother|bytespider|tiktokspider|amazonbot|applebot|petalbot|ahrefs|semrush|mj12bot|dotbot|blexbot|yandex|baiduspider|duckduckbot|slurp|meta-webindexer|diffbot|imagesift|youbot|scrapy|python|curl|wget|urllib|axios|go-http-client|node-fetch|undici|httpie|postman/i;
+  /bot|crawler|spider|crawling|scraper|reflection|claude|anthropic|gpt|chatgpt|oai-search|perplexity|meta-externalagent|facebookexternalhit|facebot|ccbot|headless|google-extended|googleother|bytespider|tiktokspider|amazonbot|applebot|petalbot|ahrefs|semrush|mj12bot|dotbot|blexbot|yandex|baiduspider|duckduckbot|slurp|meta-webindexer|diffbot|imagesift|youbot|scrapy|python|curl|wget|urllib|httpie|postman/i;
 
+// Di dalam fungsi proxy(request):
+  const userAgent = request.headers.get("user-agent") || "";
+
+  // Jangan terlalu ketat melarang UA pendek agar fetch internal server tidak ikut terblokir
+  if (!userAgent) {
+    return new NextResponse(null, { status: 403 });
+  }
 // 3. Route berat yang memicu request ke Proxy API (Episode, Batch, Chapter Komik)
 // Bot SEO (Googlebot/Bingbot) TIDAK BOLEH masuk ke route ini agar proxy tidak kena ban
 function isHeavyProxyRoute(pathname) {
