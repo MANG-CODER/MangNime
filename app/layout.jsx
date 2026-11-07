@@ -2,6 +2,7 @@ import { Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import RateLimitPopups from "@/components/layout/RateLimitPopups";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -37,11 +38,12 @@ export default function RootLayout({ children }) {
       className="scroll-smooth scroll-pt-20"
     >
       <body
-        className={`${jakarta.variable} ${playfair.variable} font-body bg-[#120F16] text-[#FAF5F8] antialiased flex flex-col min-h-screen selection:bg-[#FFB7C5] selection:text-[#120F16]`}
+        className={`${jakarta.variable} ${playfair.variable} font-body bg-[#161218] text-[#FAF5F8] antialiased flex flex-col min-h-screen pb-24 lg:pb-0 selection:bg-[#FFB7C5] selection:text-[#120F16]`}
       >
         <Navbar />
-        <main className="flex-grow pb-24 lg:pb-0">{children}</main>
+        <main className="flex-grow">{children}</main>
         <Footer />
+        <RateLimitPopups />
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function Error({ error, reset }) {
   useEffect(() => {
@@ -17,8 +18,8 @@ export default function Error({ error, reset }) {
           Ups! Terjadi Kesalahan Sistem
         </h2>
         <p className="text-sm text-[#AD9CA6] leading-relaxed">
-          Gagal mengambil data dari server penyedia. Silakan coba muat ulang
-          halaman ini.
+          Halaman ini gagal ditampilkan. Silakan coba muat ulang. Kalau
+          masalahnya berulang, kabari kami lewat halaman laporan.
         </p>
         <div className="pt-2">
           <button
@@ -27,6 +28,14 @@ export default function Error({ error, reset }) {
           >
             Coba Muat Ulang
           </button>
+        </div>
+        <div>
+          <Link
+            href="/report"
+            className="text-xs font-bold text-[#F4B8C6] hover:underline"
+          >
+            Laporkan masalah
+          </Link>
         </div>
       </div>
     </div>

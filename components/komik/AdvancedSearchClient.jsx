@@ -4,14 +4,31 @@ import { useRouter } from "next/navigation";
 import KomikCard from "@/components/komik/KomikCard";
 import Pagination from "@/components/ui/Pagination";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import GridSkeleton from "@/components/ui/GridSkeleton";
+import FetchError from "@/components/ui/FetchError";
+import { KomikClient } from "@/services/komikApi.client";
+import { useProvider } from "@/hooks/useProvider";
 
-export default function AdvancedSearchClient({
-  genresList,
-  initialData,
-  initialPagination,
-  currentFilters,
-}) {
+export default function AdvancedSearchClient({ currentFilters, page = 1 }) {
   const router = useRouter();
+
+  // Data diambil di browser. Komponen ini TIDAK di-remount saat URL berubah, jadi panel
+  // filter tetap tampil dan cuma area hasil yang berganti ke skeleton.
+  // Genre cuma pelengkap filter: kalau gagal, halaman tetap jalan dengan daftar kosong.
+  const genres = useProvider(() => KomikClient.getGenres().catch(() => []), []);
+  const results = useProvider(
+    () =>
+      KomikClient.getAdvancedSearch(
+        currentFilters.format,
+        page,
+        currentFilters.status,
+        currentFilters.genre,
+      ),
+    [currentFilters.format, currentFilters.status, currentFilters.genre, page],
+  );
+  const genresList = genres.data || [];
+  const initialData = results.data?.data || [];
+  const initialPagination = results.data?.pagination || null;
 
   const [selectedFormats, setSelectedFormats] = useState(
     currentFilters.format ? currentFilters.format.split(",") : [],
@@ -192,6 +209,11 @@ export default function AdvancedSearchClient({
                 </div>
 
                 <div className="flex flex-wrap gap-2 p-4 rounded-2xl bg-[#161218] border border-[#F4B8C6]/15 max-h-52 overflow-y-auto custom-scrollbar">
+                  {genres.loading && (
+                    <span className="text-xs text-[#AD9CA6]">
+                      Memuat genre...
+                    </span>
+                  )}
                   {genresList.map((g, idx) => {
                     const isSelected = selectedGenres.includes(g.slug);
                     return (
@@ -240,7 +262,11 @@ export default function AdvancedSearchClient({
         </div>
 
         {/* KONTEN HASIL GRID */}
-        {initialData.length > 0 ? (
+        {results.loading ? (
+          <GridSkeleton className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 md:gap-7" />
+        ) : results.error ? (
+          <FetchError error={results.error} onRetry={results.retry} />
+        ) : initialData.length > 0 ? (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 md:gap-7">
               {initialData.map((komik, idx) => (

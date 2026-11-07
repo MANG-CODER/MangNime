@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 const rateLimitMap = new Map();
 
 // 🔧 true = seluruh website dalam maintenance
-const MAINTENANCE_MODE = true;
+const MAINTENANCE_MODE = false;
 
 // 1. Hanya izinkan bot mesin pencari utama untuk SEO (Google & Bing)
 // Catatan: GoogleOther & YandexBot dihapus karena sering nyepam request tanpa bantu ranking Google Search

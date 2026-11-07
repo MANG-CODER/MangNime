@@ -1,17 +1,11 @@
-import { KomikProvider } from "@/services/komikApi";
-import KomikCard from "@/components/komik/KomikCard";
-import Pagination from "@/components/ui/Pagination";
-import ScrollReveal from "@/components/ui/ScrollReveal";
+import PaginatedKomikList from "@/components/komik/PaginatedKomikList";
 
-export const revalidate = 1800;
 export const metadata = { title: "Komik Populer - MangNime" };
 
+// Banner di server (ikut masuk HTML). Daftar komik diambil di browser user.
 export default async function PopularKomikPage({ searchParams }) {
   const resolvedParams = await searchParams;
-  const page = parseInt(resolvedParams?.page || 1);
-  const res = await KomikProvider.getPopular(page);
-  const komikList = res?.data || [];
-  const pagination = res?.pagination || null;
+  const page = Math.max(1, parseInt(resolvedParams?.page || 1, 10) || 1);
 
   return (
     <div className="min-h-screen bg-[#161218] pt-6 pb-20 px-4 md:px-8">
@@ -49,27 +43,13 @@ export default async function PopularKomikPage({ searchParams }) {
           </div>
         </div>
 
-        {/* KONTEN */}
-        {komikList.length > 0 ? (
-          <>
-            <div
-              key={`popular-${page}`}
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 md:gap-7"
-            >
-              {komikList.map((komik, idx) => (
-                <ScrollReveal key={komik.slug || idx}>
-                  <KomikCard komik={komik} />
-                </ScrollReveal>
-              ))}
-            </div>
-
-            <Pagination pagination={pagination} basePath="/komik/popular" />
-          </>
-        ) : (
-          <div className="text-center py-24 text-[#AD9CA6] bg-[#211B24]/60 rounded-3xl border border-[#F4B8C6]/15">
-            Sedang mencari data komik populer...
-          </div>
-        )}
+        <PaginatedKomikList
+          key={page}
+          source="popular"
+          page={page}
+          basePath="/komik/popular"
+          emptyText="Belum ada komik populer."
+        />
       </div>
     </div>
   );

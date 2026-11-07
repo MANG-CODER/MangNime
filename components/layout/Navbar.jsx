@@ -1,15 +1,90 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import SearchBar from "./SearchBar";
+import RateLimitMeter from "./RateLimitMeter";
 import Image from "next/image";
+
+const MOBILE_TABS = [
+  {
+    label: "Beranda",
+    href: "/",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+      />
+    ),
+  },
+  {
+    label: "Anime",
+    href: "/ongoing",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    ),
+  },
+  {
+    label: "Komik",
+    href: "/komik/popular",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+      />
+    ),
+  },
+  {
+    label: "Jadwal",
+    href: "/schedule",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+    ),
+  },
+  {
+    label: "Simpan",
+    href: "/bookmark",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+      />
+    ),
+  },
+];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [pillStyle, setPillStyle] = useState({ left: 0, width: 0, opacity: 0 });
+  const [mobilePillStyle, setMobilePillStyle] = useState({
+    left: 0,
+    width: 0,
+    opacity: 0,
+  });
+
+  // State khusus interaksi Hold & Slide (Scrubbing) di Mobile Dock
+  const [isHoldingDock, setIsHoldingDock] = useState(false);
+  const [scrubTab, setScrubTab] = useState(null);
+  const [optimisticTab, setOptimisticTab] = useState(null);
+
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
 
@@ -19,7 +94,11 @@ export default function Navbar() {
   const komikRef = useRef(null);
   const scheduleRef = useRef(null);
 
+  const mobileTabRefs = useRef({});
+  const activePointerId = useRef(null);
+
   const pathname = usePathname();
+  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
@@ -27,6 +106,7 @@ export default function Navbar() {
       const currentScrollY = window.scrollY;
       if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
         setIsNavVisible(false);
+        setIsOpen(false);
       } else {
         setIsNavVisible(true);
       }
@@ -38,6 +118,9 @@ export default function Navbar() {
 
   useEffect(() => {
     setIsOpen(false);
+    setOptimisticTab(null);
+    setScrubTab(null);
+    setIsHoldingDock(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -76,6 +159,137 @@ export default function Navbar() {
     "/batch",
   ].some((p) => pathname.startsWith(p));
   const isKomikSection = ["/komik"].some((p) => pathname.startsWith(p));
+  const isBookmarkSection = pathname.startsWith("/bookmark");
+
+  const activeMobileTab = isHomeSection
+    ? "Beranda"
+    : isAnimeSection
+      ? "Anime"
+      : isKomikSection
+        ? "Komik"
+        : isScheduleSection
+          ? "Jadwal"
+          : isBookmarkSection
+            ? "Simpan"
+            : null;
+
+  // Prioritas tampilan tab: sedang di-hold/slide -> baru dilepas (menunggu route) -> route aktif
+  const currentMobileTarget = scrubTab || optimisticTab || activeMobileTab;
+
+  const moveMobilePill = useCallback(() => {
+    if (!currentMobileTarget) {
+      setMobilePillStyle((prev) => ({ ...prev, opacity: 0 }));
+      return;
+    }
+    const el = mobileTabRefs.current[currentMobileTarget];
+    if (el) {
+      setMobilePillStyle({
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+        opacity: 1,
+      });
+    }
+  }, [currentMobileTarget]);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(moveMobilePill);
+    const timer = setTimeout(moveMobilePill, 50);
+    window.addEventListener("resize", moveMobilePill);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+      window.removeEventListener("resize", moveMobilePill);
+    };
+  }, [moveMobilePill]);
+
+  // Deteksi tab mana yang berada di bawah jari/kursor saat sliding
+  const getTabFromClientX = useCallback((clientX) => {
+    let closestLabel = null;
+    let minDistance = Infinity;
+
+    for (const tab of MOBILE_TABS) {
+      const el = mobileTabRefs.current[tab.label];
+      if (!el) continue;
+      const rect = el.getBoundingClientRect();
+
+      // Jika jari berada di dalam batas tombol saat ini, kunci ke tombol tersebut (anti-jitter)
+      if (clientX >= rect.left + 2 && clientX <= rect.right - 2) {
+        return tab.label;
+      }
+
+      const center = rect.left + rect.width / 2;
+      const dist = Math.abs(clientX - center);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestLabel = tab.label;
+      }
+    }
+    return closestLabel;
+  }, []);
+
+  const handleDockPointerDown = (e) => {
+    // Hanya tangani klik utama / sentuhan jari
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+
+    activePointerId.current = e.pointerId;
+    if (e.currentTarget.setPointerCapture) {
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // Abaikan jika browser tidak mendukung pointer capture
+      }
+    }
+
+    const hoveredLabel = getTabFromClientX(e.clientX);
+    setIsHoldingDock(true);
+    if (hoveredLabel) {
+      setScrubTab(hoveredLabel);
+      const targetObj = MOBILE_TABS.find((t) => t.label === hoveredLabel);
+      if (targetObj) router.prefetch(targetObj.href);
+    }
+  };
+
+  const handleDockPointerMove = (e) => {
+    if (!isHoldingDock || activePointerId.current !== e.pointerId) return;
+
+    const hoveredLabel = getTabFromClientX(e.clientX);
+    if (hoveredLabel && hoveredLabel !== scrubTab) {
+      setScrubTab(hoveredLabel);
+      const targetObj = MOBILE_TABS.find((t) => t.label === hoveredLabel);
+      if (targetObj) router.prefetch(targetObj.href);
+    }
+  };
+
+  const finishDockHold = (e, shouldNavigate) => {
+    if (!isHoldingDock) return;
+    if (
+      activePointerId.current !== null &&
+      e.currentTarget.releasePointerCapture
+    ) {
+      try {
+        e.currentTarget.releasePointerCapture(activePointerId.current);
+      } catch {
+        // Abaikan
+      }
+    }
+    activePointerId.current = null;
+
+    const finalLabel = scrubTab;
+    setIsHoldingDock(false);
+    setScrubTab(null);
+
+    if (shouldNavigate && finalLabel) {
+      const targetObj = MOBILE_TABS.find((t) => t.label === finalLabel);
+      if (targetObj) {
+        if (finalLabel !== activeMobileTab || pathname !== targetObj.href) {
+          setOptimisticTab(finalLabel);
+          router.push(targetObj.href);
+        } else {
+          setOptimisticTab(null);
+        }
+      }
+    }
+  };
 
   const movePillToActive = useCallback(() => {
     let activeRef = null;
@@ -121,8 +335,8 @@ export default function Navbar() {
             : "-top-24 -translate-y-full opacity-0 pointer-events-none"
         }`}
       >
-        <div className="bg-[#161218]/85 backdrop-blur-2xl border-b border-[#F4B8C6]/15">
-          <div className="container mx-auto px-4 md:px-8 max-w-[1400px] h-16 md:h-20 flex items-center justify-between gap-4">
+        <div className="relative bg-[#161218]/85 backdrop-blur-2xl border-b border-[#F4B8C6]/15">
+          <div className="container mx-auto px-4 md:px-8 max-w-[1400px] h-16 md:h-20 flex items-center justify-between gap-3 md:gap-4">
             {/* KIRI: LOGO */}
             <div className="flex items-center gap-3">
               <Link
@@ -141,7 +355,12 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* TENGAH: MAGNETIC SLIDING CAPSULE MENU */}
+            {/* TENGAH (MOBILE): RATE LIMIT METER COMPACT (A:N K:N) */}
+            <div className="md:hidden flex items-center justify-center">
+              <RateLimitMeter variant="compact" />
+            </div>
+
+            {/* TENGAH (DESKTOP): MAGNETIC SLIDING CAPSULE MENU */}
             <div
               ref={menuContainerRef}
               onMouseLeave={movePillToActive}
@@ -520,6 +739,7 @@ export default function Navbar() {
             {/* KANAN: SEARCH, BOOKMARK, PROFIL */}
             <div className="hidden md:flex items-center gap-3 flex-1 justify-end max-w-sm">
               <SearchBar />
+              <RateLimitMeter variant="compact" />
 
               <Link
                 href="/bookmark"
@@ -579,7 +799,7 @@ export default function Navbar() {
             {/* TOMBOL MENU MOBILE */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="lg:hidden w-10 h-10 rounded-full bg-[#211B24] border border-[#F4B8C6]/25 flex items-center justify-center text-[#F4B8C6]"
+              className="lg:hidden w-10 h-10 rounded-full bg-[#211B24] border border-[#F4B8C6]/25 flex items-center justify-center text-[#F4B8C6] shrink-0"
               aria-label="Toggle Menu"
             >
               <svg
@@ -601,16 +821,17 @@ export default function Navbar() {
 
         {/* MOBILE EXPANDABLE DRAWER */}
         <div
-          className={`lg:hidden transition-all duration-300 bg-[#1B151E]/95 backdrop-blur-2xl border-b border-[#F4B8C6]/20 ${
+          className={`lg:hidden absolute top-full inset-x-0 transition-all duration-300 bg-[#1B151E]/95 backdrop-blur-2xl border-b border-[#F4B8C6]/20 shadow-vogue-card ${
             isOpen
-              ? "max-h-[82vh] py-5 overflow-y-auto opacity-100"
-              : "max-h-0 py-0 overflow-hidden opacity-0 border-transparent"
+              ? "max-h-[82vh] py-5 overflow-y-auto opacity-100 pointer-events-auto"
+              : "max-h-0 py-0 overflow-hidden opacity-0 border-transparent pointer-events-none"
           }`}
         >
           <div className="container mx-auto px-4 flex flex-col gap-4 pb-6">
             <div className="md:hidden">
               <SearchBar />
             </div>
+            <RateLimitMeter variant="full" />
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: "Anime Ongoing", path: "/ongoing" },
@@ -675,97 +896,65 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* MOBILE FLOATING PILL DOCK */}
+      {/* MOBILE FLOATING PILL DOCK (HOLD -> SCALE UP -> SLIDE SCRUB -> RELEASE TO NAVIGATE) */}
       <div className="lg:hidden fixed bottom-4 inset-x-4 z-50 flex justify-center pointer-events-none">
-        <div className="pointer-events-auto flex items-center justify-around w-full max-w-sm bg-[#211B24]/95 backdrop-blur-2xl border border-[#F4B8C6]/25 rounded-full px-2 py-1.5 shadow-vogue-card">
-          {[
-            {
-              label: "Beranda",
-              href: "/",
-              active: isHomeSection,
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                />
-              ),
-            },
-            {
-              label: "Anime",
-              href: "/ongoing",
-              active: isAnimeSection,
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              ),
-            },
-            {
-              label: "Komik",
-              href: "/komik/popular",
-              active: isKomikSection,
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              ),
-            },
-            {
-              label: "Jadwal",
-              href: "/schedule",
-              active: isScheduleSection,
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              ),
-            },
-            {
-              label: "Simpan",
-              href: "/bookmark",
-              active: pathname.startsWith("/bookmark"),
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                />
-              ),
-            },
-          ].map((tab) => (
-            <Link
-              key={tab.label}
-              href={tab.href}
-              prefetch={false}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-bold transition-all duration-300 ${
-                tab.active
-                  ? "bg-[#F4B8C6] text-[#161218] shadow-vogue-blush"
-                  : "text-[#AD9CA6] hover:text-[#FDF6F7]"
-              }`}
-            >
-              <svg
-                className="w-4 h-4 shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+        <div
+          onPointerDown={handleDockPointerDown}
+          onPointerMove={handleDockPointerMove}
+          onPointerUp={(e) => finishDockHold(e, true)}
+          onPointerCancel={(e) => finishDockHold(e, false)}
+          onContextMenu={(e) => e.preventDefault()}
+          className="relative pointer-events-auto touch-none select-none flex items-center justify-between w-full max-w-sm bg-[#1B151E]/95 backdrop-blur-2xl border border-[#F4B8C6]/20 rounded-full p-1.5 shadow-[inset_0_2px_6px_rgba(0,0,0,0.55),0_12px_30px_rgba(0,0,0,0.6)]"
+        >
+          {/* SLIDING & SCALING TACTILE PILL */}
+          <div
+            className={`absolute top-1.5 bottom-1.5 rounded-full bg-gradient-to-b from-[#F9CED8] to-[#E89EB0] border border-white/50 transition-[left,width,transform,box-shadow,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] z-0 pointer-events-none ${
+              isHoldingDock
+                ? "scale-x-[1.07] scale-y-[1.16] shadow-[inset_0_2px_2px_rgba(255,255,255,0.9),0_8px_24px_rgba(244,184,198,0.65)]"
+                : "scale-100 shadow-[inset_0_1.5px_1px_rgba(255,255,255,0.75),0_4px_14px_rgba(244,184,198,0.4)]"
+            }`}
+            style={{
+              left: mobilePillStyle.left,
+              width: mobilePillStyle.width,
+              opacity: mobilePillStyle.opacity,
+            }}
+          />
+
+          {MOBILE_TABS.map((tab) => {
+            const isSelected = currentMobileTarget === tab.label;
+            return (
+              <button
+                key={tab.label}
+                type="button"
+                ref={(el) => {
+                  mobileTabRefs.current[tab.label] = el;
+                }}
+                className={`relative z-10 flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-extrabold tracking-wide cursor-pointer transition-colors duration-200 ${
+                  isSelected ? "text-[#161218]" : "text-[#AD9CA6]"
+                }`}
               >
-                {tab.icon}
-              </svg>
-              {tab.active && <span>{tab.label}</span>}
-            </Link>
-          ))}
+                <svg
+                  className={`w-4 h-4 shrink-0 transition-transform duration-300 ${
+                    isSelected
+                      ? isHoldingDock
+                        ? "scale-110"
+                        : "scale-105"
+                      : "scale-100"
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  {tab.icon}
+                </svg>
+                {isSelected && (
+                  <span className="whitespace-nowrap animate-fade-in">
+                    {tab.label}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
     </>

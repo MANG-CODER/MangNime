@@ -1,8 +1,5 @@
-import { KomikProvider } from "@/services/komikApi";
-import KomikCard from "@/components/komik/KomikCard";
-import Pagination from "@/components/ui/Pagination";
 import Link from "next/link";
-import ScrollReveal from "@/components/ui/ScrollReveal";
+import PaginatedKomikList from "@/components/komik/PaginatedKomikList";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -12,20 +9,14 @@ export async function generateMetadata({ params }) {
   return { title: `Komik Genre ${genreName} - MangNime` };
 }
 
-export const revalidate = 1800;
-
 export default async function KomikGenreDetailPage({ params, searchParams }) {
   const { slug: genreSlug } = await params;
   const resolvedSearchParams = await searchParams;
-  const page = parseInt(resolvedSearchParams?.page || 1);
+  const page = Math.max(1, parseInt(resolvedSearchParams?.page || 1, 10) || 1);
 
   const displayTitle = (genreSlug || "")
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
-
-  const res = await KomikProvider.getKomikByGenre(genreSlug, page);
-  const komikList = res?.data || [];
-  const pagination = res?.pagination || null;
 
   return (
     <div className="min-h-screen bg-[#161218] pt-8 pb-20 px-4 md:px-8">
@@ -67,28 +58,15 @@ export default async function KomikGenreDetailPage({ params, searchParams }) {
           </Link>
         </div>
 
-        {komikList.length > 0 ? (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-7">
-              {komikList.map((komik, idx) => (
-                <ScrollReveal key={komik.slug || idx}>
-                  <KomikCard komik={komik} />
-                </ScrollReveal>
-              ))}
-            </div>
-
-            <Pagination
-              pagination={pagination}
-              basePath={`/komik/genre/${genreSlug}`}
-            />
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-[#AD9CA6] border border-[#F4B8C6]/15 rounded-3xl bg-[#211B24]/60">
-            <p className="text-sm">
-              Tidak ada komik ditemukan untuk genre ini.
-            </p>
-          </div>
-        )}
+        <PaginatedKomikList
+          key={`${genreSlug}-${page}`}
+          source="genre"
+          genreSlug={genreSlug}
+          page={page}
+          basePath={`/komik/genre/${genreSlug}`}
+          gridClass="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-7"
+          emptyText="Tidak ada komik ditemukan untuk genre ini."
+        />
       </div>
     </div>
   );

@@ -3,8 +3,6 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { searchKomikServer } from "@/services/searchAction";
-import { searchAllAnime } from "@/services/animeAction";
 
 const SEARCH_CACHE_TTL = 5 * 60 * 1000;
 
@@ -51,6 +49,13 @@ export default function SearchBar() {
 
       setIsLoading(true);
       try {
+        // Dimuat saat user pertama kali mencari, supaya kode provider
+        // nggak ikut di bundle awal semua halaman (SearchBar ada di layout).
+        const [{ searchAllAnime }, { searchKomikServer }] = await Promise.all([
+          import("@/services/animeAction.client"),
+          import("@/services/searchAction.client"),
+        ]);
+
         const [animeRes, komikRes] = await Promise.allSettled([
           searchAllAnime(trimmed),
           searchKomikServer(trimmed),

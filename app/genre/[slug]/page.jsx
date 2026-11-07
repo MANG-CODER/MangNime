@@ -1,8 +1,5 @@
-import AnimeCard from "@/components/anime/AnimeCard";
-import Pagination from "@/components/ui/Pagination";
 import Link from "next/link";
-import ScrollReveal from "@/components/ui/ScrollReveal";
-import { AnimeProvider } from "@/services/providers";
+import PaginatedAnimeList from "@/components/anime/PaginatedAnimeList";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -14,12 +11,10 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export const revalidate = 1800;
-
 export default async function GenreDetailPage({ params, searchParams }) {
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;
-  const page = parseInt(resolvedSearchParams?.page || 1);
+  const page = Math.max(1, parseInt(resolvedSearchParams?.page || 1, 10) || 1);
 
   if (!slug) {
     return (
@@ -32,17 +27,6 @@ export default async function GenreDetailPage({ params, searchParams }) {
   const displayTitle = slug
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
-
-  let animeList = [];
-  let paginationData = null;
-
-  try {
-    const res = await AnimeProvider.Otakudesu.getAnimeByGenre(slug, page);
-    animeList = res?.data || [];
-    paginationData = res?.pagination || null;
-  } catch (error) {
-    console.error("Gagal fetch genre:", error);
-  }
 
   return (
     <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-8 mt-6">
@@ -83,29 +67,15 @@ export default async function GenreDetailPage({ params, searchParams }) {
         </Link>
       </div>
 
-      {animeList.length > 0 ? (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-7">
-            {animeList.map((anime, idx) => {
-              const uniqueKey =
-                anime.animeId || anime.slug || `genre-item-${idx}`;
-              return (
-                <ScrollReveal key={uniqueKey}>
-                  <AnimeCard anime={anime} index={idx} />
-                </ScrollReveal>
-              );
-            })}
-          </div>
-
-          <Pagination pagination={paginationData} basePath={`/genre/${slug}`} />
-        </>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-[#AD9CA6] border border-[#F4B8C6]/15 rounded-3xl bg-[#211B24]/60">
-          <p className="text-sm">
-            Memuat data genre atau genre tidak ditemukan...
-          </p>
-        </div>
-      )}
+      <PaginatedAnimeList
+        key={`${slug}-${page}`}
+        source="genre"
+        genreSlug={slug}
+        page={page}
+        basePath={`/genre/${slug}`}
+        keyPrefix="genre-item"
+        emptyText="Genre tidak ditemukan atau belum ada anime."
+      />
     </div>
   );
 }

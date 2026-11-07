@@ -326,8 +326,9 @@ export default function ProfilePage() {
     ? Math.max(0, (imageRef.current.naturalHeight * cropScale - 250) / 2)
     : 0;
 
+  // Ubah pb-20 menjadi pb-10 md:pb-16
   return (
-    <div className="min-h-screen bg-[#161218] pt-8 pb-20 px-4 md:px-8 relative">
+    <div className="bg-[#161218] pt-8 pb-10 md:pb-16 px-4 md:px-8 relative">
       {/* FLOATING TOAST ALERT */}
       {alertInfo.show && (
         <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[150] animate-fade-in w-[90%] max-w-md">
@@ -685,7 +686,11 @@ export default function ProfilePage() {
                         {h.title}
                       </h4>
                       <p className="text-xs text-[#B8C4D4] mt-0.5 font-semibold">
-                        Chapter {h.chapterIndex}
+                        {String(h.chapterIndex)
+                          .toLowerCase()
+                          .startsWith("chapter")
+                          ? h.chapterIndex
+                          : `Chapter ${h.chapterIndex}`}
                       </p>
                     </div>
                   </Link>
@@ -868,11 +873,11 @@ export default function ProfilePage() {
         )}
 
         {/* AREA BOOKMARK */}
-        <div className="bg-[#211B24]/85 border border-[#F4B8C6]/20 rounded-3xl p-6 flex justify-between items-center shadow-vogue-card">
+        <div className="bg-[#211B24]/85 border border-[#F4B8C6]/20 rounded-3xl p-5 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-vogue-card">
           <div>
-            <h3 className="text-lg font-extrabold text-[#FDF6F7] mb-0.5 flex items-center gap-2.5">
+            <h3 className="text-base md:text-lg font-extrabold text-[#FDF6F7] mb-0.5 flex items-center gap-2.5">
               <svg
-                className="w-5 h-5 text-[#F4B8C6]"
+                className="w-5 h-5 text-[#F4B8C6] shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -892,7 +897,7 @@ export default function ProfilePage() {
           </div>
           <Link
             href="/bookmark"
-            className="px-6 py-2.5 bg-[#F4B8C6] text-[#161218] rounded-full text-xs font-extrabold hover:bg-[#f8c7d3] transition-all shadow-vogue-blush"
+            className="w-full sm:w-auto text-center shrink-0 px-6 py-2.5 bg-[#F4B8C6] text-[#161218] rounded-full text-xs font-extrabold hover:bg-[#f8c7d3] transition-all shadow-vogue-blush"
           >
             Buka Koleksi &rarr;
           </Link>

@@ -1,28 +1,10 @@
-import Link from "next/link";
-import { AnimeProvider } from "@/services/providers";
+import GenreGrid from "./GenreGrid";
 
 export const metadata = {
   title: "Daftar Genre Anime - MangNime",
 };
 
-export const revalidate = 1800;
-
-export default async function GenreListPage() {
-  let genreList = [];
-
-  try {
-    const otakuGenres = await AnimeProvider.Otakudesu.getGenres();
-
-    genreList = (otakuGenres?.genreList || [])
-      .map((genre) => ({
-        title: genre.title,
-        genreId: genre.genreId,
-      }))
-      .sort((a, b) => a.title.localeCompare(b.title));
-  } catch (error) {
-    console.error("Gagal memuat daftar genre:", error);
-  }
-
+export default function GenreListPage() {
   return (
     <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-8 mt-6">
       {/* HEADER BANNER */}
@@ -59,30 +41,8 @@ export default async function GenreListPage() {
         </div>
       </div>
 
-      {/* GRID GENRE */}
-      {genreList.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
-          {genreList.map((genre, idx) => (
-            <Link
-              href={`/genre/${genre.genreId}`}
-              key={idx}
-              className="group bg-[#211B24]/90 border border-[#F4B8C6]/15 hover:border-[#F4B8C6]/50 hover:bg-[#28202C] rounded-2xl px-4 py-4 flex items-center justify-between shadow-vogue-card hover:-translate-y-0.5 transition-all"
-            >
-              <span className="font-bold text-xs md:text-sm text-[#FDF6F7] group-hover:text-[#F4B8C6] transition-colors truncate pr-2">
-                {genre.title}
-              </span>
-              <span className="w-6 h-6 rounded-full bg-[#161218] group-hover:bg-[#F4B8C6] text-[#AD9CA6] group-hover:text-[#161218] flex items-center justify-center text-xs transition-all shrink-0">
-                &rarr;
-              </span>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-[#F4B8C6]">
-          <span className="w-9 h-9 border-[3px] border-[#F4B8C6] border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-xs text-[#AD9CA6]">Memuat data genre...</p>
-        </div>
-      )}
+      {/* GRID GENRE (diambil di browser user) */}
+      <GenreGrid />
     </div>
   );
 }

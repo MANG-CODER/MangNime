@@ -1,20 +1,10 @@
-import ScheduleTabs from "@/components/schedule/ScheduleTabs";
-import { AnimeProvider } from "@/services/providers";
+import ScheduleLoader from "./ScheduleLoader";
 
 export const metadata = {
   title: "Jadwal Rilis Anime - MangNime",
 };
 
-export default async function SchedulePage() {
-  let scheduleData = [];
-
-  try {
-    const res = await AnimeProvider.Otakudesu.getSchedule();
-    scheduleData = res || [];
-  } catch (error) {
-    console.error("Schedule Error:", error);
-  }
-
+export default function SchedulePage() {
   return (
     <div className="space-y-10 animate-fade-in max-w-[1400px] mx-auto pb-16 px-4 md:px-8 relative">
       <div className="bg-[#211B24]/90 border border-[#F4B8C6]/20 rounded-[32px] p-7 md:p-11 relative overflow-hidden mt-6 shadow-vogue-card">
@@ -48,16 +38,7 @@ export default async function SchedulePage() {
         </div>
       </div>
 
-      {scheduleData.length > 0 ? (
-        <ScheduleTabs scheduleData={scheduleData} />
-      ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-[#F4B8C6]">
-          <span className="w-9 h-9 border-[3px] border-[#F4B8C6] border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-xs text-[#AD9CA6]">
-            Mencari jadwal anime terbaru...
-          </p>
-        </div>
-      )}
+      <ScheduleLoader />
     </div>
   );
 }

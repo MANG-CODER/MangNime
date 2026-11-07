@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { getMoreKomikChapters } from "@/services/searchAction";
+import { getMoreKomikChapters } from "@/services/searchAction.client";
 
 function formatReleaseDate(dateStr) {
   if (!dateStr) return "Baru saja";
@@ -75,6 +75,11 @@ export default function ChapterListInfinite({
 
       if (res?.rateLimited) {
         setErrorMsg("Server sibuk, gulir lagi dalam beberapa detik...");
+        return;
+      }
+
+      if (res?.error) {
+        setErrorMsg("Gagal memuat chapter tambahan.");
         return;
       }
 
