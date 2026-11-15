@@ -737,7 +737,7 @@ export default function Navbar() {
             </div>
 
             {/* KANAN: SEARCH, BOOKMARK, PROFIL */}
-            <div className="hidden md:flex items-center gap-3 flex-1 justify-end max-w-sm">
+            <div className="hidden md:flex items-center gap-2.5 lg:gap-3 justify-end shrink-0">
               <SearchBar />
               <RateLimitMeter variant="compact" />
 
