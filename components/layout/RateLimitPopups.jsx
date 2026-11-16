@@ -52,7 +52,9 @@ function GuideModal({ open, onClose, limit, warnAt, windowMs }) {
         ? [...dialogRef.current.querySelectorAll("button, a[href]")]
         : [];
     const items = focusables();
-    if (items.length) items[items.length - 1].focus(); // tombol utama "Mengerti"
+    // Fokus ke tombol utama TANPA menggulung dialog (kalau tidak, dialog terbuka ter-scroll ke bawah)
+    if (items.length) items[items.length - 1].focus({ preventScroll: true });
+    if (dialogRef.current) dialogRef.current.scrollTop = 0;
 
     const onKey = (e) => {
       if (e.key === "Escape") {
@@ -98,7 +100,7 @@ function GuideModal({ open, onClose, limit, warnAt, windowMs }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="rate-guide-title"
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar p-6 md:p-8 rounded-[28px] bg-[#211B24] border border-[#F4B8C6]/20 shadow-vogue-card space-y-5 animate-fade-in"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar px-6 pt-6 md:px-8 md:pt-8 rounded-[28px] bg-[#211B24] border border-[#F4B8C6]/20 shadow-vogue-card space-y-5 animate-fade-in"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
@@ -202,13 +204,16 @@ function GuideModal({ open, onClose, limit, warnAt, windowMs }) {
           ini?&rdquo; saat kamu mengarahkan kursor ke counter di navbar.
         </p>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-full px-7 py-3 bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] text-sm font-extrabold rounded-full shadow-vogue-blush transition-all active:scale-95"
-        >
-          Mengerti
-        </button>
+        {/* menempel di bawah dialog supaya selalu terjangkau walau isinya harus di-scroll */}
+        <div className="sticky bottom-0 -mx-6 md:-mx-8 px-6 md:px-8 pt-4 pb-6 md:pb-8 bg-gradient-to-t from-[#211B24] via-[#211B24] to-transparent">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full px-7 py-3 bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] text-sm font-extrabold rounded-full shadow-vogue-blush transition-all active:scale-95"
+          >
+            Mengerti
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -232,7 +237,7 @@ function RestToast({ hot, usage, onDismiss }) {
   const urgent = hot.some((b) => severity(usage[b.id]) === 2);
   return (
     <div className="fixed inset-x-0 bottom-24 lg:bottom-6 z-[90] flex justify-center px-4 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-md p-5 rounded-3xl bg-[#211B24]/95 backdrop-blur-2xl border border-[#F4B8C6]/25 shadow-vogue-card space-y-4 animate-fade-in">
+      <div className="pointer-events-auto w-full max-w-md p-4 rounded-3xl bg-[#211B24]/95 backdrop-blur-2xl border border-[#F4B8C6]/25 shadow-vogue-card space-y-3 animate-fade-in">
         <span className="sr-only" role="status">
           Jatah request hampir habis. Rehat sejenak.
         </span>
@@ -265,8 +270,7 @@ function RestToast({ hot, usage, onDismiss }) {
               </span>
             </h3>
             <p className="text-xs text-[#AD9CA6] leading-relaxed">
-              Kamu sudah mengirim banyak request dalam 1 menit terakhir. Jeda
-              beberapa detik biar tidak kena batas dari server penyedia.
+              Jeda beberapa detik biar tidak kena batas server penyedia.
               Hitungannya turun sendiri.
             </p>
           </div>

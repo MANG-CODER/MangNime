@@ -1,5 +1,37 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  canEmbed,
+  pickFallbackServers,
+  safeHttpUrl,
+} from "@/services/core/embedPolicy";
+
+// Ditampilkan di dalam bingkai video kalau server aktif melarang disematkan di situs lain.
+function BlockedNotice({ url }) {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+      <span className="px-3 py-1 rounded-full bg-[#E88D9E]/15 text-[#E88D9E] text-xs font-extrabold uppercase tracking-wider">
+        Tidak Bisa Disematkan
+      </span>
+      <p className="text-sm font-bold text-[#FDF6F7]">
+        Server ini tidak mengizinkan diputar di situs lain.
+      </p>
+      <p className="text-xs text-[#AD9CA6] max-w-sm leading-relaxed">
+        Pilih server lain di bawah, atau buka langsung di tab baru.
+      </p>
+      {url && (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-5 py-2.5 rounded-full bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] text-xs font-extrabold shadow-vogue-blush transition-all active:scale-95"
+        >
+          Buka di Tab Baru &#8599;
+        </a>
+      )}
+    </div>
+  );
+}
 
 export default function InteractivePlayer({
   defaultUrl,
@@ -9,6 +41,47 @@ export default function InteractivePlayer({
   const [iframeSrc, setIframeSrc] = useState(defaultUrl);
   const [activeServer, setActiveServer] = useState("Default Server");
   const [isLoading, setIsLoading] = useState(false);
+  const [searching, setSearching] = useState(false); // lagi cari server pengganti otomatis
+  const [notice, setNotice] = useState(null);
+
+  const blocked = Boolean(iframeSrc) && !canEmbed(iframeSrc);
+  const externalUrl = safeHttpUrl(iframeSrc);
+
+  // Server bawaan melarang disematkan -> pindah otomatis ke server yang bisa diputar.
+  useEffect(() => {
+    if (!defaultUrl || canEmbed(defaultUrl)) return;
+    let alive = true;
+    setSearching(true);
+    setIsLoading(true);
+    (async () => {
+      for (const c of pickFallbackServers(qualities, 3)) {
+        try {
+          const url = await onFetchServer(c.serverId);
+          if (!alive) return;
+          if (url && canEmbed(url)) {
+            setIframeSrc(url);
+            setActiveServer(c.title);
+            setNotice(
+              `Server bawaan tidak bisa disematkan di situs lain, otomatis pindah ke ${c.title}.`,
+            );
+            return;
+          }
+        } catch {
+          // coba kandidat berikutnya
+        }
+      }
+    })().finally(() => {
+      if (alive) {
+        setSearching(false);
+        setIsLoading(false);
+      }
+    });
+    return () => {
+      alive = false;
+    };
+    // hanya saat URL bawaan berganti (pindah episode)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultUrl]);
 
   const handleServerClick = async (serverId, serverName) => {
     // Cegah request ganda saat masih loading atau saat klik server yang sudah aktif
@@ -18,7 +91,10 @@ export default function InteractivePlayer({
     setActiveServer(serverName);
     try {
       const newUrl = await onFetchServer(serverId);
-      if (newUrl) setIframeSrc(newUrl);
+      if (newUrl) {
+        setIframeSrc(newUrl);
+        setNotice(null);
+      }
     } catch (error) {
       console.error("Gagal mengganti server:", error);
     } finally {
@@ -34,17 +110,41 @@ export default function InteractivePlayer({
           <div className="absolute inset-0 z-10 bg-[#161218]/90 flex flex-col items-center justify-center backdrop-blur-md">
             <span className="w-10 h-10 border-[3px] border-[#F4B8C6] border-t-transparent rounded-full animate-spin mb-3" />
             <span className="text-[#F4B8C6] font-bold tracking-wider text-xs animate-pulse">
-              Menghubungkan ke {activeServer}...
+              {searching
+                ? "Mencari server yang bisa diputar..."
+                : `Menghubungkan ke ${activeServer}...`}
             </span>
           </div>
         )}
-        <iframe
-          src={iframeSrc}
-          allowFullScreen
-          className="absolute inset-0 w-full h-full border-0"
-          referrerPolicy="no-referrer"
-        />
+        {iframeSrc && !blocked ? (
+          <iframe
+            src={iframeSrc}
+            allowFullScreen
+            className="absolute inset-0 w-full h-full border-0"
+            referrerPolicy="no-referrer"
+          />
+        ) : blocked && !searching ? (
+          <BlockedNotice url={externalUrl} />
+        ) : null}
       </div>
+
+      {/* Selalu ada jalan keluar kalau player nggak muncul */}
+      {externalUrl && !blocked && (
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 text-[11px]">
+          <span className={notice ? "text-[#F7D6C4]" : "text-[#AD9CA6]"}>
+            {notice ||
+              "Player tidak muncul atau macet? Coba server lain di bawah."}
+          </span>
+          <a
+            href={externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 font-bold text-[#F4B8C6] hover:underline"
+          >
+            Buka di tab baru &#8599;
+          </a>
+        </div>
+      )}
 
       {/* PILIHAN RESOLUSI & SERVER */}
       {qualities?.length > 0 && (
