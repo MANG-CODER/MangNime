@@ -145,15 +145,6 @@ function normalizeKomikuChapter(raw) {
   };
 }
 
-/**
- * @param {object} deps
- * @param {(endpoint: string, ttlSeconds?: number) => Promise<any>} deps.fetchShinigami
- * @param {(endpoint: string, ttlSeconds?: number) => Promise<any>} deps.fetchKomiku
- * @param {{getCache, setCache, withSingleflight, registerMangaSlug, getMangaUuid}} deps.cache
- *
- * Versi server: fetcher di-wrap silentFail -> return null kalau gagal.
- * Versi client: fetcher melempar error -> UI bisa nampilin state error/retry.
- */
 export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
   const {
     getCache,
@@ -174,6 +165,19 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
       if (item.title) registerMangaSlug(toSlug(item.title), item.manga_id);
     }
     return slug;
+  }
+
+  function formatShinigamiCard(item) {
+    return {
+      title: item.title,
+      slug: extractAndRegisterSlug(item),
+      mangaId: item.manga_id,
+      image: proxyImage(item.cover_portrait || item.cover || item.thumbnail),
+      chapter: item.chapter || item.latest_chapter || "",
+      score: item.rating || item.score || "",
+      type: item.format || item.type || "Manhwa",
+      source: "shinigami",
+    };
   }
 
   async function resolveMangaId(slugOrId) {
@@ -378,10 +382,12 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
           title: item.title,
           slug: extractAndRegisterSlug(item),
           mangaId: item.manga_id,
-          image: proxyImage(item.thumbnail || item.cover),
+          image: proxyImage(
+            item.cover_portrait || item.cover || item.thumbnail,
+          ),
           chapter: item.chapter || item.latest_chapter || "",
           score: item.rating || item.score || "",
-          type: item.type || "Manhwa",
+          type: item.format || item.type || "Manhwa",
         }));
       };
 
@@ -389,7 +395,10 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
         latest: formatItems(res.data?.latest || res.latest),
         popular: formatItems(res.data?.popular || res.popular),
         recommendations: formatItems(
-          res.data?.recommendations || res.recommendations,
+          res.data?.recommended ||
+            res.data?.recommendations ||
+            res.recommended ||
+            res.recommendations,
         ),
       };
     },
@@ -405,9 +414,12 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
           title: item.title,
           slug: extractAndRegisterSlug(item),
           mangaId: item.manga_id,
-          image: proxyImage(item.thumbnail || item.cover),
+          image: proxyImage(
+            item.cover_portrait || item.cover || item.thumbnail,
+          ),
           chapter: item.chapter || item.latest_chapter || "",
           score: item.rating || "",
+          type: item.format || item.type || "Manhwa",
         })),
         pagination: res.pagination || null,
       };
@@ -424,9 +436,12 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
           title: item.title,
           slug: extractAndRegisterSlug(item),
           mangaId: item.manga_id,
-          image: proxyImage(item.thumbnail || item.cover),
+          image: proxyImage(
+            item.cover_portrait || item.cover || item.thumbnail,
+          ),
           chapter: item.chapter || item.latest_chapter || "",
           score: item.rating || "",
+          type: item.format || item.type || "Manhwa",
         })),
         pagination: res.pagination || null,
       };
@@ -457,7 +472,6 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
             )}?page=${page}`,
             1800,
           ),
-          // Komiku sumber sekunder: kalau gagal, search tetap jalan dari Shinigami
           fetchKomikuAPI(
             `${KOMIKU_ENDPOINTS.SEARCH}${encodeURIComponent(cleanKeyword)}`,
             1800,
@@ -472,18 +486,7 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
             : [];
 
         const formattedShinigami = Array.isArray(shinigamiList)
-          ? shinigamiList.map((item) => ({
-              title: item.title,
-              slug: extractAndRegisterSlug(item),
-              mangaId: item.manga_id,
-              image: proxyImage(
-                item.cover_portrait || item.cover || item.thumbnail,
-              ),
-              chapter: item.chapter || item.latest_chapter || "",
-              score: item.rating || item.score || "",
-              type: item.format || item.type || "Manhwa",
-              source: "shinigami",
-            }))
+          ? shinigamiList.map(formatShinigamiCard)
           : [];
 
         const combinedMap = new Map();
@@ -515,17 +518,10 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
       if (!res) return { data: [], pagination: null };
       return {
         data: (res.data || []).map((item) => ({
-          title: item.title,
-          slug: extractAndRegisterSlug(item),
-          mangaId: item.manga_id,
-          image: proxyImage(
-            item.cover_portrait || item.cover || item.thumbnail,
-          ),
+          ...formatShinigamiCard(item),
           chapter: item.latest_chapter
             ? `Chapter ${item.latest_chapter}`
             : item.chapter || "",
-          score: item.rating || item.score || "",
-          type: item.format || item.type || "Manhwa",
         })),
         pagination: res.pagination || null,
       };
@@ -538,7 +534,7 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
       genre = "",
     ) => {
       let endpoint = `${SHINIGAMI_ENDPOINTS.ADVANCED_SEARCH}?page=${page}`;
-      if (format) endpoint += `&format=${encodeURIComponent(format)}`;
+      if (format) endpoint += `&format=${encodeIComponent(format)}`;
       if (status) endpoint += `&status=${encodeURIComponent(status)}`;
       if (genre) endpoint += `&genre_include=${encodeURIComponent(genre)}`;
 
@@ -546,23 +542,15 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
       if (!res) return { data: [], pagination: null };
       return {
         data: (res.data || []).map((item) => ({
-          title: item.title,
-          slug: extractAndRegisterSlug(item),
-          mangaId: item.manga_id,
-          image: proxyImage(
-            item.cover_portrait || item.cover || item.thumbnail,
-          ),
+          ...formatShinigamiCard(item),
           chapter: item.latest_chapter
             ? `Chapter ${item.latest_chapter}`
             : item.chapter || "",
-          score: item.rating || item.score || "",
-          type: item.format || item.type || "Manhwa",
         })),
         pagination: res.pagination || null,
       };
     },
 
-    // Fungsi baru khusus untuk memanggil halaman chapter ke-2, ke-3, dst. saat di-scroll
     getChaptersPage: async (mangaSlugOrId, page = 2) => {
       const cleanPage = Math.max(1, Number(page) || 1);
       const mangaId = await resolveMangaId(mangaSlugOrId);
