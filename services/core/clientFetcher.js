@@ -3,7 +3,7 @@
 import { getTTLSeconds } from "./ttl";
 
 // Naikkan versi prefix (cf:v2:) agar saat deploy baru, cache lama otomatis diabaikan
-const LS_PREFIX = "cf:v2:";
+const LS_PREFIX = "cf:";
 const OLD_LS_PREFIX = "cf:";
 const MEM_MAX = 300;
 const COOLDOWN_MS = 60_000;
