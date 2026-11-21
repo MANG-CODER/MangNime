@@ -9,6 +9,7 @@ import CommentSection from "@/components/ui/CommentSection";
 import EpisodeHistoryTracker from "@/components/anime/EpisodeHistoryTracker";
 import { OtakudesuClient } from "@/services/providers/otakudesu.client";
 import { useProvider } from "@/hooks/useProvider";
+import { DetailBackLink } from "@/components/ui/BackButton";
 
 const PLACEHOLDER_POSTER = "https://placehold.co/300x400/211B24/F4B8C6";
 
@@ -167,7 +168,7 @@ export default function EpisodeClient({ slug }) {
       <div className="relative z-10 bg-[#211B24]/90 border border-[#F4B8C6]/20 p-5 md:p-7 rounded-[28px] flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-vogue-card">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-xs font-bold text-[#F4B8C6]">
-            <Link
+            <DetailBackLink
               href={`/anime/${epData.animeId}`}
               className="hover:underline flex items-center gap-1.5"
             >
@@ -185,7 +186,7 @@ export default function EpisodeClient({ slug }) {
                 />
               </svg>
               Kembali ke Detail Anime
-            </Link>
+            </DetailBackLink>
           </div>
           <h1 className="text-xl md:text-3xl font-extrabold text-[#FDF6F7] leading-snug">
             {epData.title}
@@ -219,13 +220,12 @@ export default function EpisodeClient({ slug }) {
               url: `/episode/${slug}`,
             }}
           />
-          <Button
+          <DetailBackLink
             href={`/anime/${epData.animeId}`}
-            variant="secondary"
-            size="md"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-[#161218] hover:bg-[#F4B8C6] text-[#FDF6F7] hover:text-[#161218] border border-[#F4B8C6]/25 text-xs md:text-sm font-bold transition-all"
           >
             Semua Episode
-          </Button>
+          </DetailBackLink>
         </div>
       </div>
 
@@ -243,6 +243,7 @@ export default function EpisodeClient({ slug }) {
             {epData.hasPrevEpisode && epData.prevEpisode ? (
               <Link
                 href={`/episode/${epData.prevEpisode.episodeId}`}
+                replace
                 prefetch={false}
                 className="px-5 py-2 rounded-full bg-[#161218] hover:bg-[#F4B8C6] text-[#FDF6F7] hover:text-[#161218] font-bold flex items-center gap-2 transition-all text-xs md:text-sm"
               >
@@ -263,6 +264,7 @@ export default function EpisodeClient({ slug }) {
             {epData.hasNextEpisode && epData.nextEpisode ? (
               <Link
                 href={`/episode/${epData.nextEpisode.episodeId}`}
+                replace
                 prefetch={false}
                 className="px-5 py-2 rounded-full bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] font-extrabold flex items-center gap-2 transition-all text-xs md:text-sm shadow-vogue-blush"
               >
@@ -309,6 +311,7 @@ export default function EpisodeClient({ slug }) {
                 <Link
                   href={`/episode/${ep.episodeId}`}
                   key={ep.episodeId}
+                  replace
                   prefetch={false}
                   className={`px-4 py-3 rounded-2xl border transition-all text-xs font-bold flex justify-between items-center ${
                     isCurrent

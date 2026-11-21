@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { DetailBackLink } from "@/components/ui/BackButton";
 import CommentSection from "@/components/ui/CommentSection";
 import ChapterHistoryTracker from "@/components/komik/ChapterHistoryTracker";
 import ReaderStickyBar from "@/components/komik/ReaderStickyBar";
@@ -63,13 +64,12 @@ export default function ChapterReaderClient({ slug, chapterSlug }) {
             (ID: {chapterSlug})
           </span>
         </p>
-        <Link
+        <DetailBackLink
           href={`/komik/${slug}`}
-          prefetch={false}
           className="bg-[#F4B8C6] px-6 py-2.5 rounded-full font-extrabold text-xs text-[#161218] shadow-vogue-blush"
         >
           Kembali ke Detail Komik
-        </Link>
+        </DetailBackLink>
       </div>
     );
   }
@@ -144,6 +144,7 @@ export default function ChapterReaderClient({ slug, chapterSlug }) {
         {prevChapterUrl ? (
           <Link
             href={prevChapterUrl}
+            replace
             prefetch={false}
             className="w-full sm:w-auto px-6 py-3 bg-[#211B24] border border-[#F4B8C6]/20 text-[#FDF6F7] hover:bg-[#F4B8C6] hover:text-[#161218] text-xs font-extrabold rounded-full transition-all text-center flex items-center justify-center gap-2"
           >
@@ -159,17 +160,17 @@ export default function ChapterReaderClient({ slug, chapterSlug }) {
           </button>
         )}
 
-        <Link
+        <DetailBackLink
           href={`/komik/${slug}`}
-          prefetch={false}
           className="w-full sm:w-auto px-7 py-3 bg-[#211B24] hover:bg-[#2B232F] text-[#F4B8C6] border border-[#F4B8C6]/35 text-xs font-extrabold rounded-full transition-all text-center"
         >
           Daftar Chapter
-        </Link>
+        </DetailBackLink>
 
         {nextChapterUrl ? (
           <Link
             href={nextChapterUrl}
+            replace
             prefetch={false}
             className="w-full sm:w-auto px-6 py-3 bg-[#F4B8C6] hover:bg-[#f8c7d3] text-[#161218] text-xs font-extrabold rounded-full shadow-vogue-blush transition-all text-center flex items-center justify-center gap-2"
           >

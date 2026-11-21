@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import RateLimitPopups from "@/components/layout/RateLimitPopups";
+import { NavHistoryTracker } from "@/components/ui/BackButton";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -40,6 +41,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${jakarta.variable} ${playfair.variable} font-body bg-[#161218] text-[#FAF5F8] antialiased flex flex-col min-h-screen pb-24 lg:pb-0 selection:bg-[#FFB7C5] selection:text-[#120F16]`}
       >
+        <NavHistoryTracker />
         <Navbar />
         <main className="flex-grow">{children}</main>
         <Footer />

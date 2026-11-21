@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { DetailBackLink } from "@/components/ui/BackButton";
 import BookmarkButton from "@/components/ui/BookmarkButton";
 
 export default function ReaderStickyBar({
@@ -49,9 +50,8 @@ export default function ReaderStickyBar({
       }`}
     >
       <div className="container mx-auto max-w-4xl px-4 py-2.5 flex items-center justify-between gap-2 md:gap-4">
-        <Link
+        <DetailBackLink
           href={`/komik/${slug}`}
-          prefetch={false}
           className="flex items-center justify-center w-9 h-9 shrink-0 rounded-full bg-[#211B24] hover:bg-[#F4B8C6] text-[#AD9CA6] hover:text-[#161218] border border-[#F4B8C6]/20 transition-all group"
           title="Kembali ke Detail"
         >
@@ -68,12 +68,14 @@ export default function ReaderStickyBar({
               d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
-        </Link>
+        </DetailBackLink>
 
         <div className="flex items-center justify-center gap-2 md:gap-3 flex-1 min-w-0">
           {prevChapterSlug ? (
             <Link
               href={`/komik/${slug}/${prevChapterSlug}`}
+              replace
+              prefetch={false}
               className="shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#211B24] border border-[#F4B8C6]/20 text-[#FDF6F7] hover:bg-[#F4B8C6] hover:text-[#161218] transition-all text-xs font-bold"
               title="Chapter Sebelumnya"
             >
@@ -104,6 +106,8 @@ export default function ReaderStickyBar({
           {nextChapterSlug ? (
             <Link
               href={`/komik/${slug}/${nextChapterSlug}`}
+              replace
+              prefetch={false}
               className="shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#F4B8C6] text-[#161218] hover:bg-[#f8c7d3] transition-all text-xs font-extrabold"
               title="Chapter Selanjutnya"
             >
