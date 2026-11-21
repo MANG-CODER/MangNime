@@ -8,6 +8,7 @@ import Link from "next/link";
 // menampilkan hitungan mundur + mencoba lagi otomatis saat waktunya habis.
 
 function classify(error) {
+  if (error?.emptyUpstream) return "empty";
   const status = error?.status;
   if (error?.rateLimited || status === 429) return "rate";
   if (status === 403) return "forbidden";
@@ -24,6 +25,16 @@ function classify(error) {
 }
 
 const COPY = {
+  empty: {
+    chip: "Data Kosong",
+    title: "Server penyedia mengirim data kosong",
+    body: (bucket) =>
+      `Server data ${bucket || ""} sedang mengirim daftar kosong. Ini terjadi di sisi penyedia data, bukan karena koneksi kamu.`.replace(
+        /\s+/g,
+        " ",
+      ),
+    hint: "Biasanya sementara. Coba lagi beberapa menit lagi.",
+  },
   rate: {
     chip: "Rehat Sejenak",
     title: "Terlalu banyak request",

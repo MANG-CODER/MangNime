@@ -373,8 +373,18 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
 
   const KomikProvider = {
     getHome: async () => {
-      const res = await fetchAPI(SHINIGAMI_ENDPOINTS.HOME, 1800);
-      if (!res) return { latest: [], popular: [], recommendations: [] };
+      // Kalau /home sedang rusak di server penyedia, jangan ditembak lagi selama 5 menit
+      const homeBroken = getCache("komik_home_broken");
+      let res = null;
+      if (!homeBroken) {
+        try {
+          res = await fetchAPI(SHINIGAMI_ENDPOINTS.HOME, 1800);
+        } catch (err) {
+          // clientFetcher melempar emptyUpstream kalau semua daftar /home kosong.
+          // Error lain (429, 403, timeout) tetap dilempar: fallback di bawah tidak akan menolong.
+          if (!err?.emptyUpstream && !(err?.status >= 500)) throw err;
+        }
+      }
 
       const formatItems = (list) => {
         if (!Array.isArray(list)) return [];
@@ -391,15 +401,51 @@ export function createKomikProvider({ fetchShinigami, fetchKomiku, cache }) {
         }));
       };
 
+      const home = res
+        ? {
+            latest: formatItems(res.data?.latest || res.latest),
+            popular: formatItems(res.data?.popular || res.popular),
+            recommendations: formatItems(
+              res.data?.recommended ||
+                res.data?.recommendations ||
+                res.recommended ||
+                res.recommendations,
+            ),
+          }
+        : { latest: [], popular: [], recommendations: [] };
+
+      if (
+        home.latest.length ||
+        home.popular.length ||
+        home.recommendations.length
+      ) {
+        return home;
+      }
+
+      // FALLBACK: /home kosong atau error server -> rakit dari endpoint yang masih hidup.
+      setCache("komik_home_broken", true, 300);
+      const popularFail = getCache("komik_popular_fail"); // jangan menembak endpoint yang baru gagal
+      const [lat, pop] = await Promise.allSettled([
+        KomikProvider.getLatest(1),
+        popularFail ? Promise.reject(popularFail) : KomikProvider.getPopular(1),
+      ]);
+      if (pop.status === "rejected" && !popularFail) {
+        setCache("komik_popular_fail", pop.reason, 120);
+      }
+      // dua-duanya gagal: lempar error aslinya (UI menampilkan pesan + tombol coba lagi)
+      if (lat.status === "rejected" && pop.status === "rejected")
+        throw lat.reason;
+
       return {
-        latest: formatItems(res.data?.latest || res.latest),
-        popular: formatItems(res.data?.popular || res.popular),
-        recommendations: formatItems(
-          res.data?.recommended ||
-            res.data?.recommendations ||
-            res.recommended ||
-            res.recommendations,
-        ),
+        latest: lat.status === "fulfilled" ? lat.value.data.slice(0, 10) : [],
+        popular: pop.status === "fulfilled" ? pop.value.data.slice(0, 10) : [],
+        recommendations: [],
+        fallback: true,
+        // dipakai UI kalau mau menampilkan "bagian ini gagal" per baris
+        errors: {
+          latest: lat.status === "rejected" ? lat.reason : null,
+          popular: pop.status === "rejected" ? pop.reason : null,
+        },
       };
     },
 

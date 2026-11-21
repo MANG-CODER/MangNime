@@ -2,8 +2,9 @@
 
 import { getTTLSeconds } from "./ttl";
 
-// Naikkan versi prefix (cf:v2:) agar saat deploy baru, cache lama otomatis diabaikan
-const LS_PREFIX = "cf:";
+// Naikkan versi prefix (mis. cf:v3:) agar saat deploy baru, cache lama otomatis diabaikan.
+// Semua kunci "cf:" yang BUKAN "cf:v2:" dianggap versi lama dan dibersihkan sekali (purgeOldCacheOnce).
+const LS_PREFIX = "cf:v2:";
 const OLD_LS_PREFIX = "cf:";
 const MEM_MAX = 300;
 const COOLDOWN_MS = 60_000;
@@ -12,23 +13,50 @@ const mem = new Map(); // url -> { data, exp }
 const inflight = new Map(); // url -> Promise
 const cooldownUntil = { anime: 0, komik: 0 };
 
+// true kalau ada minimal satu elemen di dalam array, atau di array di dalam objek (1 tingkat).
+// Penting: anime home bentuknya { ongoing: { animeList: [...] } }, komik home { latest: [...] }.
+function hasItems(v) {
+  if (Array.isArray(v)) return v.length > 0;
+  if (v && typeof v === "object") {
+    return Object.values(v).some((x) => Array.isArray(x) && x.length > 0);
+  }
+  return false;
+}
+
+const HOME_KEYS = ["latest", "popular", "ongoing", "completed", "recommended"];
+
+// Payload bentuk /home yang SEMUA daftarnya kosong (biasanya upstream bermasalah, bukan "memang kosong")
+function isEmptyHome(res) {
+  const d = res?.data;
+  if (!d || typeof d !== "object" || Array.isArray(d)) return false;
+  const present = HOME_KEYS.filter((k) => k in d);
+  return present.length > 0 && present.every((k) => !hasItems(d[k]));
+}
+
 // Cek apakah payload dari API sebenarnya kosong (misal saat upstream maintenance)
 function isEmptyPayload(res) {
   if (!res || typeof res !== "object") return true;
   const d = res.data;
   if (d == null) return false; // beberapa endpoint mungkin tidak pakai wrapper .data
   if (Array.isArray(d)) return d.length === 0;
-  if (typeof d === "object") {
-    // Cek khusus struktur /home (anime maupun komik)
-    const keys = ["latest", "popular", "ongoing", "completed", "recommended"];
-    const presentKeys = keys.filter((k) => k in d);
-    if (presentKeys.length > 0) {
-      return presentKeys.every(
-        (k) => !Array.isArray(d[k]) || d[k].length === 0,
-      );
-    }
-  }
+  if (typeof d === "object") return isEmptyHome(res);
   return false;
+}
+
+let purged = false;
+function purgeOldCacheOnce() {
+  if (purged) return;
+  purged = true;
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(OLD_LS_PREFIX) && !k.startsWith(LS_PREFIX)) {
+        localStorage.removeItem(k);
+      }
+    }
+  } catch {
+    // abaikan
+  }
 }
 
 // ---------- localStorage: format "<exp>|<json>" supaya exp bisa dibaca tanpa parse JSON ----------
@@ -242,14 +270,14 @@ async function acquireSlot(bucket) {
 
 // ---------- request ----------
 
-async function request(url, bucket, timeout, retries) {
+async function request(url, bucket, timeout, retries, cacheMode = "default") {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     await acquireSlot(bucket);
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeout);
     try {
-      const res = await fetch(url, { signal: ctrl.signal });
+      const res = await fetch(url, { signal: ctrl.signal, cache: cacheMode });
       if (!res.ok) {
         const err = new Error(`HTTP ${res.status}`);
         err.status = res.status;
@@ -292,7 +320,28 @@ async function load(url, ttlSec, timeout, retries) {
       err.bucket = bucket;
       throw err;
     }
-    const data = await request(url, bucket, timeout, retries);
+    let data = await request(url, bucket, timeout, retries);
+
+    // /home yang semua daftarnya kosong jarang "memang kosong". Bisa jadi yang kebaca adalah
+    // respons kosong lama dari HTTP cache browser: coba sekali lagi dengan melewati cache itu.
+    // (cache: "reload" cuma melewati cache BROWSER, bukan cache di CDN/server penyedia.)
+    if (isEmptyHome(data)) {
+      try {
+        const fresh = await request(url, bucket, timeout, 0, "reload");
+        if (!isEmptyHome(fresh)) data = fresh;
+      } catch {
+        // pakai hasil pertama
+      }
+    }
+    if (isEmptyHome(data)) {
+      // Kosongnya dari server penyedia. Lempar error yang jelas daripada halaman kosong yang
+      // membingungkan. Kalau ada data lama di cache, blok catch di bawah memakainya.
+      const err = new Error("Server penyedia mengembalikan data kosong");
+      err.emptyUpstream = true;
+      err.bucket = bucket;
+      err.noRetry = true;
+      throw err;
+    }
 
     // Hanya simpan ke cache jika payload tidak kosong
     if (!isEmptyPayload(data)) {
@@ -312,6 +361,7 @@ export function clientFetch(
   url,
   { ttl, timeout = 10000, retries = 1, force = false } = {},
 ) {
+  purgeOldCacheOnce();
   const hit = force ? null : readEntry(url);
   if (hit && hit.exp > Date.now() && !isEmptyPayload(hit.data)) {
     return Promise.resolve(hit.data);
